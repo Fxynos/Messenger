@@ -23,10 +23,11 @@ class JwtService(
 
     private val secret = SecretKeySpec(Base64.getDecoder().decode(key), "AES")
 
-    fun generateToken(login: String, password: ByteArray, expiration: Int): String {
+    fun generateToken(id: Int, login: String, password: ByteArray, expiration: Int): String {
         return Jwts.builder()
-            .subject(login)
+            .subject("$id")
             .expiration(Date(System.currentTimeMillis() + expiration))
+            .claim("login", login)
             .claim("password", Base64.getEncoder().encodeToString(password))
             .encryptWith(secret, Jwts.ENC.A256GCM)
             .compact()
@@ -36,7 +37,8 @@ class JwtService(
         if (validateToken(token))
             getClaims(token).run {
                 JwtAuth(
-                    subject,
+                    subject.toInt(),
+                    get("login", String::class.java),
                     Base64.getDecoder().decode(get("password", String::class.java)),
                     true
                 )
@@ -60,6 +62,7 @@ class JwtService(
         Jwts.parser().decryptWith(secret).build().parseEncryptedClaims(token).payload!!
 
     private class JwtAuth(
+        val id: Int,
         val login: String,
         val password: ByteArray,
         private var isAuthenticated: Boolean
@@ -68,7 +71,7 @@ class JwtService(
         override fun getAuthorities() = listOf<GrantedAuthority>()
         override fun getCredentials() = password
         override fun getDetails() = null
-        override fun getPrincipal() = login
+        override fun getPrincipal() = id
         override fun isAuthenticated() = isAuthenticated
         override fun setAuthenticated(isAuthenticated: Boolean) {
             this.isAuthenticated = isAuthenticated
