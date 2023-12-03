@@ -1,6 +1,6 @@
 package com.vl.messenger.auth.service
 
-import com.vl.messenger.auth.dao.UserRepository
+import com.vl.messenger.DataMapper
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import org.springframework.beans.factory.annotation.Autowired
@@ -15,7 +15,7 @@ import javax.crypto.spec.SecretKeySpec
 @Service
 class JwtService(
     @Value("\${jwt.aes.key}") key: String,
-    @Autowired private val userRepository: UserRepository
+    @Autowired private val dataMapper: DataMapper
 ) {
     companion object {
         private val logger = Logger.getLogger("JwtService")
@@ -52,7 +52,7 @@ class JwtService(
             return false
         }
         return Base64.getEncoder().encodeToString(
-            userRepository.getPasswordHash(claims.subject)
+            dataMapper.getPasswordHash(claims.subject)
         ) == claims.get("password", String::class.java)
     }
 

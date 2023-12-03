@@ -4,6 +4,9 @@ import com.vl.messenger.dto.StatusResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 
+const val LOGIN_PATTERN = "^\\w{1,20}$"
+const val NAME_PATTERN = "^[\\w -]{1,20}\$"
+
 fun <T> statusOf(
     status: HttpStatus = HttpStatus.OK,
     reason: String = status.reasonPhrase,

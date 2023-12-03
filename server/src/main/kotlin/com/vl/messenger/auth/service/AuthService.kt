@@ -1,25 +1,25 @@
 package com.vl.messenger.auth.service
 
-import com.vl.messenger.auth.dao.UserRepository
+import com.vl.messenger.DataMapper
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class AuthService(
-    @Autowired private val userRepository: UserRepository,
+    @Autowired private val dataMapper: DataMapper,
     @Autowired private val jwtService: JwtService,
     @Autowired private val passwordObfuscator: PasswordObfuscator
 ) {
     companion object {
-        const val TOKEN_TTL_MS = 60_000 // minute
+        const val TOKEN_TTL_MS = 24 * 60 * 60 * 1000 // day
     }
 
     fun registerUser(login: String, password: String) {
-        userRepository.addUser(login, passwordObfuscator.hashWithSalt(password))
+        dataMapper.addUser(login, passwordObfuscator.hashWithSalt(password))
     }
 
     fun authorize(login: String, password: String): Token? =
-        userRepository.getPasswordHash(login)
+        dataMapper.getPasswordHash(login)
             ?.takeIf { passwordObfuscator.approve(password, it) }
             ?.let { hash ->
                 Token(
@@ -29,7 +29,7 @@ class AuthService(
             }
 
     fun exists(login: String): Boolean {
-        return userRepository.getPasswordHash(login) != null
+        return dataMapper.getPasswordHash(login) != null
     }
 
     data class Token(val token: String, val expirationMs: Int)
