@@ -92,7 +92,7 @@ create table notification(
     id bigint primary key auto_increment,
     user_id int not null,
     time timestamp not null,
-    title varchar(40) not null,
+    title varchar(40),
     content varchar(1000),
     seen bool not null default false,
     foreign key (user_id) references user(id) on delete cascade,
