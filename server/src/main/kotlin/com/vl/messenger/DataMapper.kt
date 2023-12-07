@@ -27,12 +27,19 @@ class DataMapper {
     private val getVerboseUserByIdStatement = connection.prepareStatement("select login, password from user where id = ?;")
     private val getVerboseUserByLoginStatement = connection.prepareStatement("select id, password from user where login = ?;")
     private val getUsersByLoginPatternStatement = connection.prepareStatement("select id, login, image from user where login like ? order by login limit 20;")
-    private val addFriendStatement = connection.prepareStatement("insert into friend (user_id, friend_id) values (?, ?);")
     private val getFriendRequestId = connection.prepareStatement("""
-            select id from notification inner join friend_request on id = notification_id 
-            where sender_id = ? and user_id = ?;
-            """.trimIndent())
+        select id from notification inner join friend_request on id = notification_id 
+        where sender_id = ? and user_id = ?;
+    """.trimIndent())
     private val removeNotificationStatement = connection.prepareStatement("delete from notification where id = ?;")
+    private val addFriendStatement = connection.prepareStatement("insert into friend (user_id, friend_id) values (?, ?);")
+    private val getFriendsStatement = connection.prepareStatement("""
+        select id, login, image from (
+            select friend_id as id from friend where user_id = ?
+            union select user_id as id from friend where friend_id = ?
+        ) as ids inner join user using (id);
+    """.trimIndent())
+    private val deleteFromFriendsStatement = connection.prepareStatement("delete from friend where (user_id = ? and friend_id = ?) or (friend_id = ? and user_id = ?);")
 
     fun addUser(login: String, password: ByteArray) {
         addUserStatement.run {
@@ -105,6 +112,27 @@ class DataMapper {
         addFriendStatement.run {
             setInt(1, userId)
             setInt(2, friendId)
+            execute()
+        }
+    }
+
+    fun getFriends(userId: Int): List<User> =
+        getFriendsStatement.run {
+            repeat(2) { i -> setInt(i + 1, userId) }
+            val friends = LinkedList<User>()
+            executeQuery().run {
+                while (next())
+                    friends += User(getInt("id"), getString("login"), getString("image"))
+                friends
+            }
+        }
+
+    fun deleteFriend(userId: Int, friendId: Int) {
+        deleteFromFriendsStatement.run {
+            repeat(2) { i ->
+                setInt(i * 2 + 1, userId)
+                setInt((i + 1) * 2, friendId)
+            }
             execute()
         }
     }
