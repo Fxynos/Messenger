@@ -33,7 +33,7 @@ class AuthController(@Autowired private val authService: AuthService) {
             return unauthorizedStatus()
         return statusOf(
             payload = authService.authorize(form.login, form.password)
-                ?.run { AuthResponse(token, expirationMs) }
+                ?.run { AuthResponse(userId, token, expirationMs) }
                 ?: return unauthorizedStatus()
         )
     }

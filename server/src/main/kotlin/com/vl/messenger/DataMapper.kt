@@ -24,14 +24,15 @@ class DataMapper {
     private val connection = createConnection()
 
     private val addUserStatement = connection.prepareStatement("insert into user (login, password) values (?, ?);")
-    private val getUserId = connection.prepareStatement("select id from user where login = ?;")
-    private val getPasswordStatement = connection.prepareStatement("select password from user where login = ?;")
+    private val getVerboseUserByIdStatement = connection.prepareStatement("select login, password from user where id = ?;")
+    private val getVerboseUserByLoginStatement = connection.prepareStatement("select id, password from user where login = ?;")
     private val getUsersByLoginPatternStatement = connection.prepareStatement("select id, login, image from user where login like ? order by login limit 20;")
     private val addFriendStatement = connection.prepareStatement("insert into friend (user_id, friend_id) values (?, ?);")
     private val getFriendRequestId = connection.prepareStatement("""
             select id from notification inner join friend_request on id = notification_id 
             where sender_id = ? and user_id = ?;
             """.trimIndent())
+    private val removeNotificationStatement = connection.prepareStatement("delete from notification where id = ?;")
 
     fun addUser(login: String, password: ByteArray) {
         addUserStatement.run {
@@ -41,20 +42,19 @@ class DataMapper {
         }
     }
 
-    fun getUserId(login: String) =
-        getUserId.run {
-            setString(1, login)
-            executeQuery().takeIf(ResultSet::next)?.getInt("id")
+    fun getVerboseUser(id: Int) =
+        getVerboseUserByIdStatement.run {
+            setInt(1, id)
+            executeQuery().takeIf { it.next() }?.run {
+                VerboseUser(id, getString("login"), getBytes("password"))
+            }
         }
 
-    fun getPasswordHash(login: String): ByteArray? =
-        getPasswordStatement.run {
+    fun getVerboseUser(login: String) =
+        getVerboseUserByLoginStatement.run {
             setString(1, login)
-            executeQuery().run {
-                if (next())
-                    this.getBytes("password")
-                else
-                    null
+            executeQuery().takeIf { it.next() }?.run {
+                VerboseUser(getInt("id"), login, getBytes("password"))
             }
         }
 
@@ -109,5 +109,17 @@ class DataMapper {
         }
     }
 
-    data class User(val id: Int, val login: String, val image: String?)
+    /**
+     * Deletes notification with supplied id.
+     * It also deletes associated friend requests and conversation requests through DBMS cascade deleting.
+     */
+    fun removeNotification(notificationId: Long) {
+        removeNotificationStatement.run {
+            setLong(1, notificationId)
+            execute()
+        }
+    }
+
+    class User(val id: Int, val login: String, val image: String?)
+    class VerboseUser(val id: Int, val login: String, val password: ByteArray)
 }

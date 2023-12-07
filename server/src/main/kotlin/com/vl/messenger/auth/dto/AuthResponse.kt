@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import jakarta.validation.constraints.Min
 
 class AuthResponse(
+    @field:JsonProperty("user_id", required = true)
+    val userId: Int,
     @field:JsonProperty("access_token", required = true)
     val token: String,
     @field:JsonProperty("expires_in")

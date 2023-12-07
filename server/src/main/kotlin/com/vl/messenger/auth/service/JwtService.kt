@@ -46,16 +46,16 @@ class JwtService(
         else null
 
     private fun validateToken(token: String): Boolean {
-        val claims: Claims
-        try {
-            claims = Jwts.parser().decryptWith(secret).build().parseEncryptedClaims(token).payload
+        val claims: Claims = try {
+            Jwts.parser().decryptWith(secret).build().parseEncryptedClaims(token).payload
         } catch (exception: Exception) {
             logger.info("invalid token: ${exception.message}")
             return false
         }
-        return Base64.getEncoder().encodeToString(
-            dataMapper.getPasswordHash(claims.subject)
-        ) == claims.get("password", String::class.java)
+        return dataMapper.getVerboseUser(claims.subject.toInt())?.run {
+            Base64.getEncoder().encodeToString(password) == claims.get("password", String::class.java) &&
+                    login == claims.get("login", String::class.java)
+        } ?: false
     }
 
     private fun getClaims(token: String): Claims =

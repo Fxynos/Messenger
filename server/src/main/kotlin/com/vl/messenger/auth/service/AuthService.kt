@@ -19,18 +19,19 @@ class AuthService(
     }
 
     fun authorize(login: String, password: String): Token? =
-        dataMapper.getPasswordHash(login) // TODO single query for id and hash
-            ?.takeIf { passwordObfuscator.approve(password, it) }
-            ?.let { hash ->
+        dataMapper.getVerboseUser(login)
+            ?.takeIf { passwordObfuscator.approve(password, it.password) }
+            ?.let {
                 Token(
-                    jwtService.generateToken(dataMapper.getUserId(login)!!, login, hash, TOKEN_TTL_MS),
+                    it.id,
+                    jwtService.generateToken(it.id, it.login, it.password, TOKEN_TTL_MS),
                     TOKEN_TTL_MS
                 )
             }
 
     fun exists(login: String): Boolean {
-        return dataMapper.getPasswordHash(login) != null
+        return dataMapper.getVerboseUser(login) != null
     }
 
-    data class Token(val token: String, val expirationMs: Int)
+    data class Token(val userId: Int, val token: String, val expirationMs: Int)
 }
