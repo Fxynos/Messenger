@@ -109,18 +109,25 @@ class DataMapper {
     fun sendFriendRequest(userId: Int, friendId: Int) {
         createTransactionalConnection().use { connection -> // concurrent transactions require different JDBC connections
             connection.prepareStatement(
-                "select id from notification inner join friend_request on id = notification_id where sender_id = ? and user_id = ?;"
+                """
+                    select id from notification inner join friend_request on id = notification_id 
+                    where sender_id = ? and user_id = ?;
+                """.trimIndent()
             ).run {
                 setInt(1, userId)
                 setInt(2, friendId)
                 if (executeQuery().next())
                     throw IllegalStateException("Friend request is already sent")
             }
-            connection.prepareStatement("insert into notification (user_id, time) values (?, now());").use { statement ->
+            connection.prepareStatement(
+                "insert into notification (user_id, time) values (?, now());"
+            ).use { statement ->
                 statement.setInt(1, friendId)
                 statement.execute()
             }
-            connection.prepareStatement("insert into friend_request (notification_id, sender_id) values (LAST_INSERT_ID(), ?);").use { statement ->
+            connection.prepareStatement(
+                "insert into friend_request (notification_id, sender_id) values (LAST_INSERT_ID(), ?);"
+            ).use { statement ->
                 statement.setInt(1, userId)
                 statement.execute()
             }
@@ -180,6 +187,23 @@ class DataMapper {
         removeNotificationStatement.run {
             setLong(1, notificationId)
             execute()
+        }
+    }
+
+    fun sendMessage(senderId: Int, receiverId: Int, content: String) {
+        if (content.toByteArray().size > 1000)
+            throw IllegalArgumentException("Message must be less than 1000 bytes")
+        createTransactionalConnection().use { connection ->
+            connection.prepareStatement(
+                "insert into message (sender_id, content, time) values (?, ?, now());"
+            ).use { statement ->
+                statement.setInt(1, senderId)
+                statement.setString(2, content)
+                statement.execute()
+            }
+            connection.prepareStatement(
+                "" // TODO
+            )
         }
     }
 
