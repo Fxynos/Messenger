@@ -23,23 +23,43 @@ class DataMapper {
 
     private val connection = createConnection()
 
-    private val addUserStatement = connection.prepareStatement("insert into user (login, password) values (?, ?);")
-    private val getVerboseUserByIdStatement = connection.prepareStatement("select login, password from user where id = ?;")
-    private val getVerboseUserByLoginStatement = connection.prepareStatement("select id, password from user where login = ?;")
-    private val getUsersByLoginPatternStatement = connection.prepareStatement("select id, login, image from user where login like ? order by login limit 20;")
+    private val addUserStatement = connection.prepareStatement(
+        "insert into user (login, password) values (?, ?);"
+    )
+    private val getVerboseUserByIdStatement = connection.prepareStatement(
+        "select login, password from user where id = ?;"
+    )
+    private val getVerboseUserByLoginStatement = connection.prepareStatement(
+        "select id, password from user where login = ?;"
+    )
+    private val getUsersByLoginPatternStatement = connection.prepareStatement(
+        "select id, login, image from user where login like ? order by login limit 20;"
+    )
     private val getFriendRequestId = connection.prepareStatement("""
         select id from notification inner join friend_request on id = notification_id 
         where sender_id = ? and user_id = ?;
     """.trimIndent())
-    private val removeNotificationStatement = connection.prepareStatement("delete from notification where id = ?;")
-    private val addFriendStatement = connection.prepareStatement("insert into friend (user_id, friend_id) values (?, ?);")
+    private val removeNotificationStatement = connection.prepareStatement(
+        "delete from notification where id = ?;"
+    )
+    private val addFriendStatement = connection.prepareStatement(
+        "insert into friend (user_id, friend_id) values (?, ?);"
+    )
     private val getFriendsStatement = connection.prepareStatement("""
         select id, login, image from (
             select friend_id as id from friend where user_id = ?
             union select user_id as id from friend where friend_id = ?
         ) as ids inner join user using (id);
     """.trimIndent())
-    private val deleteFromFriendsStatement = connection.prepareStatement("delete from friend where (user_id = ? and friend_id = ?) or (friend_id = ? and user_id = ?);")
+    private val areFriendsStatement = connection.prepareStatement("""
+        select count(*) as count from (
+            select friend_id as id from friend where user_id = ? and friend_id = ?
+            union select user_id as id from friend where friend_id = ? and user_id = ?
+        ) as ids;
+    """.trimIndent())
+    private val deleteFromFriendsStatement = connection.prepareStatement(
+        "delete from friend where (user_id = ? and friend_id = ?) or (friend_id = ? and user_id = ?);"
+    )
 
     fun addUser(login: String, password: ByteArray) {
         addUserStatement.run {
@@ -122,9 +142,24 @@ class DataMapper {
             val friends = LinkedList<User>()
             executeQuery().run {
                 while (next())
-                    friends += User(getInt("id"), getString("login"), getString("image"))
+                    friends += User(
+                        getInt("id"),
+                        getString("login"),
+                        getString("image")
+                    )
                 friends
             }
+        }
+
+    fun areFriends(userId: Int, friendId: Int) =
+        areFriendsStatement.run {
+            repeat(2) { i ->
+                setInt(i * 2 + 1, userId)
+                setInt((i + 1) * 2, friendId)
+            }
+            executeQuery()
+                .also(ResultSet::next)
+                .getInt("count") > 0
         }
 
     fun deleteFriend(userId: Int, friendId: Int) {
