@@ -14,13 +14,21 @@ import org.springframework.web.filter.GenericFilterBean
 class JwtFilter(@Autowired private val jwtService: JwtService): GenericFilterBean() {
     companion object {
         const val TOKEN_TYPE = "Bearer"
+        const val TOKEN_COOKIE_NAME = "access_token"
     }
 
+    /**
+     * Accepts bearer token from *Authorization* header or *access_token* cookie
+     */
     override fun doFilter(request: ServletRequest, response: ServletResponse, chain: FilterChain) {
-        val authorization = (request as HttpServletRequest).getHeader(HttpHeaders.AUTHORIZATION)
-        if (authorization?.startsWith(TOKEN_TYPE) == true) {
-            val token = authorization.substring(TOKEN_TYPE.length).trim()
-            SecurityContextHolder.getContext().authentication = jwtService.authenticate(token)
+        ((request as HttpServletRequest).getHeader(HttpHeaders.AUTHORIZATION)
+            ?.takeIf { it.startsWith(TOKEN_TYPE) }
+            ?.substring(TOKEN_TYPE.length)
+            ?.trim()
+            ?: request.cookies?.firstOrNull { it.name == TOKEN_COOKIE_NAME }
+                ?.value
+        )?.also {
+            SecurityContextHolder.getContext().authentication = jwtService.authenticate(it)
         }
         chain.doFilter(request, response)
     }
