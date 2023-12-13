@@ -1,4 +1,4 @@
-package com.vl.messenger.auth.service
+package com.vl.messenger.auth
 
 import com.vl.messenger.DataMapper
 import org.springframework.beans.factory.annotation.Autowired
@@ -11,7 +11,7 @@ class AuthService(
     @Autowired private val passwordObfuscator: PasswordObfuscator
 ) {
     companion object {
-        const val TOKEN_TTL_MS = 24 * 60 * 60 * 1000 // day
+        const val TOKEN_TTL_SEC = 24 * 60 * 60 // day
     }
 
     fun registerUser(login: String, password: String) {
@@ -24,8 +24,8 @@ class AuthService(
             ?.let {
                 Token(
                     it.id,
-                    jwtService.generateToken(it.id, it.login, it.password, TOKEN_TTL_MS),
-                    TOKEN_TTL_MS
+                    jwtService.generateToken(it.id, it.login, it.password, TOKEN_TTL_SEC),
+                    TOKEN_TTL_SEC
                 )
             }
 
@@ -33,5 +33,5 @@ class AuthService(
         return dataMapper.getVerboseUser(login) != null
     }
 
-    data class Token(val userId: Int, val token: String, val expirationMs: Int)
+    data class Token(val userId: Int, val token: String, val expirationSec: Int)
 }

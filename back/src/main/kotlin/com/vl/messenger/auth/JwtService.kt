@@ -1,4 +1,4 @@
-package com.vl.messenger.auth.service
+package com.vl.messenger.auth
 
 import com.vl.messenger.DataMapper
 import io.jsonwebtoken.Claims
@@ -23,10 +23,10 @@ class JwtService(
 
     private val secret = SecretKeySpec(Base64.getDecoder().decode(key), "AES")
 
-    fun generateToken(id: Int, login: String, password: ByteArray, expiration: Int): String {
+    fun generateToken(id: Int, login: String, password: ByteArray, expirationSec: Int): String {
         return Jwts.builder()
             .subject("$id")
-            .expiration(Date(System.currentTimeMillis() + expiration))
+            .expiration(Date(System.currentTimeMillis() + expirationSec * 1000))
             .claim("login", login)
             .claim("password", Base64.getEncoder().encodeToString(password))
             .encryptWith(secret, Jwts.ENC.A256GCM)

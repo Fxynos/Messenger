@@ -1,6 +1,5 @@
 package com.vl.messenger.auth
 
-import com.vl.messenger.auth.service.JwtService
 import jakarta.servlet.FilterChain
 import jakarta.servlet.ServletRequest
 import jakarta.servlet.ServletResponse

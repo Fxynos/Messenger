@@ -1,4 +1,4 @@
-package com.vl.messenger.auth.service
+package com.vl.messenger.auth
 
 import org.springframework.stereotype.Service
 import java.nio.ByteBuffer
