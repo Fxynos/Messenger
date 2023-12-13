@@ -1,25 +1,29 @@
-import logo from './logo.svg';
 import './App.css';
+import {useState} from "react";
+import LoginForm from "./LoginForm";
+import {useCookies} from "react-cookie";
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    const [isLogged, setLogged] = useState(false);
+    const [cookies, setCookie] = useCookies(["token", "isLogged"]);
+
+    if (!isLogged && cookies.isLogged === true)
+        setLogged(true);
+
+    function onLogged() {// TODO sign in actually
+        setCookie("token", "sometoken", { httpOnly: true, sameSite: true, maxAge: 60 });
+        setCookie("isLogged", true, { sameSite: true, maxAge: 60 });
+        setLogged(true);
+    }
+
+    return isLogged ? (
+        <p>You are logged</p>
+    ) : (
+        <div className="App">
+            <p>App Div</p>
+            <LoginForm onLogged={onLogged}/>
+        </div>
+    );
 }
 
 export default App;
