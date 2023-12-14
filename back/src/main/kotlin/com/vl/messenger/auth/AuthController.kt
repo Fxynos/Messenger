@@ -14,10 +14,10 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/user")
+@RequestMapping("/auth")
 class AuthController(@Autowired private val authService: AuthService) {
 
-    @PostMapping("/register")
+    @PostMapping("/sign-up")
     fun register(@Valid @RequestBody form: RegistrationForm): ResponseEntity<StatusResponse<Any>> {
         if (authService.exists(form.login))
             return statusOf(HttpStatus.CONFLICT, "Login is taken")
@@ -25,7 +25,7 @@ class AuthController(@Autowired private val authService: AuthService) {
         return statusOf(HttpStatus.OK, "Account is created")
     }
 
-    @PostMapping("/auth")
+    @PostMapping("/sign-in")
     fun authorize(@Valid @RequestBody form: RegistrationForm): ResponseEntity<StatusResponse<AuthResponse>> {
         fun unauthorizedStatus() = statusOf<AuthResponse>(HttpStatus.UNAUTHORIZED, "Wrong login or password")
         if (!authService.exists(form.login))

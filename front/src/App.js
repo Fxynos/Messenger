@@ -10,9 +10,10 @@ function App() {
     if (!isLogged && cookies.isLogged === true)
         setLogged(true);
 
-    function onLogged() {// TODO sign in actually
-        setCookie("token", "sometoken", { httpOnly: true, sameSite: true, maxAge: 60 });
-        setCookie("isLogged", true, { sameSite: true, maxAge: 60 });
+    function onLogged(token, expirationSec) {
+        alert(`here is token: ${token}`);
+        setCookie("token", token, { httpOnly: true, sameSite: true, maxAge: expirationSec });
+        setCookie("isLogged", true, { sameSite: true, maxAge: expirationSec });
         setLogged(true);
     }
 
