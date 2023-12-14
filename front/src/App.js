@@ -1,7 +1,7 @@
 import './App.css';
 import {useState} from "react";
-import LoginForm from "./LoginForm";
 import {useCookies} from "react-cookie";
+import LoginForm from "./LoginForm";
 
 function App() {
     const [isLogged, setLogged] = useState(false);

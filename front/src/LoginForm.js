@@ -1,7 +1,8 @@
 function LoginForm({onLogged}) {
+    let address = require("./Configuration").address
 
     function onClick() {
-        alert("Logged");
+        alert(address);
         onLogged();
     }
 
