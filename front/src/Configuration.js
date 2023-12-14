@@ -1,3 +1,3 @@
-var address = "localhost:8080"
+const address = "localhost:8080";
 
 exports.address = address

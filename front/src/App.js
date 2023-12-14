@@ -1,7 +1,7 @@
 import './App.css';
 import {useState} from "react";
 import {useCookies} from "react-cookie";
-import LoginForm from "./LoginForm";
+import LoginNavigation from "./LoginNavigation";
 
 function App() {
     const [isLogged, setLogged] = useState(false);
@@ -21,7 +21,7 @@ function App() {
     ) : (
         <div className="App">
             <p>App Div</p>
-            <LoginForm onLogged={onLogged}/>
+            <LoginNavigation onLogged={onLogged}/>
         </div>
     );
 }
