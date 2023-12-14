@@ -12,5 +12,5 @@ class AuthResponse(
     @field:JsonProperty("expires_in")
     @field:JsonInclude(JsonInclude.Include.NON_NULL)
     @field:Min(0)
-    val expiration: Int? = null
+    val expiration: Int? = null // seconds
 )

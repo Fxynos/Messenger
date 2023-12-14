@@ -3,7 +3,6 @@ package com.vl.messenger.auth
 import com.vl.messenger.auth.dto.AuthResponse
 import com.vl.messenger.auth.dto.RegistrationForm
 import com.vl.messenger.dto.StatusResponse
-import com.vl.messenger.auth.service.AuthService
 import com.vl.messenger.statusOf
 import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Autowired
@@ -33,7 +32,7 @@ class AuthController(@Autowired private val authService: AuthService) {
             return unauthorizedStatus()
         return statusOf(
             payload = authService.authorize(form.login, form.password)
-                ?.run { AuthResponse(userId, token, expirationMs) }
+                ?.run { AuthResponse(userId, token, expirationSec) }
                 ?: return unauthorizedStatus()
         )
     }
