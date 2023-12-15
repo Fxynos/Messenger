@@ -1,0 +1,10 @@
+.Card {
+    width: 800px;
+    margin-top: 8px;
+    background: bisque;
+}
+
+.Card > button, .Card > p {
+    display: inline-block;
+    margin-right: 8px;
+}

@@ -45,6 +45,8 @@ class SocialController(@Autowired private val socialService: SocialService) {
     fun addFriend(@RequestParam("user_id") friendId: Int): ResponseEntity<StatusResponse<Any>> {
         if (userId == friendId)
             return statusOf(HttpStatus.BAD_REQUEST, "It's forbidden for users to add themselves to friends")
+        if (socialService.getUser(friendId) == null)
+            return statusOf(HttpStatus.GONE, "No such user")
         return statusOf(HttpStatus.OK,
             if (socialService.addFriend(userId, friendId))
                 "User is added to friends"
