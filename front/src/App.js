@@ -3,6 +3,7 @@ import {useState} from "react";
 import {useCookies} from "react-cookie";
 import LoginNavigation from "./LoginNavigation";
 import Friends from "./Friends";
+import Search from "./Search";
 
 const baseUrl = require("./Configuration").baseUrl;
 
@@ -68,9 +69,14 @@ function App() {
 
 function AppNavigation({route}) { // TODO direct navigating to certain conversation
     switch (route) {
+        case Route.MESSAGES:
+            return <p>Not implemented yet</p>
         case Route.FRIENDS:
             return <Friends/>
-        // TODO
+        case Route.SEARCH:
+            return <Search/>
+        default:
+            throw new Error() // unreachable
     }
 }
 

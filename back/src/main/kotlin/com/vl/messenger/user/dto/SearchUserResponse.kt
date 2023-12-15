@@ -15,6 +15,16 @@ class SearchUserResponse(
         val login: String,
         @field:JsonProperty("image_url")
         @field:JsonInclude(JsonInclude.Include.NON_NULL)
-        val image: String?
+        val image: String?,
+        @field:JsonProperty("friend_status")
+        @field:JsonInclude(JsonInclude.Include.NON_NULL)
+        val friendStatus: FriendStatus? = null
     )
+
+    enum class FriendStatus {
+        NONE,
+        REQUEST_SENT,
+        REQUEST_GOTTEN,
+        FRIEND
+    }
 }

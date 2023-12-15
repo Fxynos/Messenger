@@ -22,8 +22,6 @@ import org.springframework.web.bind.annotation.RestController
 class SocialController(@Autowired private val socialService: SocialService) {
     companion object {
         private val LOGIN_REGEX = Regex(LOGIN_PATTERN)
-
-        private fun userToDto(user: DataMapper.User) = SearchUserResponse.User(user.id, user.login, user.image)
     }
 
     @GetMapping("/me")
@@ -37,7 +35,7 @@ class SocialController(@Autowired private val socialService: SocialService) {
         if (!pattern.matches(LOGIN_REGEX))
             return statusOf(HttpStatus.BAD_REQUEST, "Login contains illegal character")
         return statusOf(payload = SearchUserResponse(
-            socialService.searchUsers(pattern).filter { it.id != id }.map(::userToDto)
+            socialService.searchUsers(pattern).filter { it.id != id }.map(::userToDtoWithFriendStatus)
         ))
     }
 
@@ -68,5 +66,19 @@ class SocialController(@Autowired private val socialService: SocialService) {
             else
                 "Friend request is revoked"
         )
+    }
+
+    /* Mappers */
+
+    private fun userToDto(user: DataMapper.User) = SearchUserResponse.User(user.id, user.login, user.image)
+
+    private fun userToDtoWithFriendStatus(user: DataMapper.User): SearchUserResponse.User {
+        val id = userId
+        return SearchUserResponse.User(user.id, user.login, user.image, when {
+            socialService.isFriend(id, user.id) -> SearchUserResponse.FriendStatus.FRIEND
+            socialService.hasRequestFrom(id, user.id) -> SearchUserResponse.FriendStatus.REQUEST_GOTTEN
+            socialService.hasRequestFrom(user.id, id) -> SearchUserResponse.FriendStatus.REQUEST_SENT
+            else -> SearchUserResponse.FriendStatus.NONE
+        })
     }
 }

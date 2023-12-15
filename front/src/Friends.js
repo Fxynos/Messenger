@@ -2,6 +2,8 @@ import {useEffect, useState} from "react";
 
 const baseUrl = require("./Configuration").baseUrl
 
+/* Component */
+
 function Friends() {
     const [friends, setFriends] = useState([]);
 
@@ -13,16 +15,6 @@ function Friends() {
             (json) => setFriends(json.response.users)
         ));
     });
-
-    function removeFriend(userId) {
-        fetch(`${baseUrl}/users/friend?user_id=${userId}`, {
-            method: "DELETE",
-            credentials: "include"
-        }).then((response) => {
-            if (!response.ok)
-                throw new Error(`${response.status}`)
-        });
-    }
 
     // TODO send msg
 
@@ -41,3 +33,25 @@ function Friends() {
 }
 
 export default Friends;
+
+/* Utils */
+
+export function removeFriend(userId) {
+    fetch(`${baseUrl}/users/friend?user_id=${userId}`, {
+        method: "DELETE",
+        credentials: "include"
+    }).then((response) => {
+        if (!response.ok)
+            throw new Error(`${response.status}`)
+    });
+}
+
+export function addFriend(userId) {
+    fetch(`${baseUrl}/users/add-friend?user_id=${userId}`, {
+        method: "PUT",
+        credentials: "include"
+    }).then((response) => {
+        if (!response.ok)
+            throw new Error(`${response.status}`)
+    });
+}

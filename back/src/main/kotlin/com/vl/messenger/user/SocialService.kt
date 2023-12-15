@@ -17,6 +17,8 @@ class SocialService(@Autowired private val dataMapper: DataMapper) {
     fun hasRequestFrom(userId: Int, senderId: Int) =
         dataMapper.getFriendRequestId(senderId, userId) != null
 
+    fun isFriend(userId: Int, friendId: Int) = dataMapper.areFriends(userId, friendId)
+
     /**
      * Send friend request or accept existing
      * @return true if users are friends now, false if there's no answering request from the second one

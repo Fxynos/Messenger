@@ -179,7 +179,7 @@ function SignUpForm({onSignUp}) {
             <input placeholder="Enter login" maxLength="20" onChange={onLoginChange}/>
             <input placeholder="Enter password" maxLength="20" onChange={onPasswordChange}/>
             <input placeholder="Repeat password" maxLength="20" onChange={onRepPasswordChange}/>
-            <button onClick={attemptSignIn}>Sign in</button>
+            <button onClick={attemptSignIn}>Sign up</button>
         </div>
     );
 }
