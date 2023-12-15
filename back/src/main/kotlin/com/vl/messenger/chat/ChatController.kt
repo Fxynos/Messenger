@@ -12,7 +12,6 @@ class ChatController(@Autowired private val template: SimpMessagingTemplate) {
 
     @MessageMapping("/chat")
     fun sendMessage(@Valid @Payload message: ChatMessage) {
-        println("got $message")
-        template.convertAndSend(ChatMessage(content = "Yo"))
+        println("got ${message.content}")
     }
 }

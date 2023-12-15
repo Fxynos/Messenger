@@ -5,6 +5,19 @@ import LoginNavigation from "./LoginNavigation";
 import Friends from "./Friends";
 import Search from "./Search";
 
+// ----
+import {Client} from '@stomp/stompjs';
+
+const client = new Client({
+    brokerURL: "ws://localhost:8080/ws",
+    onConnect: () => client.publish({
+        destination: "/app/chat",
+        body: JSON.stringify({content:"here is content"})
+    })
+});
+client.activate();
+// ----
+
 const baseUrl = require("./Configuration").baseUrl;
 
 const Route = {
