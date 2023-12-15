@@ -26,6 +26,11 @@ class SocialController(@Autowired private val socialService: SocialService) {
         private fun userToDto(user: DataMapper.User) = SearchUserResponse.User(user.id, user.login, user.image)
     }
 
+    @GetMapping("/me")
+    fun whoAmI(): ResponseEntity<StatusResponse<SearchUserResponse.User>> {
+        return statusOf(payload = userToDto(socialService.getUser(userId)!!))
+    }
+
     @GetMapping("/search/{pattern}")
     fun searchUser(@PathVariable pattern: String): ResponseEntity<StatusResponse<SearchUserResponse>> {
         val id = userId

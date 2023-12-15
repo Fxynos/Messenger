@@ -26,9 +26,10 @@ open class SecurityConfig(
                     registerCorsConfiguration(
                         "/**",
                         CorsConfiguration().apply {
-                            allowedOrigins = listOf("*")
+                            allowedOrigins = listOf("http://localhost:3000")
                             allowedHeaders = listOf("*")
                             allowedMethods = listOf("POST", "GET", "PUT", "DELETE")
+                            allowCredentials = true
                         }
                     )
                 })

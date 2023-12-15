@@ -14,15 +14,25 @@ function LoginNavigation({onLogged}) {
 
     switch (route) {
         case LoginRoute.SIGN_IN:
-            return <SignInForm onSignIn={onLogged}/>
+            return (
+                <div className="Card">
+                    <SignInForm onSignIn={onLogged}/>
+                </div>
+            )
         case LoginRoute.SIGN_UP:
-            return <SignUpForm onSignUp={onLogged}/>
+            return (
+                <div className="Card">
+                    <SignUpForm onSignUp={onLogged}/>
+                </div>
+            )
         case LoginRoute.MENU:
             return (
-                <SignInOrSignUpForm
-                    onSignInClick={() => setRoute(LoginRoute.SIGN_IN)}
-                    onSignUpClick={() => setRoute(LoginRoute.SIGN_UP)}
-                />
+                <div className="Card">
+                    <SignInOrSignUpForm
+                        onSignInClick={() => setRoute(LoginRoute.SIGN_IN)}
+                        onSignUpClick={() => setRoute(LoginRoute.SIGN_UP)}
+                    />
+                </div>
             )
         default:
             throw new Error(); // unreachable
@@ -66,15 +76,16 @@ function SignInForm({onSignIn}) {
             return;
         }
         fetch(
-            `${baseUrl}/auth/sign-in`,
+            `${baseUrl}/auth/sign-in?web=1`,
             {
                     method: "POST",
                     body: JSON.stringify({ login: login, password: password }),
-                    headers: new Headers({"Content-Type": "application/json"})
+                    headers: new Headers({"Content-Type": "application/json"}),
+                    credentials: "include"
             }
         ).then((response) => {
             if (response.ok)
-                response.json().then((json) => onSignIn(json.response["access_token"], json.response["expires_in"]));
+                response.json().then((json) => onSignIn(json.response["expires_in"]));
             else switch (response.status) {
                 case 401: setError("Wrong login or password"); break;
                 case 400: setError("Malformed credentials"); break;
@@ -140,15 +151,16 @@ function SignUpForm({onSignUp}) {
         ).then((response) => {
             if (response.ok)
                 fetch(
-                    `${baseUrl}/auth/sign-in`,
+                    `${baseUrl}/auth/sign-in?web=1`,
                     {
                         method: "POST",
                         body: JSON.stringify({ login: login, password: password }),
-                        headers: new Headers({"Content-Type": "application/json"})
+                        headers: new Headers({"Content-Type": "application/json"}),
+                        credentials: "include"
                     }
                 ).then((response) => {
                     if (response.ok)
-                        response.json().then((json) => onSignUp(json.response["access_token"], json.response["expires_in"]));
+                        response.json().then((json) => onSignUp(json.response["expires_in"]));
                     else
                         setError("Account is created, but error occurred while signing in");
                 }).catch((reason) => alert(reason));

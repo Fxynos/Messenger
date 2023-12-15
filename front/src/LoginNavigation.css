@@ -1,3 +1,18 @@
 .ErrorLabel {
     color: darkred;
 }
+
+.Card {
+    width: 200px;
+    padding: 8px;
+    margin: 0 auto;
+    background: bisque;
+    border-radius: 12px;
+}
+
+button {
+    margin: 0 auto;
+    background: transparent;
+    border-radius: 4px;
+    border: 2px solid chocolate;
+}

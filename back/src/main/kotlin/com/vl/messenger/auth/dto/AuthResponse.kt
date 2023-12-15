@@ -7,8 +7,9 @@ import jakarta.validation.constraints.Min
 class AuthResponse(
     @field:JsonProperty("user_id", required = true)
     val userId: Int,
-    @field:JsonProperty("access_token", required = true)
-    val token: String,
+    @field:JsonProperty("access_token")
+    @field:JsonInclude(JsonInclude.Include.NON_NULL)
+    val token: String?,
     @field:JsonProperty("expires_in")
     @field:JsonInclude(JsonInclude.Include.NON_NULL)
     @field:Min(0)

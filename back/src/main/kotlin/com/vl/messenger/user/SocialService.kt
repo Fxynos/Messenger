@@ -10,6 +10,8 @@ class SocialService(@Autowired private val dataMapper: DataMapper) {
 
     private val logger = Logger.getLogger("SocialService")
 
+    fun getUser(userId: Int) = dataMapper.getVerboseUser(userId)
+
     fun searchUsers(login: String) = dataMapper.getUsersByLogin(login)
 
     fun hasRequestFrom(userId: Int, senderId: Int) =

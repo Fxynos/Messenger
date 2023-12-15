@@ -27,10 +27,10 @@ class DataMapper {
         "insert into user (login, password) values (?, ?);"
     )
     private val getVerboseUserByIdStatement = connection.prepareStatement(
-        "select login, password from user where id = ?;"
+        "select login, password, image from user where id = ?;"
     )
     private val getVerboseUserByLoginStatement = connection.prepareStatement(
-        "select id, password from user where login = ?;"
+        "select id, password, image from user where login = ?;"
     )
     private val getUsersByLoginPatternStatement = connection.prepareStatement(
         "select id, login, image from user where login like ? order by login limit 20;"
@@ -73,7 +73,7 @@ class DataMapper {
         getVerboseUserByIdStatement.run {
             setInt(1, id)
             executeQuery().takeIf { it.next() }?.run {
-                VerboseUser(id, getString("login"), getBytes("password"))
+                VerboseUser(id, getString("login"), getString("image"), getBytes("password"))
             }
         }
 
@@ -81,7 +81,7 @@ class DataMapper {
         getVerboseUserByLoginStatement.run {
             setString(1, login)
             executeQuery().takeIf { it.next() }?.run {
-                VerboseUser(getInt("id"), login, getBytes("password"))
+                VerboseUser(getInt("id"), login, getString("image"), getBytes("password"))
             }
         }
 
@@ -207,6 +207,6 @@ class DataMapper {
         }
     }
 
-    class User(val id: Int, val login: String, val image: String?)
-    class VerboseUser(val id: Int, val login: String, val password: ByteArray)
+    open class User(val id: Int, val login: String, val image: String?)
+    class VerboseUser(id: Int, login: String, image: String?, val password: ByteArray): User(id, login, image)
 }
