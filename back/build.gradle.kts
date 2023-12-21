@@ -1,3 +1,6 @@
+import java.sql.DriverManager
+import java.sql.ResultSet
+
 plugins {
     kotlin("jvm") version "1.8.10"
     application
@@ -58,4 +61,24 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions {
         jvmTarget = "17"
     }
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath("mysql:mysql-connector-java:8.0.18")
+    }
+}
+
+tasks.register("usersCount") {
+    Class.forName("com.mysql.cj.jdbc.Driver")
+    DriverManager.getConnection((System.getenv("MSG_DB_URL")
+        ?: throw IllegalArgumentException("Define environment variable MSG_DB_URL")))
+        .prepareStatement("select count(*) as count from user;").executeQuery()
+        .also(ResultSet::next)
+        .getInt("count")
+        .also { println("There are $it users registered") }
 }
