@@ -216,7 +216,7 @@ class DataMapper {
     fun getPrivateMessages(userId: Int, companionId: Int): List<Message> = // TODO pagination
         connection.prepareStatement("""
             select id, sender_id, time, content from message inner join private_message 
-            where (sender_id = ? and receiver_id = ?) or (receiver_id = ? and sender_id = ?) 
+            where id = message_id and ((sender_id = ? and receiver_id = ?) or (receiver_id = ? and sender_id = ?)) 
             order by id desc;
         """.trimIndent()).use { statement ->
             repeat(2) { i ->

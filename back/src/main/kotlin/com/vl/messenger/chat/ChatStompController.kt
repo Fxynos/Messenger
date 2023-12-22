@@ -19,7 +19,6 @@ class ChatStompController(
         @Valid @Payload message: StompMessage,
         auth: Authentication
     ) {
-        println("receiver $receiverId") // TODO remove
         if (!chatService.userExists(receiverId))
             throw NoSuchElementException("No such user")
         if (message.content.length > 1000)
