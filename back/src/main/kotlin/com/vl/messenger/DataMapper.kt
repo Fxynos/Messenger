@@ -26,19 +26,19 @@ class DataMapper {
     fun addUser(login: String, password: ByteArray) {
         connection.prepareStatement(
             "insert into user (login, password) values (?, ?);"
-        ).run {
-            setString(1, login)
-            setBytes(2, password)
-            execute()
+        ).use { statement ->
+            statement.setString(1, login)
+            statement.setBytes(2, password)
+            statement.execute()
         }
     }
 
     fun getVerboseUser(id: Int) =
         connection.prepareStatement(
             "select login, password, image from user where id = ?;"
-        ).run {
-            setInt(1, id)
-            executeQuery().takeIf { it.next() }?.run {
+        ).use { statement ->
+            statement.setInt(1, id)
+            statement.executeQuery().takeIf { it.next() }?.run {
                 VerboseUser(id, getString("login"), getString("image"), getBytes("password"))
             }
         }
@@ -46,20 +46,20 @@ class DataMapper {
     fun getVerboseUser(login: String) =
         connection.prepareStatement(
             "select id, password, image from user where login = ?;"
-        ).run {
-            setString(1, login)
-            executeQuery().takeIf { it.next() }?.run {
+        ).use { statement ->
+            statement.setString(1, login)
+            statement.executeQuery().takeIf { it.next() }?.run {
                 VerboseUser(getInt("id"), login, getString("image"), getBytes("password"))
             }
         }
 
-    fun getUsersByLogin(login: String): List<User> = // TODO pagination
+    fun getUsersByLogin(login: String): List<User> =
         connection.prepareStatement(
-            "select id, login, image from user where login like ? order by login limit 20;"
-        ).run {
-            setString(1, "$login%")
+            "select id, login, image from user where login like ? order by login limit 20;" // TODO pagination
+        ).use { statement ->
+            statement.setString(1, "$login%")
             val list = LinkedList<User>()
-            val result = executeQuery()
+            val result = statement.executeQuery()
             while (result.next())
                 list += User(
                     result.getInt("id"),
@@ -73,10 +73,10 @@ class DataMapper {
         connection.prepareStatement("""
         select id from notification inner join friend_request on id = notification_id 
         where sender_id = ? and user_id = ?;
-    """.trimIndent()).run {
-            setInt(1, senderId)
-            setInt(2, receiverId)
-            executeQuery().takeIf(ResultSet::next)?.getLong("id")
+    """.trimIndent()).use { statement ->
+            statement.setInt(1, senderId)
+            statement.setInt(2, receiverId)
+            statement.executeQuery().takeIf(ResultSet::next)?.getLong("id")
         }
 
     fun sendFriendRequest(userId: Int, friendId: Int) {
@@ -94,27 +94,30 @@ class DataMapper {
             }
             connection.prepareStatement(
                 "insert into notification (user_id, time) values (?, now());"
-            ).use { statement ->
-                statement.setInt(1, friendId)
-                statement.execute()
+            ).run {
+                setInt(1, friendId)
+                execute()
             }
             connection.prepareStatement(
                 "insert into friend_request (notification_id, sender_id) values (LAST_INSERT_ID(), ?);"
-            ).use { statement ->
-                statement.setInt(1, userId)
-                statement.execute()
+            ).run {
+                setInt(1, userId)
+                execute()
             }
             connection.commit()
         }
     }
 
+    /**
+     * Symmetric
+     */
     fun addFriend(userId: Int, friendId: Int) {
         connection.prepareStatement(
             "insert into friend (user_id, friend_id) values (?, ?);"
-        ).run {
-            setInt(1, userId)
-            setInt(2, friendId)
-            execute()
+        ).use { statement ->
+            statement.setInt(1, userId)
+            statement.setInt(2, friendId)
+            statement.execute()
         }
     }
 
@@ -124,10 +127,10 @@ class DataMapper {
             select friend_id as id from friend where user_id = ?
             union select user_id as id from friend where friend_id = ?
         ) as ids inner join user using (id);
-    """.trimIndent()).run {
-            repeat(2) { i -> setInt(i + 1, userId) }
+    """.trimIndent()).use { statement ->
+            repeat(2) { i -> statement.setInt(i + 1, userId) }
             val friends = LinkedList<User>()
-            executeQuery().run {
+            statement.executeQuery().run {
                 while (next())
                     friends += User(
                         getInt("id"),
@@ -138,31 +141,37 @@ class DataMapper {
             }
         }
 
+    /**
+     * Symmetric
+     */
     fun areFriends(userId: Int, friendId: Int) =
         connection.prepareStatement("""
             select count(*) as count from (
                 select friend_id as id from friend where user_id = ? and friend_id = ?
                 union select user_id as id from friend where friend_id = ? and user_id = ?
             ) as ids;
-        """.trimIndent()).run {
+        """.trimIndent()).use { statement ->
             repeat(2) { i ->
-                setInt(i * 2 + 1, userId)
-                setInt((i + 1) * 2, friendId)
+                statement.setInt(i * 2 + 1, userId)
+                statement.setInt((i + 1) * 2, friendId)
             }
-            executeQuery()
+            statement.executeQuery()
                 .also(ResultSet::next)
                 .getInt("count") > 0
         }
 
+    /**
+     * Symmetric
+     */
     fun deleteFriend(userId: Int, friendId: Int) {
         connection.prepareStatement(
             "delete from friend where (user_id = ? and friend_id = ?) or (friend_id = ? and user_id = ?);"
-        ).run {
+        ).use { statement ->
             repeat(2) { i ->
-                setInt(i * 2 + 1, userId)
-                setInt((i + 1) * 2, friendId)
+                statement.setInt(i * 2 + 1, userId)
+                statement.setInt((i + 1) * 2, friendId)
             }
-            execute()
+            statement.execute()
         }
     }
 
@@ -173,26 +182,45 @@ class DataMapper {
     fun removeNotification(notificationId: Long) {
         connection.prepareStatement(
             "delete from notification where id = ?;"
-        ).run {
-            setLong(1, notificationId)
-            execute()
+        ).use { statement ->
+            statement.setLong(1, notificationId)
+            statement.execute()
         }
     }
 
-    fun sendMessage(senderId: Int, receiverId: Int, content: String) {
+    fun addMessage(senderId: Int, receiverId: Int, content: String) {
         if (content.toByteArray().size > 1000)
             throw IllegalArgumentException("Message must be less than 1000 bytes")
         createTransactionalConnection().use { connection ->
             connection.prepareStatement(
                 "insert into message (sender_id, content, time) values (?, ?, now());"
-            ).use { statement ->
-                statement.setInt(1, senderId)
-                statement.setString(2, content)
-                statement.execute()
+            ).run {
+                setInt(1, senderId)
+                setString(2, content)
+                execute()
             }
             connection.prepareStatement(
-                "" // TODO
-            )
+                "insert into private_message (message_id, receiver_id) values (last_insert_id(), ?);"
+            ).run {
+                setInt(1, receiverId)
+                execute()
+            }
+            connection.commit()
+        }
+    }
+
+    /**
+     * Symmetric
+     */
+    fun getMessages(userId: Int, companionId: Int) {
+        connection.prepareStatement("""
+            select id, time, content from message inner join private_message 
+            where (sender_id = ? and receiver_id = ?) or (receiver_id = ? and sender_id = ?);
+        """.trimIndent()).use { statement ->
+            /*repeat(2) { i ->
+                setInt(i * 2 + 1, userId)
+                setInt((i + 1) * 2, friendId)
+            } TODO*/
         }
     }
 
