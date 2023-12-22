@@ -4,7 +4,7 @@ const baseUrl = require("./Configuration").baseUrl
 
 /* Component */
 
-function Friends() {
+function Friends({onOpenDialog}) {
     const [friends, setFriends] = useState([]);
 
     useEffect(() => {
@@ -23,8 +23,8 @@ function Friends() {
             <h1>Friends</h1>
             {friends.map((friend) =>
                 <div className="Card" key={friend.id}>
+                    <button onClick={() => onOpenDialog({user: friend})}>Open dialog</button>
                     <button onClick={() => removeFriend(friend.id)}>Remove</button>
-                    <button>Send message</button>
                     <p>{friend.login}</p>
                 </div>
             )}

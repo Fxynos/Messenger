@@ -1,10 +1,10 @@
-import "./Search.css";
+import "./App.css";
 import {useReducer, useState} from "react";
 import {addFriend, removeFriend} from "./Friends";
 
 const baseUrl = require("./Configuration").baseUrl;
 
-function Search() {
+function Search({onOpenDialog}) {
     const [, forceUpdate] = useReducer(x => ++x, 0, undefined)
     const [pattern, setPattern] = useState("");
     const [users, setUsers] = useState([]);
@@ -61,6 +61,7 @@ function Search() {
             <button onClick={search}>Search</button>
             {users.map((user) =>
                 <div className="Card" key={user.id}>
+                    <button onClick={() => onOpenDialog({user: user})}>Open dialog</button>
                     <button onClick={() => onFriendButtonClick(user)}>{friendStatusTitle[user["friend_status"]]}</button>
                     <p>{user.login}</p>
                 </div>

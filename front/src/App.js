@@ -4,18 +4,27 @@ import {useCookies} from "react-cookie";
 import LoginNavigation from "./LoginNavigation";
 import Friends from "./Friends";
 import Search from "./Search";
+import Dialogs from "./Dialogs";
+import Dialog from "./Dialog";
 
 // ----
-import {Client} from '@stomp/stompjs';
+/*import {Client} from '@stomp/stompjs';
+
+let sessionId = "no"
 
 const client = new Client({
     brokerURL: "ws://localhost:8080/ws",
-    onConnect: () => client.publish({
-        destination: "/app/chat",
-        body: JSON.stringify({content:"here is content"})
-    })
+    onConnect: (frame) => {
+        sessionId = frame.headers["user-name"];
+        alert(sessionId)
+        client.subscribe(`/user/chat-user${sessionId}`, (message) => alert(message.body));
+        client.publish({
+            destination: "/app/chat",
+            body: JSON.stringify({content:"here is content"})
+        });
+    }
 });
-client.activate();
+client.activate();*/
 // ----
 
 const baseUrl = require("./Configuration").baseUrl;
@@ -65,12 +74,12 @@ function App() {
                 <p>{user === undefined ? "Loading..." : user.login}</p>
             </div>
             <div className="SideBar">
-                <button onClick={() => setRoute(Route.MESSAGES)}>Messages</button>
-                <button onClick={() => setRoute(Route.FRIENDS)}>Friends</button>
-                <button onClick={() => setRoute(Route.SEARCH)}>Search users</button>
+                <button onClick={() => { if (user !== undefined) setRoute(Route.MESSAGES) }}>Messages</button>
+                <button onClick={() => { if (user !== undefined) setRoute(Route.FRIENDS) }}>Friends</button>
+                <button onClick={() => { if (user !== undefined) setRoute(Route.SEARCH) }}>Search users</button>
             </div>
             <div className="NavHost">
-                <AppNavigation route={route}/>
+                <AppNavigation route={route} user={user} onOpenDialog={(dialog) => setRoute({dialog: dialog})}/>
             </div>
         </div>
     ) : (
@@ -80,14 +89,16 @@ function App() {
     );
 }
 
-function AppNavigation({route}) { // TODO direct navigating to certain conversation
+function AppNavigation({route, onOpenDialog}) { // TODO direct navigating to certain conversation
+    if (route.dialog !== undefined)
+        return <Dialog dialog={route.dialog}/>
     switch (route) {
         case Route.MESSAGES:
-            return <p>Not implemented yet</p>
+            return <Dialogs onOpenDialog={onOpenDialog}/>
         case Route.FRIENDS:
-            return <Friends/>
+            return <Friends onOpenDialog={onOpenDialog}/>
         case Route.SEARCH:
-            return <Search/>
+            return <Search onOpenDialog={onOpenDialog}/>
         default:
             throw new Error() // unreachable
     }

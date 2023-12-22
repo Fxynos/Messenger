@@ -46,3 +46,14 @@ button {
   border-radius: 4px;
   border: 2px solid chocolate;
 }
+
+.Card {
+  width: 800px;
+  margin-top: 8px;
+  background: bisque;
+}
+
+.Card > button, .Card > p {
+  display: inline-block;
+  margin-right: 8px;
+}
