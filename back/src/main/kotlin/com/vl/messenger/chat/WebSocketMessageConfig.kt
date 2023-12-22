@@ -16,6 +16,7 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor
 import org.springframework.messaging.support.ChannelInterceptor
 import org.springframework.messaging.support.MessageBuilder
 import org.springframework.security.access.AccessDeniedException
+import org.springframework.security.core.Authentication
 import org.springframework.util.MimeTypeUtils.APPLICATION_JSON
 import org.springframework.util.MultiValueMap
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker
@@ -57,8 +58,12 @@ open class WebSocketMessageConfig: WebSocketMessageBrokerConfigurer {
         registration.interceptors(object: ChannelInterceptor {
             override fun preSend(message: Message<*>, channel: MessageChannel): Message<*> {
                 val accessor = StompHeaderAccessor.wrap(message)
-                if (accessor.command == StompCommand.SUBSCRIBE && !accessor.destination!!.endsWith(accessor.user!!.name))
-                    throw AccessDeniedException("Forbidden")
+                if (
+                    accessor.command == StompCommand.SUBSCRIBE &&
+                    !accessor.destination!!.startsWith(
+                        "/user/${(accessor.user as Authentication).principal as Int}"
+                    )
+                ) throw AccessDeniedException("Forbidden")
                 return message
             }
         })

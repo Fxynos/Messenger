@@ -188,9 +188,7 @@ class DataMapper {
         }
     }
 
-    fun addMessage(senderId: Int, receiverId: Int, content: String) {
-        if (content.toByteArray().size > 1000)
-            throw IllegalArgumentException("Message must be less than 1000 bytes")
+    fun addMessage(senderId: Int, receiverId: Int, content: String): Long =
         createTransactionalConnection().use { connection ->
             connection.prepareStatement(
                 "insert into message (sender_id, content, time) values (?, ?, now());"
@@ -199,6 +197,9 @@ class DataMapper {
                 setString(2, content)
                 execute()
             }
+            val messageId = connection.prepareStatement("select last_insert_id() as id;").run {
+                executeQuery().also(ResultSet::next).getLong("id")
+            }
             connection.prepareStatement(
                 "insert into private_message (message_id, receiver_id) values (last_insert_id(), ?);"
             ).run {
@@ -206,8 +207,8 @@ class DataMapper {
                 execute()
             }
             connection.commit()
+            messageId
         }
-    }
 
     /**
      * Symmetric
@@ -227,7 +228,7 @@ class DataMapper {
                     list += Message(
                         getLong("id"),
                         getInt("sender_id"),
-                        getLong("time"),
+                        getTimestamp("time").time / 1000,
                         getString("content")
                     )
                 list
