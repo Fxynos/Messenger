@@ -212,18 +212,31 @@ class DataMapper {
     /**
      * Symmetric
      */
-    fun getMessages(userId: Int, companionId: Int) {
+    fun getPrivateMessages(userId: Int, companionId: Int): List<Message> = // TODO pagination
         connection.prepareStatement("""
-            select id, time, content from message inner join private_message 
+            select id, sender_id, time, content from message inner join private_message 
             where (sender_id = ? and receiver_id = ?) or (receiver_id = ? and sender_id = ?);
         """.trimIndent()).use { statement ->
-            /*repeat(2) { i ->
-                setInt(i * 2 + 1, userId)
-                setInt((i + 1) * 2, friendId)
-            } TODO*/
+            repeat(2) { i ->
+                statement.setInt(i * 2 + 1, userId)
+                statement.setInt((i + 1) * 2, companionId)
+            }
+            statement.executeQuery().run {
+                val list = LinkedList<Message>()
+                while (next())
+                    list += Message(
+                        getLong("id"),
+                        getInt("sender_id"),
+                        getLong("time"),
+                        getString("content")
+                    )
+                list
+            }
         }
-    }
 
     open class User(val id: Int, val login: String, val image: String?)
+
     class VerboseUser(id: Int, login: String, image: String?, val password: ByteArray): User(id, login, image)
+
+    class Message(val id: Long, val senderId: Int, val unixSec: Long, val content: String)
 }
