@@ -7,26 +7,6 @@ import Search from "./Search";
 import Dialogs from "./Dialogs";
 import Dialog from "./Dialog";
 
-// ----
-/*import {Client} from '@stomp/stompjs';
-
-let sessionId = "no"
-
-const client = new Client({
-    brokerURL: "ws://localhost:8080/ws",
-    onConnect: (frame) => {
-        sessionId = frame.headers["user-name"];
-        alert(sessionId)
-        client.subscribe(`/user/chat-user${sessionId}`, (message) => alert(message.body));
-        client.publish({
-            destination: "/app/chat",
-            body: JSON.stringify({content:"here is content"})
-        });
-    }
-});
-client.activate();*/
-// ----
-
 const baseUrl = require("./Configuration").baseUrl;
 
 const Route = {
@@ -63,6 +43,7 @@ function App() {
     }
 
     function onLogOutClick() {
+        setRoute(Route.MESSAGES);
         setCookie("isLogged", false, { sameSite: true });
         setLogged(false);
     }
@@ -89,9 +70,9 @@ function App() {
     );
 }
 
-function AppNavigation({route, onOpenDialog}) { // TODO direct navigating to certain conversation
+function AppNavigation({route, user, onOpenDialog}) { // TODO direct navigating to certain conversation
     if (route.dialog !== undefined)
-        return <Dialog dialog={route.dialog}/>
+        return <Dialog dialog={route.dialog} user={user}/>
     switch (route) {
         case Route.MESSAGES:
             return <Dialogs onOpenDialog={onOpenDialog}/>

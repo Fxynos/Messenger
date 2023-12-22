@@ -23,6 +23,7 @@ class ChatService(
         if (registry.getUser(dataMapper.getVerboseUser(receiverId)!!.login) != null)
             template.convertAndSend("/user/$receiverId/chat", StompMessage().apply {
                 id = messageId
+                senderId = userId
                 this.content = content
             })
     }
