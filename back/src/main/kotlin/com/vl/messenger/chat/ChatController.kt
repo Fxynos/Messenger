@@ -2,7 +2,7 @@ package com.vl.messenger.chat
 
 import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.messaging.handler.annotation.Header
+import org.springframework.messaging.handler.annotation.DestinationVariable
 import org.springframework.messaging.handler.annotation.MessageMapping
 import org.springframework.messaging.handler.annotation.Payload
 import org.springframework.messaging.simp.SimpMessagingTemplate
@@ -11,19 +11,16 @@ import org.springframework.stereotype.Controller
 
 @Controller
 class ChatController(
-    @Autowired private val template: SimpMessagingTemplate,
-   //@Autowired private val activeUserSto
+    @Autowired private val template: SimpMessagingTemplate
 ) {
 
-    @MessageMapping("/chat")
+    @MessageMapping("/app/chat/{name}")
     fun sendMessage(
+        @DestinationVariable name: String,
         @Valid @Payload message: ChatMessage,
-        @Header("simpSessionId") sessionId: String,
         auth: Authentication
     ) {
-        println("got ${message.content} on $sessionId")
-        template.convertAndSendToUser(auth.name, "/user/${auth.principal}/chat", ChatMessage().apply {
-            content = "I can answer"
-        })
+        println("received on $name (${auth.name}): ${message.content}")
+        template.convertAndSend("/user/$name", ChatMessage().apply { content = "i got it: ${message.content}" })
     }
 }
