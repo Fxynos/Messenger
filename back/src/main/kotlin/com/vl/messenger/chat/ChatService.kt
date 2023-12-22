@@ -16,6 +16,8 @@ class ChatService(
 
     fun userExists(userId: Int) = dataMapper.getVerboseUser(userId) != null
 
+    fun getDialogs(userId: Int) = dataMapper.getDialogs(userId)
+
     fun sendMessage(userId: Int, receiverId: Int, content: String) {
         val messageId = dataMapper.addMessage(userId, receiverId, content)
         if (registry.getUser(dataMapper.getVerboseUser(receiverId)!!.login) != null)

@@ -3,6 +3,7 @@ package com.vl.messenger.chat
 import com.vl.messenger.chat.dto.MessageForm
 import com.vl.messenger.chat.dto.MessagesResponse
 import com.vl.messenger.dto.StatusResponse
+import com.vl.messenger.dto.UsersResponse
 import com.vl.messenger.statusOf
 import com.vl.messenger.userId
 import jakarta.validation.Valid
@@ -19,6 +20,13 @@ import org.springframework.web.bind.annotation.RestController
 class ChatRestController(
     @Autowired private val chatService: ChatService
 ) {
+    @GetMapping("/dialogs")
+    fun getDialogs(): ResponseEntity<StatusResponse<UsersResponse>> {
+        return statusOf(payload = UsersResponse(chatService.getDialogs(userId).map {
+            UsersResponse.User(it.id, it.login, it.image)
+        }))
+    }
+
     @GetMapping("/messages/private")
     fun getPrivateMessages(
         @RequestParam("user_id") companionId: Int

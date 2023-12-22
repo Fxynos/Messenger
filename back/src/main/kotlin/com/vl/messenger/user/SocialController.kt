@@ -4,7 +4,7 @@ import com.vl.messenger.DataMapper
 import com.vl.messenger.LOGIN_PATTERN
 import com.vl.messenger.dto.StatusResponse
 import com.vl.messenger.statusOf
-import com.vl.messenger.user.dto.SearchUserResponse
+import com.vl.messenger.dto.UsersResponse
 import com.vl.messenger.userId
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -25,18 +25,19 @@ class SocialController(@Autowired private val socialService: SocialService) {
     }
 
     @GetMapping("/me")
-    fun whoAmI(): ResponseEntity<StatusResponse<SearchUserResponse.User>> {
+    fun whoAmI(): ResponseEntity<StatusResponse<UsersResponse.User>> {
         return statusOf(payload = userToDto(socialService.getUser(userId)!!))
     }
 
     @GetMapping("/search/{pattern}")
-    fun searchUser(@PathVariable pattern: String): ResponseEntity<StatusResponse<SearchUserResponse>> {
+    fun searchUser(@PathVariable pattern: String): ResponseEntity<StatusResponse<UsersResponse>> {
         val id = userId
         if (!pattern.matches(LOGIN_REGEX))
             return statusOf(HttpStatus.BAD_REQUEST, "Login contains illegal character")
-        return statusOf(payload = SearchUserResponse(
+        return statusOf(payload = UsersResponse(
             socialService.searchUsers(pattern).filter { it.id != id }.map(::userToDtoWithFriendStatus)
-        ))
+        )
+        )
     }
 
     @PutMapping("/add-friend")
@@ -54,8 +55,8 @@ class SocialController(@Autowired private val socialService: SocialService) {
     }
 
     @GetMapping("/friends")
-    fun getFriends(): ResponseEntity<StatusResponse<SearchUserResponse>> {
-        return statusOf(payload = SearchUserResponse(socialService.getFriends(userId).map(::userToDto)))
+    fun getFriends(): ResponseEntity<StatusResponse<UsersResponse>> {
+        return statusOf(payload = UsersResponse(socialService.getFriends(userId).map(::userToDto)))
     }
 
     @DeleteMapping("/friend")
@@ -70,15 +71,15 @@ class SocialController(@Autowired private val socialService: SocialService) {
 
     /* Mappers */
 
-    private fun userToDto(user: DataMapper.User) = SearchUserResponse.User(user.id, user.login, user.image)
+    private fun userToDto(user: DataMapper.User) = UsersResponse.User(user.id, user.login, user.image)
 
-    private fun userToDtoWithFriendStatus(user: DataMapper.User): SearchUserResponse.User {
+    private fun userToDtoWithFriendStatus(user: DataMapper.User): UsersResponse.User {
         val id = userId
-        return SearchUserResponse.User(user.id, user.login, user.image, when {
-            socialService.isFriend(id, user.id) -> SearchUserResponse.FriendStatus.FRIEND
-            socialService.hasRequestFrom(id, user.id) -> SearchUserResponse.FriendStatus.REQUEST_GOTTEN
-            socialService.hasRequestFrom(user.id, id) -> SearchUserResponse.FriendStatus.REQUEST_SENT
-            else -> SearchUserResponse.FriendStatus.NONE
+        return UsersResponse.User(user.id, user.login, user.image, when {
+            socialService.isFriend(id, user.id) -> UsersResponse.FriendStatus.FRIEND
+            socialService.hasRequestFrom(id, user.id) -> UsersResponse.FriendStatus.REQUEST_GOTTEN
+            socialService.hasRequestFrom(user.id, id) -> UsersResponse.FriendStatus.REQUEST_SENT
+            else -> UsersResponse.FriendStatus.NONE
         })
     }
 }

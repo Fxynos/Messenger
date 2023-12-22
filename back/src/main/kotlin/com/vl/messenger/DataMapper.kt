@@ -19,6 +19,17 @@ class DataMapper {
             autoCommit = false
             transactionIsolation = Connection.TRANSACTION_READ_COMMITTED // some DBMS anomalies are still can be there
         }
+
+        private fun ResultSet.collectUsers(): List<User> {
+            val users = LinkedList<User>()
+            while (next())
+                users += User(
+                    getInt("id"),
+                    getString("login"),
+                    getString("image")
+                )
+            return users
+        }
     }
 
     private val connection = createConnection()
@@ -58,15 +69,7 @@ class DataMapper {
             "select id, login, image from user where login like ? order by login limit 20;" // TODO pagination
         ).use { statement ->
             statement.setString(1, "$login%")
-            val list = LinkedList<User>()
-            val result = statement.executeQuery()
-            while (result.next())
-                list += User(
-                    result.getInt("id"),
-                    result.getString("login"),
-                    result.getString("image")
-                )
-            list
+            statement.executeQuery().collectUsers()
         }
 
     fun getFriendRequestId(senderId: Int, receiverId: Int) =
@@ -123,22 +126,13 @@ class DataMapper {
 
     fun getFriends(userId: Int): List<User> =
         connection.prepareStatement("""
-        select id, login, image from (
-            select friend_id as id from friend where user_id = ?
-            union select user_id as id from friend where friend_id = ?
-        ) as ids inner join user using (id);
-    """.trimIndent()).use { statement ->
+            select id, login, image from (
+                select friend_id as id from friend where user_id = ?
+                union select user_id as id from friend where friend_id = ?
+            ) as ids inner join user using (id);
+        """.trimIndent()).use { statement ->
             repeat(2) { i -> statement.setInt(i + 1, userId) }
-            val friends = LinkedList<User>()
-            statement.executeQuery().run {
-                while (next())
-                    friends += User(
-                        getInt("id"),
-                        getString("login"),
-                        getString("image")
-                    )
-                friends
-            }
+            statement.executeQuery().collectUsers()
         }
 
     /**
@@ -216,7 +210,7 @@ class DataMapper {
     fun getPrivateMessages(userId: Int, companionId: Int): List<Message> = // TODO pagination
         connection.prepareStatement("""
             select id, sender_id, time, content from message inner join private_message 
-            where id = message_id and ((sender_id = ? and receiver_id = ?) or (receiver_id = ? and sender_id = ?)) 
+            on id = message_id where ((sender_id = ? and receiver_id = ?) or (receiver_id = ? and sender_id = ?)) 
             order by id desc;
         """.trimIndent()).use { statement ->
             repeat(2) { i ->
@@ -234,6 +228,20 @@ class DataMapper {
                     )
                 list
             }
+        }
+
+    fun getDialogs(userId: Int): List<User> =
+        connection.prepareStatement("""
+            select id, login, image from (
+                with members as (
+                    select sender_id, receiver_id from message inner join private_message on id = message_id 
+                    where (sender_id = ? or receiver_id = ?)
+                ) select sender_id as id from members 
+                union select receiver_id as id from members
+            ) as ids inner join user using (id) where id != ?;
+        """.trimIndent()).use { statement ->
+            repeat(3) { i -> statement.setInt(i + 1, userId) }
+            statement.executeQuery().collectUsers()
         }
 
     open class User(val id: Int, val login: String, val image: String?)

@@ -1,10 +1,10 @@
-package com.vl.messenger.user.dto
+package com.vl.messenger.dto
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import jakarta.validation.Valid
 
-class SearchUserResponse(
+class UsersResponse(
     @field:JsonProperty(required = true)
     val users: List<@Valid User>
 ) {
