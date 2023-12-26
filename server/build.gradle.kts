@@ -45,6 +45,7 @@ java {
 liquibase {
     activities.register("main") {
         arguments = mapOf(
+            "driver" to "com.mysql.cj.jdbc.Driver",
             "changelogFile" to "changelog.sql",
             "url" to (System.getenv("MSG_DB_URL")
                 ?: throw IllegalArgumentException("Define environment variable MSG_DB_URL"))
