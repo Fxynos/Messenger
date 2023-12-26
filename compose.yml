@@ -3,11 +3,26 @@ services:
     image: mysql:8
     restart: always
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT}:${MYSQL_PORT}"
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASS}
       - MYSQL_PASSWORD=${MYSQL_PASS}
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_DATABASE=${MYSQL_DB}
+      - MYSQL_HOST=${MYSQL_HOST}
+      - MYSQL_PORT=${MYSQL_PORT}
     volumes:
       - ./mysql:/var/lib/mysql
+
+  server:
+    build: ./server
+    restart: always
+    environment:
+      - MSG_DB_URL=jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DB}?user=${MYSQL_USER}&password=${MYSQL_PASS}&autoReconnect=true&failOverReadOnly=false&maxReconnects=10
+      - SERVER_HOST=${SERVER_HOST}
+      - SERVER_PORT=${SERVER_PORT}
+      - JWT_AES=${JWT_AES}
+    ports:
+      - "${SERVER_PORT}:${SERVER_PORT}"
+    depends_on:
+      - db
