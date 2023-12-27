@@ -26,3 +26,19 @@ services:
       - "${SERVER_PORT}:${SERVER_PORT}"
     depends_on:
       - db
+
+  client:
+    build: ./client
+    restart: always
+    environment:
+      - SERVER_HOST=${SERVER_HOST}
+      - SERVER_PORT=${SERVER_PORT}
+      - STOMP_URL=ws://${SERVER_HOST}:${SERVER_PORT}/ws
+      - HOST=${CLIENT_HOST}
+      - PORT=${CLIENT_PORT}
+    ports:
+      - "${CLIENT_PORT}:${CLIENT_PORT}"
+    depends_on:
+      - server
+    volumes:
+      - ../:/usr/src/app/
