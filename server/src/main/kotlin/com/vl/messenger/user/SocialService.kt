@@ -12,7 +12,7 @@ class SocialService(@Autowired private val dataMapper: DataMapper) {
 
     fun getUser(userId: Int) = dataMapper.getVerboseUser(userId)
 
-    fun searchUsers(login: String) = dataMapper.getUsersByLogin(login)
+    fun searchUsers(login: String, fromId: Int?, limit: Int) = dataMapper.getUsersByLogin(login, fromId, limit)
 
     fun hasRequestFrom(userId: Int, senderId: Int) =
         dataMapper.getFriendRequestId(senderId, userId) != null

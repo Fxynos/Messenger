@@ -64,11 +64,19 @@ class DataMapper {
             }
         }
 
-    fun getUsersByLogin(login: String): List<User> =
+    fun getUsersByLogin(login: String, fromId: Int?, limit: Int): List<User> =
         connection.prepareStatement(
-            "select id, login, image from user where login like ? order by login limit 20;" // TODO pagination
+            """
+                select id, login, image from user 
+                where ${ if (fromId == null) "" else " id < ? and " }
+                login like ? order by id desc limit ?;
+            """.trimIndent()
         ).use { statement ->
-            statement.setString(1, "$login%")
+            var argCounter = 0
+            if (fromId != null)
+                statement.setInt(++argCounter, fromId)
+            statement.setString(++argCounter, "$login%")
+            statement.setInt(++argCounter, limit)
             statement.executeQuery().collectUsers()
         }
 

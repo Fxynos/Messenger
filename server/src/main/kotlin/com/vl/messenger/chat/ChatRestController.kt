@@ -31,7 +31,7 @@ class ChatRestController(
     fun getPrivateMessages(
         @RequestParam("user_id") companionId: Int,
         @RequestParam("from_id", required = false) fromId: Long?,
-        @RequestParam("limit", defaultValue = "50") limit: Int
+        @RequestParam(defaultValue = "50") limit: Int
     ): ResponseEntity<StatusResponse<MessagesResponse>> {
         if (fromId != null && fromId < 0)
             return statusOf(HttpStatus.BAD_REQUEST, "\"from_id\" must be positive")

@@ -30,14 +30,23 @@ class SocialController(@Autowired private val socialService: SocialService) {
     }
 
     @GetMapping("/search/{pattern}")
-    fun searchUser(@PathVariable pattern: String): ResponseEntity<StatusResponse<UsersResponse>> {
-        val id = userId
+    fun searchUser(
+        @PathVariable pattern: String,
+        @RequestParam("from_id", required = false) fromId: Int?,
+        @RequestParam(defaultValue = "50") limit: Int
+    ): ResponseEntity<StatusResponse<UsersResponse>> {
+        if (fromId != null && fromId < 0)
+            return statusOf(HttpStatus.BAD_REQUEST, "\"from_id\" must be positive")
+        if (limit <= 0)
+            return statusOf(HttpStatus.BAD_REQUEST, "\"limit\" must be positive")
         if (!pattern.matches(LOGIN_REGEX))
             return statusOf(HttpStatus.BAD_REQUEST, "Login contains illegal character")
+        val id = userId
         return statusOf(payload = UsersResponse(
-            socialService.searchUsers(pattern).filter { it.id != id }.map(::userToDtoWithFriendStatus)
-        )
-        )
+            socialService.searchUsers(pattern, fromId, limit)
+                .filter { it.id != id }
+                .map(::userToDtoWithFriendStatus)
+        ))
     }
 
     @PutMapping("/add-friend")
