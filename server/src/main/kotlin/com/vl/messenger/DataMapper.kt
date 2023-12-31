@@ -207,16 +207,21 @@ class DataMapper {
     /**
      * Symmetric
      */
-    fun getPrivateMessages(userId: Int, companionId: Int): List<Message> = // TODO pagination
+    fun getPrivateMessages(userId: Int, companionId: Int, fromId: Long?, limit: Int): List<Message> =
         connection.prepareStatement("""
             select id, sender_id, time, content from message inner join private_message 
-            on id = message_id where ((sender_id = ? and receiver_id = ?) or (receiver_id = ? and sender_id = ?)) 
-            order by id desc;
+            on id = message_id where ${ if (fromId == null) "" else "id < ? and " } 
+            ((sender_id = ? and receiver_id = ?) or (receiver_id = ? and sender_id = ?)) 
+            order by id desc limit ?;
         """.trimIndent()).use { statement ->
-            repeat(2) { i ->
-                statement.setInt(i * 2 + 1, userId)
-                statement.setInt((i + 1) * 2, companionId)
-            }
+            var argCounter = 0
+            if (fromId != null)
+                statement.setLong(++argCounter, fromId)
+            statement.setInt(++argCounter, userId)
+            statement.setInt(++argCounter, companionId)
+            statement.setInt(++argCounter, userId)
+            statement.setInt(++argCounter, companionId)
+            statement.setInt(++argCounter, limit)
             statement.executeQuery().run {
                 val list = LinkedList<Message>()
                 while (next())

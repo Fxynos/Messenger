@@ -28,5 +28,6 @@ class ChatService(
             })
     }
 
-    fun getPrivateMessages(userId: Int, companionId: Int) = dataMapper.getPrivateMessages(userId, companionId)
+    fun getPrivateMessages(userId: Int, companionId: Int, fromId: Long?, limit: Int) =
+        dataMapper.getPrivateMessages(userId, companionId, fromId, limit)
 }

@@ -29,13 +29,21 @@ class ChatRestController(
 
     @GetMapping("/messages/private")
     fun getPrivateMessages(
-        @RequestParam("user_id") companionId: Int
+        @RequestParam("user_id") companionId: Int,
+        @RequestParam("from_id", required = false) fromId: Long?,
+        @RequestParam("limit", defaultValue = "50") limit: Int
     ): ResponseEntity<StatusResponse<MessagesResponse>> {
+        if (fromId != null && fromId < 0)
+            return statusOf(HttpStatus.BAD_REQUEST, "\"from_id\" must be positive")
+        if (limit <= 0)
+            return statusOf(HttpStatus.BAD_REQUEST, "\"limit\" must be positive")
         if (!chatService.userExists(companionId))
             return statusOf(HttpStatus.GONE, "No such user")
-        return statusOf(payload = MessagesResponse(chatService.getPrivateMessages(userId, companionId).map {
-            MessagesResponse.Message(it.id, it.senderId, it.unixSec, it.content)
-        }))
+        return statusOf(payload = MessagesResponse(
+            chatService.getPrivateMessages(userId, companionId, fromId, limit).map {
+                MessagesResponse.Message(it.id, it.senderId, it.unixSec, it.content)
+            }
+        ))
     }
 
     @PostMapping("/messages/private/send")
