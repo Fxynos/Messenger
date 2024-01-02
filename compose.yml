@@ -28,7 +28,7 @@ services:
       - db
 
   client:
-    build: ./client
+    build: ./client-web
     restart: always
     environment:
       - SERVER_HOST=${SERVER_HOST}
