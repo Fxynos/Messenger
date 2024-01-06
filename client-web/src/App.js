@@ -70,7 +70,7 @@ function App() {
     );
 }
 
-function AppNavigation({route, user, onOpenDialog}) { // TODO direct navigating to certain conversation
+function AppNavigation({route, user, onOpenDialog}) {
     if (route.dialog !== undefined)
         return <Dialog dialog={route.dialog} user={user}/>
     switch (route) {

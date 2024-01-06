@@ -50,21 +50,25 @@ function Dialog({dialog, user}) {
 
     return (
         <div>
-            {
-                stompClient === undefined ?
-                <h1>Connecting to dialog with {dialog.user.login}...</h1> : (
-                    <div>
-                        <h1>Dialog with {dialog.user.login}</h1>
-                        <input placeholder="Enter message" onChange={(event) => setText(event.target.value)}></input>
-                        <button onClick={sendMessage}>Send</button>
+            <div className="Low">
+                {
+                    stompClient === undefined ?
+                        <h1>Connecting to dialog with {dialog.user.login}...</h1> : (
+                            <div>
+                                <h1>Dialog with {dialog.user.login}</h1>
+                                <input placeholder="Enter message" onChange={(event) => setText(event.target.value)}></input>
+                                <button onClick={sendMessage}>Send</button>
+                            </div>
+                        )
+                }
+            </div>
+            <div className="Scrollable">
+                {messages.map((message) =>
+                    <div className="Card" key={message}>
+                        <p><span className="Bold">{message.senderId === dialog.user.id ? dialog.user.login : "You"}:</span> {message.text}</p>
                     </div>
-                )
-            }
-            {messages.map((message) =>
-                <div className="Card" key={message}>
-                    <p><span className="Bold">{message.senderId === dialog.user.id ? dialog.user.login : "You"}:</span> {message.text}</p>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 }

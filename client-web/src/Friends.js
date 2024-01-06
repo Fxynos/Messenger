@@ -20,14 +20,18 @@ function Friends({onOpenDialog}) {
 
     return (
         <div>
-            <h1>Friends</h1>
-            {friends.map((friend) =>
-                <div className="Card" key={friend.id}>
-                    <button onClick={() => onOpenDialog({user: friend})}>Open dialog</button>
-                    <button onClick={() => removeFriend(friend.id)}>Remove</button>
-                    <p>{friend.login}</p>
-                </div>
-            )}
+            <div className="Low">
+                <h1>Friends</h1>
+            </div>
+            <div className="Scrollable">
+                {friends.map((friend) =>
+                    <div className="Card" key={friend.id}>
+                        <button onClick={() => onOpenDialog({user: friend})}>Open dialog</button>
+                        <button onClick={() => removeFriend(friend.id)}>Remove</button>
+                        <p>{friend.login}</p>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

@@ -18,13 +18,17 @@ function Dialogs({onOpenDialog}) {
 
     return (
         <div>
-            <h1>Dialogs</h1>
-            {dialogs.map((dialog) =>
-                <div className="Card" key={dialog}>
-                    <button onClick={() => onOpenDialog(dialog)}>Open dialog</button>
-                    <p>{dialog.user.login}</p>
-                </div>
-            )}
+            <div className="Low">
+                <h1>Dialogs</h1>
+            </div>
+            <div className="Scrollable">
+                {dialogs.map((dialog) =>
+                    <div className="Card" key={dialog}>
+                        <button onClick={() => onOpenDialog(dialog)}>Open dialog</button>
+                        <p>{dialog.user.login}</p>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

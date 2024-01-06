@@ -56,16 +56,20 @@ function Search({onOpenDialog}) {
 
     return (
         <div>
-            <h1>Users</h1>
-            <input placeholder="Enter login" onChange={(event) => setPattern(event.target.value)}></input>
-            <button onClick={search}>Search</button>
-            {users.map((user) =>
-                <div className="Card" key={user.id}>
-                    <button onClick={() => onOpenDialog({user: user})}>Open dialog</button>
-                    <button onClick={() => onFriendButtonClick(user)}>{friendStatusTitle[user["friend_status"]]}</button>
-                    <p>{user.login}</p>
-                </div>
-            )}
+            <div className="Low">
+                <h1>Users</h1>
+                <input placeholder="Enter login" onChange={(event) => setPattern(event.target.value)}></input>
+                <button onClick={search}>Search</button>
+            </div>
+            <div className="Scrollable">
+                {users.map((user) =>
+                    <div className="Card" key={user.id}>
+                        <button onClick={() => onOpenDialog({user: user})}>Open dialog</button>
+                        <button onClick={() => onFriendButtonClick(user)}>{friendStatusTitle[user["friend_status"]]}</button>
+                        <p>{user.login}</p>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

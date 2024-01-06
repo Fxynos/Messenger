@@ -49,11 +49,19 @@ button {
 
 .Card {
   width: 800px;
-  margin-top: 8px;
   background: bisque;
 }
 
 .Card > button, .Card > p {
   display: inline-block;
   margin-right: 8px;
+}
+
+.Scrollable {
+  overflow-y: scroll;
+  height: calc(100vh - 100px);
+}
+
+.Low {
+  height: 0;
 }
