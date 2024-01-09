@@ -21,6 +21,8 @@ function Search({onOpenDialog}) {
     };
 
     function search() { // TODO validation or url encoding
+        if (pattern.trim() === "")
+            return
         fetch(`${baseUrl}/users/search/${pattern}`, {
             method: "GET",
             credentials: "include"

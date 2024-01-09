@@ -1,6 +1,8 @@
 package com.vl.messenger.auth
 
+import org.jboss.logging.Logger
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -14,8 +16,20 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @EnableWebSecurity
 @Configuration
 open class SecurityConfig(
+    @Value("\${client.address:localhost}") clientAddress: String,
+    @Value("\${client.port:80}") clientPort: String,
     @Autowired private val jwtFilter: JwtFilter
 ) {
+    private val logger = Logger.getLogger("Security Config")
+    private val clients: List<String>
+
+    init {
+        clients = ArrayList()
+        clients += "http://$clientAddress:$clientPort"
+        if (clientPort == "80")
+            clients += "http://$clientAddress"
+    }
+
     @Bean
     open fun filterChain(http: HttpSecurity): SecurityFilterChain {
         return http
@@ -26,7 +40,7 @@ open class SecurityConfig(
                     registerCorsConfiguration(
                         "/**",
                         CorsConfiguration().apply {
-                            allowedOrigins = listOf("http://localhost:3000")
+                            allowedOrigins = clients
                             allowedHeaders = listOf("*")
                             allowedMethods = listOf("POST", "GET", "PUT", "DELETE")
                             allowCredentials = true

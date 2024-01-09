@@ -41,6 +41,7 @@ function Dialog({dialog, user}) {
 
     function sendMessage() {
         let messageText = text
+        setText("")
         stompClient.publish({
             destination: `/app/chat/user/${dialog.user.id}`,
             body: JSON.stringify({content: messageText})
@@ -56,7 +57,11 @@ function Dialog({dialog, user}) {
                         <h1>Connecting to dialog with {dialog.user.login}...</h1> : (
                             <div>
                                 <h1>Dialog with {dialog.user.login}</h1>
-                                <input placeholder="Enter message" onChange={(event) => setText(event.target.value)}></input>
+                                <input
+                                    placeholder="Enter message"
+                                    value={text}
+                                    onChange={(event) => setText(event.target.value)}
+                                />
                                 <button onClick={sendMessage}>Send</button>
                             </div>
                         )

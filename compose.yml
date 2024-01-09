@@ -3,7 +3,7 @@ services:
     image: mysql:8
     restart: always
     ports:
-      - "${MYSQL_PORT}:${MYSQL_PORT}"
+      - "${MYSQL_PORT}"
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASS}
       - MYSQL_PASSWORD=${MYSQL_PASS}
@@ -22,6 +22,8 @@ services:
       - SERVER_HOST=${SERVER_HOST}
       - SERVER_PORT=${SERVER_PORT}
       - JWT_AES=${JWT_AES}
+      - CLIENT_HOST=${PUBLIC_CLIENT_HOST}
+      - CLIENT_PORT=${PUBLIC_CLIENT_PORT}
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
     depends_on:
@@ -33,7 +35,7 @@ services:
     environment:
       - HOST=${CLIENT_HOST}
       - PORT=${CLIENT_PORT}
-      - REACT_APP_ADDRESS=${SERVER_HOST}:${SERVER_PORT}
+      - REACT_APP_ADDRESS=${PUBLIC_SERVER_HOST}:${PUBLIC_SERVER_PORT}
     ports:
       - "${CLIENT_PORT}:${CLIENT_PORT}"
     depends_on:
