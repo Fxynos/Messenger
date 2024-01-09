@@ -1,6 +1,7 @@
 package com.vl.messenger.auth
 
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -14,8 +15,12 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @EnableWebSecurity
 @Configuration
 open class SecurityConfig(
+    @Value("client.address") clientAddress: String,
+    @Value("client.port") clientPort: Int,
     @Autowired private val jwtFilter: JwtFilter
 ) {
+    private val clientUrl = "http://$clientAddress:$clientPort"
+
     @Bean
     open fun filterChain(http: HttpSecurity): SecurityFilterChain {
         return http
@@ -26,7 +31,7 @@ open class SecurityConfig(
                     registerCorsConfiguration(
                         "/**",
                         CorsConfiguration().apply {
-                            allowedOrigins = listOf("http://localhost:3000")
+                            allowedOrigins = listOf(clientUrl)
                             allowedHeaders = listOf("*")
                             allowedMethods = listOf("POST", "GET", "PUT", "DELETE")
                             allowCredentials = true

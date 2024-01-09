@@ -22,6 +22,8 @@ services:
       - SERVER_HOST=${SERVER_HOST}
       - SERVER_PORT=${SERVER_PORT}
       - JWT_AES=${JWT_AES}
+      - CLIENT_HOST=${CLIENT_HOST}
+      - CLIENT_PORT=${CLIENT_PORT}
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
     depends_on:
