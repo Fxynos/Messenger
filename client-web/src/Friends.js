@@ -1,6 +1,5 @@
 import {useEffect, useState} from "react";
-
-const baseUrl = require("./Configuration").baseUrl
+import {baseUrl} from "./Configuration";
 
 /* Component */
 

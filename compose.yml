@@ -31,11 +31,9 @@ services:
     build: ./client-web
     restart: always
     environment:
-      - SERVER_HOST=${SERVER_HOST}
-      - SERVER_PORT=${SERVER_PORT}
-      - STOMP_URL=ws://${SERVER_HOST}:${SERVER_PORT}/ws
       - HOST=${CLIENT_HOST}
       - PORT=${CLIENT_PORT}
+      - REACT_APP_ADDRESS=${SERVER_HOST}:${SERVER_PORT}
     ports:
       - "${CLIENT_PORT}:${CLIENT_PORT}"
     depends_on:

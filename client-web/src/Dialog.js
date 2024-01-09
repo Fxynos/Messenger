@@ -1,7 +1,7 @@
 import "./App.css";
 import "./Dialog.css";
 import {useEffect, useState} from "react";
-import {baseUrl} from "./Configuration";
+import {address, baseUrl} from "./Configuration";
 import {Client} from "@stomp/stompjs";
 
 function Dialog({dialog, user}) {
@@ -11,7 +11,7 @@ function Dialog({dialog, user}) {
 
     if (stompClient === undefined && user !== undefined) {
         let client = new Client({
-            brokerURL: "ws://localhost:8080/ws",
+            brokerURL: `ws://${address}/ws`,
             onConnect: () => {
                 client.subscribe(
                     `/user/${user.id}/chat`,

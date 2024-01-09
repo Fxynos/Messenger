@@ -1,8 +1,7 @@
 import "./App.css";
 import {useReducer, useState} from "react";
 import {addFriend, removeFriend} from "./Friends";
-
-const baseUrl = require("./Configuration").baseUrl;
+import {baseUrl} from "./Configuration";
 
 function Search({onOpenDialog}) {
     const [, forceUpdate] = useReducer(x => ++x, 0, undefined)

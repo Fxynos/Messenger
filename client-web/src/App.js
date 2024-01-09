@@ -6,8 +6,7 @@ import Friends from "./Friends";
 import Search from "./Search";
 import Dialogs from "./Dialogs";
 import Dialog from "./Dialog";
-
-const baseUrl = require("./Configuration").baseUrl;
+import {baseUrl} from "./Configuration";
 
 const Route = {
     MESSAGES: 0,

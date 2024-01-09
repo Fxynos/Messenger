@@ -1,7 +1,6 @@
 import "./LoginNavigation.css";
 import {useState} from "react";
-
-const baseUrl = require("./Configuration").baseUrl
+import {baseUrl} from "./Configuration";
 
 const LoginRoute = {
     MENU: 0,
