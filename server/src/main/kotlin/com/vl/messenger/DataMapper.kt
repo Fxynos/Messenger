@@ -56,11 +56,16 @@ class DataMapper {
 
     fun getVerboseUser(login: String) =
         connection.prepareStatement(
-            "select id, password, image from user where login = ?;"
+            "select id, login, password, image from user where login = ?;"
         ).use { statement ->
             statement.setString(1, login)
             statement.executeQuery().takeIf { it.next() }?.run {
-                VerboseUser(getInt("id"), login, getString("image"), getBytes("password"))
+                VerboseUser(
+                    getInt("id"),
+                    getString("login"),
+                    getString("image"),
+                    getBytes("password")
+                )
             }
         }
 
