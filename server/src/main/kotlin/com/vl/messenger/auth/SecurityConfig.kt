@@ -20,7 +20,6 @@ open class SecurityConfig(
     @Value("\${client.port:80}") clientPort: String,
     @Autowired private val jwtFilter: JwtFilter
 ) {
-    private val logger = Logger.getLogger("Security Config")
     private val clients: List<String>
 
     init {

@@ -115,3 +115,15 @@ create table conversation_request(
 -- rollback drop table conversation_request;
 -- rollback drop table friend_request;
 -- rollback drop table notification;
+-- changeset Fxynos:6
+insert into conversation_rights (
+    role,
+    get_reports,
+    edit_data,
+    edit_members,
+    edit_rights
+) values
+    ("member", false, false, false, false),
+    ("admin", true, true, true, false),
+    ("owner", true, true, true, true);
+-- rollback delete from conversation_rights;
