@@ -7,6 +7,7 @@ import com.vl.messenger.statusOf
 import com.vl.messenger.userId
 import jakarta.validation.constraints.NotBlank
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.multipart.MultipartFile
 
 /**
  * Provides interface to create and manage conversations.
@@ -26,7 +28,10 @@ import org.springframework.web.bind.annotation.RestController
  */
 @RestController
 @RequestMapping("/conversations")
-class ConversationController(@Autowired private val service: ConversationService) {
+class ConversationController(
+    @Value("\${base.url}") private val baseUrl: String,
+    @Autowired private val service: ConversationService
+) { // TODO generate reports
     @PostMapping
     fun createConversation(
         @NotBlank @RequestParam name: String
@@ -45,7 +50,7 @@ class ConversationController(@Autowired private val service: ConversationService
         return statusOf(payload = DescribeConversationResponse(
             conversation.id,
             conversation.name,
-            conversation.image,
+            if (conversation.image == null) null else "$baseUrl/${conversation.image}",
             service.getMembers(userId, id)!!.map {
                 DescribeConversationResponse.Member(it.id, it.login, it.image, it.role.name)
             }
@@ -60,6 +65,21 @@ class ConversationController(@Autowired private val service: ConversationService
         try {
             service.setConversationName(userId, id, name)
             return statusOf(HttpStatus.OK, "Conversation name is set")
+        } catch (exception: IllegalAccessException) {
+            return statusOf(HttpStatus.FORBIDDEN, exception.message!!)
+        }
+    }
+
+    @PostMapping("/{id}/set-image", consumes = ["multipart/form-data"])
+    fun setConversationImage(
+        @RequestParam image: MultipartFile,
+        @PathVariable id: Long
+    ): ResponseEntity<StatusResponse<Nothing>> {
+        if (image.contentType != "image/png" && image.contentType != "image/jpeg")
+            return statusOf(HttpStatus.UNPROCESSABLE_ENTITY, "Only png and jpeg images are supported")
+        try {
+            service.setConversationImage(userId, id, image)
+            return statusOf(HttpStatus.OK, "Conversation image is set")
         } catch (exception: IllegalAccessException) {
             return statusOf(HttpStatus.FORBIDDEN, exception.message!!)
         }

@@ -1,14 +1,24 @@
 package com.vl.messenger.user
 
 import com.vl.messenger.DataMapper
+import com.vl.messenger.StorageService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.web.multipart.MultipartFile
 import java.util.logging.Logger
 
 @Service
-class SocialService(@Autowired private val dataMapper: DataMapper) {
+class SocialService(
+    @Autowired private val dataMapper: DataMapper,
+    @Autowired private val storageService: StorageService
+) {
 
     private val logger = Logger.getLogger("SocialService")
+
+    fun setProfileImage(userId: Int, image: MultipartFile) {
+        val path = storageService.saveUserImage(image, userId)
+        dataMapper.setProfileImage(userId, path)
+    }
 
     fun getUser(userId: Int) = dataMapper.getVerboseUser(userId)
 
@@ -29,13 +39,11 @@ class SocialService(@Autowired private val dataMapper: DataMapper) {
             dataMapper.removeNotification(requestId) // request id references notification id
             return true
         }
-        val ms = System.currentTimeMillis()
         try {
             dataMapper.sendFriendRequest(userId, friendId)
         } catch (e: IllegalStateException) {
-            logger.warning("User#$userId attempts to send friend request, but it is already sent") // TODO log also suspicious redundant adding friend
+            logger.warning("User#$userId attempts to send friend request, but it is already sent")
         }
-        logger.finest("Sending friend request took ${System.currentTimeMillis() - ms} ms") // TODO remove after tests
         return false
     }
 

@@ -1,11 +1,16 @@
 package com.vl.messenger.chat
 
 import com.vl.messenger.DataMapper
+import com.vl.messenger.StorageService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.web.multipart.MultipartFile
 
 @Service
-class ConversationService(@Autowired private val dataMapper: DataMapper) { // TODO
+class ConversationService(
+    @Autowired private val dataMapper: DataMapper,
+    @Autowired private val storageService: StorageService
+) {
 
     fun createConversation(userId: Int, name: String) = dataMapper.createConversation(userId, name)
 
@@ -19,6 +24,14 @@ class ConversationService(@Autowired private val dataMapper: DataMapper) { // TO
         if (dataMapper.getRole(userId, conversationId)?.canEditData == true)
             dataMapper.setConversationName(conversationId, name)
         else throw IllegalAccessException("No edit conversation privilege")
+
+    @Throws(IllegalAccessException::class)
+    fun setConversationImage(userId: Int, conversationId: Long, image: MultipartFile) {
+        if (dataMapper.getRole(userId, conversationId)?.canEditData != true)
+            throw IllegalAccessException("No edit conversation privilege")
+        val path = storageService.saveConversationImage(image, conversationId)
+        dataMapper.setConversationImage(conversationId, path)
+    }
 
     fun getMembers(userId: Int, conversationId: Long) =
         if (isMember(userId, conversationId))

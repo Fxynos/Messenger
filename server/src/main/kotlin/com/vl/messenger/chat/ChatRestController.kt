@@ -5,9 +5,11 @@ import com.vl.messenger.chat.dto.MessagesResponse
 import com.vl.messenger.dto.StatusResponse
 import com.vl.messenger.dto.UsersResponse
 import com.vl.messenger.statusOf
+import com.vl.messenger.toDto
 import com.vl.messenger.userId
 import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -18,12 +20,13 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class ChatRestController(
+    @Value("\${base.url}") private val baseUrl: String,
     @Autowired private val chatService: ChatService
 ) {
     @GetMapping("/dialogs")
     fun getDialogs(): ResponseEntity<StatusResponse<UsersResponse>> {
         return statusOf(payload = UsersResponse(chatService.getDialogs(userId).map {
-            UsersResponse.User(it.id, it.login, it.image)
+            it.toDto(baseUrl)
         }))
     }
 

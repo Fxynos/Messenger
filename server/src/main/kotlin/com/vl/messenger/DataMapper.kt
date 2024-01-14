@@ -85,6 +85,17 @@ class DataMapper {
             }
         }
 
+    /**
+     * Fail-Safe
+     */
+    fun setProfileImage(userId: Int, image: String) {
+        connection.prepareStatement("update user set image = ? where id = ?;").use { statement ->
+            statement.setString(1, image)
+            statement.setInt(2, userId)
+            statement.execute()
+        }
+    }
+
     fun getUsersByLogin(login: String, fromId: Int?, limit: Int): List<User> =
         connection.prepareStatement(
             """
@@ -311,6 +322,17 @@ class DataMapper {
     fun setConversationName(id: Long, name: String) {
         connection.prepareStatement("update conversation set name = ? where id = ?;").use { statement ->
             statement.setString(1, name)
+            statement.setLong(2, id)
+            statement.execute()
+        }
+    }
+
+    /**
+     * @param image path to image in static resources
+     */
+    fun setConversationImage(id: Long, image: String) {
+        connection.prepareStatement("update conversation set image = ? where id = ?;").use { statement ->
+            statement.setString(1, image)
             statement.setLong(2, id)
             statement.execute()
         }
