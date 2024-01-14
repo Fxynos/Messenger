@@ -308,6 +308,14 @@ class DataMapper {
             }
         }
 
+    fun setConversationName(id: Long, name: String) {
+        connection.prepareStatement("update conversation set name = ? where id = ?;").use { statement ->
+            statement.setString(1, name)
+            statement.setLong(2, id)
+            statement.execute()
+        }
+    }
+
     fun getMembers(conversationId: Long): List<ConversationMember> = // TODO pagination
         connection.prepareStatement("""
             select * from participate inner join conversation_rights on rights_id = id 
@@ -339,6 +347,19 @@ class DataMapper {
         }
     }
 
+    /**
+     * Fail-Safe operation: removes member if it actually exists
+     */
+    fun removeMember(userId: Int, conversationId: Long) {
+        connection.prepareStatement(
+            "delete from participate where user_id = ? and conversation_id = ?;"
+        ).use { statement ->
+            statement.setInt(1, userId)
+            statement.setLong(2, conversationId)
+            statement.execute()
+        }
+    }
+
     val roles: List<ConversationMember.Role>
         get() = connection.createStatement()
             .executeQuery("select * from conversation_rights")
@@ -356,19 +377,16 @@ class DataMapper {
     /**
      * Fail-Safe operation: changes member if it actually exists
      */
-    fun grantPrivileges(userId: Int, conversationId: Long, ) {
-
-    }
-
-    /**
-     * Fail-Safe operation: removes member if it actually exists
-     */
-    fun removeMember(userId: Int, conversationId: Long) {
-        connection.prepareStatement(
-            "delete from participate where user_id = ? and conversation_id = ?;"
-        ).use { statement ->
-            statement.setInt(1, userId)
-            statement.setLong(2, conversationId)
+    fun setRole(userId: Int, conversationId: Long, role: String) {
+        connection.prepareStatement("""
+            update participate inner join user on user_id = id 
+            inner join conversation on conversation_id = conversation.id 
+            set rights_id = (select id from conversation_rights where role = ?) 
+            where user_id = ? and conversation_id = ?;
+        """.trimIndent()).use { statement ->
+            statement.setString(1, role)
+            statement.setInt(2, userId)
+            statement.setLong(3, conversationId)
             statement.execute()
         }
     }
@@ -381,7 +399,7 @@ class DataMapper {
 
     class Conversation(val id: Long, val name: String, val image: String?)
 
-    class ConversationMember(id: Int, login: String, image: String?, role: Role): User(id, login, image) {
+    class ConversationMember(id: Int, login: String, image: String?, val role: Role): User(id, login, image) {
         class Role(
             val id: Int,
             val name: String,

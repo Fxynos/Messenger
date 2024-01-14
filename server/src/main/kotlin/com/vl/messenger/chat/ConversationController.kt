@@ -32,20 +32,43 @@ class ConversationController(@Autowired private val service: ConversationService
         @NotBlank @RequestParam name: String
     ): ResponseEntity<StatusResponse<CreateConversationResponse>> {
         if (name.isBlank())
-            return statusOf(HttpStatus.BAD_REQUEST, "name is blank")
+            return statusOf(HttpStatus.BAD_REQUEST, "Name is blank")
         if (name.length > 20)
-            return statusOf(HttpStatus.BAD_REQUEST, "name is too long")
+            return statusOf(HttpStatus.BAD_REQUEST, "Name is too long")
         return statusOf(payload = CreateConversationResponse(service.createConversation(userId, name)))
     }
 
     @GetMapping("/{id}")
     fun describeConversation(@PathVariable id: Long): ResponseEntity<StatusResponse<DescribeConversationResponse>> {
-        TODO()
+        val conversation = service.getConversation(userId, id)
+            ?: return statusOf(HttpStatus.GONE, "No conversation or you are not its member")
+        return statusOf(payload = DescribeConversationResponse(
+            conversation.id,
+            conversation.name,
+            conversation.image,
+            service.getMembers(userId, id)!!.map {
+                DescribeConversationResponse.Member(it.id, it.login, it.image, it.role.name)
+            }
+        ))
     }
 
-    @PutMapping("/{id}")
-    fun updateConversation(@PathVariable id: Long): ResponseEntity<StatusResponse<Nothing>> {
-        TODO()
+    @PutMapping("/{id}/set-name")
+    fun setConversationName(
+        @PathVariable id: Long,
+        @RequestParam name: String
+    ): ResponseEntity<StatusResponse<Nothing>> {
+        try {
+            service.setConversationName(userId, id, name)
+            return statusOf(HttpStatus.OK, "Conversation name is set")
+        } catch (exception: IllegalAccessException) {
+            return statusOf(HttpStatus.FORBIDDEN, exception.message!!)
+        }
+    }
+
+    @PutMapping("/{id}/leave")
+    fun leaveConversation(@PathVariable id: Long): ResponseEntity<StatusResponse<Nothing>> {
+        service.leaveConversation(userId, id)
+        return statusOf(HttpStatus.OK)
     }
 
     @PostMapping("/{id}/member")
@@ -53,7 +76,12 @@ class ConversationController(@Autowired private val service: ConversationService
         @PathVariable id: Long,
         @RequestParam("user_id") memberId: Int
     ): ResponseEntity<StatusResponse<Nothing>> {
-        TODO()
+        try {
+            service.addMember(userId, id, memberId)
+            return statusOf(HttpStatus.OK, "Conversation member is added")
+        } catch (exception: IllegalAccessException) {
+            return statusOf(HttpStatus.FORBIDDEN, exception.message!!)
+        }
     }
 
     @DeleteMapping("/{id}/member")
@@ -61,15 +89,25 @@ class ConversationController(@Autowired private val service: ConversationService
         @PathVariable id: Long,
         @RequestParam("user_id") memberId: Int
     ): ResponseEntity<StatusResponse<Nothing>> {
-        TODO()
+        try {
+            service.removeMember(userId, id, memberId)
+            return statusOf(HttpStatus.OK, "Conversation member is removed")
+        } catch (exception: IllegalAccessException) {
+            return statusOf(HttpStatus.FORBIDDEN, exception.message!!)
+        }
     }
 
     @PutMapping("/{id}/member/role")
-    fun setRole(
+    fun setMemberRole(
         @PathVariable id: Long,
         @RequestParam("user_id") memberId: Int,
         @RequestParam role: String
     ): ResponseEntity<StatusResponse<Nothing>> {
-        TODO()
+        try {
+            service.setMemberRole(userId, id, memberId, role)
+            return statusOf(HttpStatus.OK, "Conversation member role is set")
+        } catch (exception: IllegalAccessException) {
+            return statusOf(HttpStatus.FORBIDDEN, exception.message!!)
+        }
     }
 }
