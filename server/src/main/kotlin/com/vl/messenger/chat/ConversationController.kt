@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController
  * @see ChatStompController
  */
 @RestController
-@RequestMapping("/conversation")
+@RequestMapping("/conversations")
 class ConversationController(@Autowired private val service: ConversationService) {
     @PostMapping
     fun createConversation(

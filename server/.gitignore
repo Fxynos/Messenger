@@ -1,3 +1,6 @@
 /build
 /.gradle
 /.idea
+/static/images/avatars/conversations/*
+/static/images/avatars/users/*
+!.gitkeep
