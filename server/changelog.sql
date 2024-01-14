@@ -46,7 +46,7 @@ create table conversation(
 );
 create table conversation_rights(
     id int primary key auto_increment,
-    role varchar(20) not null,
+    role varchar(20) unique not null,
     edit_members bool not null default false,
     edit_data bool not null default false,
     edit_rights bool not null default false,
@@ -58,7 +58,7 @@ create table participate(
     rights_id int not null,
     primary key (user_id, conversation_id),
     foreign key (user_id) references user(id) on delete cascade,
-    foreign key (conversation_id) references conversation(id),
+    foreign key (conversation_id) references conversation(id) on delete cascade,
     foreign key (rights_id) references conversation_rights(id)
 );
 -- rollback drop table participate;

@@ -21,15 +21,31 @@ class DataMapper {
         }
 
         private fun ResultSet.collectUsers(): List<User> {
-            val users = LinkedList<User>()
+            val list = LinkedList<User>()
             while (next())
-                users += User(
+                list += User(
                     getInt("id"),
                     getString("login"),
                     getString("image")
                 )
-            return users
+            return list
         }
+
+        private fun ResultSet.collectRoles(): List<ConversationMember.Role> {
+            val list = LinkedList<ConversationMember.Role>()
+            while (next())
+                list += fetchRole()
+            return list
+        }
+
+        private fun ResultSet.fetchRole() = ConversationMember.Role(
+            getInt("conversation_rights.id"),
+            getString("role"),
+            getBoolean("get_reports"),
+            getBoolean("edit_data"),
+            getBoolean("edit_members"),
+            getBoolean("edit_rights")
+        )
     }
 
     private val connection = createConnection()
@@ -204,9 +220,10 @@ class DataMapper {
                 setString(2, content)
                 execute()
             }
-            val messageId = connection.prepareStatement("select last_insert_id() as id;").run {
-                executeQuery().also(ResultSet::next).getLong("id")
-            }
+            val messageId = connection.prepareStatement("select last_insert_id() as id;")
+                .executeQuery()
+                .also(ResultSet::next)
+                .getLong("id")
             connection.prepareStatement(
                 "insert into private_message (message_id, receiver_id) values (last_insert_id(), ?);"
             ).run {
@@ -262,9 +279,116 @@ class DataMapper {
             statement.executeQuery().collectUsers()
         }
 
+    fun createConversation(userId: Int, name: String): Long =
+        createTransactionalConnection().use { connection ->
+            connection.prepareStatement("insert into conversation (name) values (?);").run {
+                setString(1, name)
+                execute()
+            }
+            connection.prepareStatement("""
+                insert into participate (user_id, conversation_id, rights_id) 
+                select ?, last_insert_id(), id from conversation_rights where role = "owner";
+            """.trimIndent()).run {
+                setInt(1, userId)
+                execute()
+            }
+            val conversationId = connection.prepareStatement("select last_insert_id() as id;")
+                .executeQuery()
+                .also(ResultSet::next)
+                .getLong("id")
+            connection.commit()
+            conversationId
+        }
+
+    fun getConversation(id: Long): Conversation? =
+        connection.prepareStatement("select name, image from conversation where id = ?;").use { statement ->
+            statement.setLong(1, id)
+            statement.executeQuery().takeIf(ResultSet::next)?.run {
+                Conversation(id, getString("name"), getString("image"))
+            }
+        }
+
+    fun getMembers(conversationId: Long): List<ConversationMember> = // TODO pagination
+        connection.prepareStatement("""
+            select * from participate inner join conversation_rights on rights_id = id 
+            inner join user on user_id = user.id 
+            where conversation_id = ?;
+        """.trimIndent()).use { statement ->
+            statement.setLong(1, conversationId)
+            statement.executeQuery().run {
+                val list = LinkedList<ConversationMember>()
+                while (next())
+                    list += ConversationMember(
+                        getInt("user.id"),
+                        getString("login"),
+                        getString("image"),
+                        fetchRole()
+                    )
+                list
+            }
+        }
+
+    fun addMember(userId: Int, conversationId: Long) {
+        connection.prepareStatement("""
+                insert into participate (user_id, conversation_id, rights_id) 
+                select ?, ?, id from conversation_rights where role = "member";
+            """.trimIndent()).use { statement ->
+            statement.setInt(1, userId)
+            statement.setLong(2, conversationId)
+            statement.execute()
+        }
+    }
+
+    val roles: List<ConversationMember.Role>
+        get() = connection.createStatement()
+            .executeQuery("select * from conversation_rights")
+            .collectRoles()
+    fun getRole(userId: Int, conversationId: Long): ConversationMember.Role? =
+        connection.prepareStatement("""
+            select * from participate inner join conversation_rights on rights_id = id 
+            where user_id = ? and conversation_id = ?;
+        """.trimIndent()).use { statement ->
+            statement.setInt(1, userId)
+            statement.setLong(2, conversationId)
+            statement.executeQuery().takeIf(ResultSet::next)?.fetchRole()
+        }
+
+    /**
+     * Fail-Safe operation: changes member if it actually exists
+     */
+    fun grantPrivileges(userId: Int, conversationId: Long, ) {
+
+    }
+
+    /**
+     * Fail-Safe operation: removes member if it actually exists
+     */
+    fun removeMember(userId: Int, conversationId: Long) {
+        connection.prepareStatement(
+            "delete from participate where user_id = ? and conversation_id = ?;"
+        ).use { statement ->
+            statement.setInt(1, userId)
+            statement.setLong(2, conversationId)
+            statement.execute()
+        }
+    }
+
     open class User(val id: Int, val login: String, val image: String?)
 
     class VerboseUser(id: Int, login: String, image: String?, val password: ByteArray): User(id, login, image)
 
     class Message(val id: Long, val senderId: Int, val unixSec: Long, val content: String)
+
+    class Conversation(val id: Long, val name: String, val image: String?)
+
+    class ConversationMember(id: Int, login: String, image: String?, role: Role): User(id, login, image) {
+        class Role(
+            val id: Int,
+            val name: String,
+            val canGetReports: Boolean,
+            val canEditData: Boolean,
+            val canEditMembers: Boolean,
+            val canEditRights: Boolean
+        )
+    }
 }
