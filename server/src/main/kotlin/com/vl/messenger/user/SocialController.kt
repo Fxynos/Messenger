@@ -25,7 +25,7 @@ import org.springframework.web.multipart.MultipartFile
 @RequestMapping("/users")
 class SocialController(
     @Value("\${base.url}") private val baseUrl: String,
-    @Autowired private val socialService: SocialService
+    @Autowired private val service: SocialService
 ) {
     companion object {
         private val LOGIN_REGEX = Regex(LOGIN_PATTERN)
@@ -33,14 +33,14 @@ class SocialController(
 
     @GetMapping("/me")
     fun whoAmI(): ResponseEntity<StatusResponse<UsersResponse.User>> {
-        return statusOf(payload = socialService.getUser(userId)!!.toDto(baseUrl))
+        return statusOf(payload = service.getUser(userId)!!.toDto(baseUrl))
     }
 
     @PostMapping("/me/set-image", consumes = ["multipart/form-data"])
     fun setProfileImage(@RequestParam image: MultipartFile): ResponseEntity<StatusResponse<Nothing>> {
         if (image.contentType != "image/png" && image.contentType != "image/jpeg")
             return statusOf(HttpStatus.UNPROCESSABLE_ENTITY, "Only png and jpeg images are supported")
-        socialService.setProfileImage(userId, image)
+        service.setProfileImage(userId, image)
         return statusOf(HttpStatus.OK, "Profile image is set")
     }
 
@@ -58,7 +58,7 @@ class SocialController(
             return statusOf(HttpStatus.BAD_REQUEST, "Login contains illegal character")
         val id = userId
         return statusOf(payload = UsersResponse(
-            socialService.searchUsers(pattern, fromId, limit)
+            service.searchUsers(pattern, fromId, limit)
                 .filter { it.id != id }
                 .map(::userToDtoWithFriendStatus)
         ))
@@ -68,10 +68,10 @@ class SocialController(
     fun addFriend(@RequestParam("user_id") friendId: Int): ResponseEntity<StatusResponse<Nothing>> {
         if (userId == friendId)
             return statusOf(HttpStatus.BAD_REQUEST, "It's forbidden for users to add themselves to friends")
-        if (socialService.getUser(friendId) == null)
+        if (service.getUser(friendId) == null)
             return statusOf(HttpStatus.GONE, "No such user")
         return statusOf(HttpStatus.OK,
-            if (socialService.addFriend(userId, friendId))
+            if (service.addFriend(userId, friendId))
                 "User is added to friends"
             else
                 "Friend request is sent"
@@ -80,17 +80,38 @@ class SocialController(
 
     @GetMapping("/friends")
     fun getFriends(): ResponseEntity<StatusResponse<UsersResponse>> {
-        return statusOf(payload = UsersResponse(socialService.getFriends(userId).map { it.toDto(baseUrl) }))
+        return statusOf(payload = UsersResponse(service.getFriends(userId).map { it.toDto(baseUrl) }))
     }
 
     @DeleteMapping("/friend")
     fun removeFriend(@RequestParam("user_id") friendId: Int): ResponseEntity<StatusResponse<Nothing>> {
         return statusOf(HttpStatus.OK,
-            if (socialService.removeFriend(userId, friendId))
+            if (service.removeFriend(userId, friendId))
                 "Removed from friends"
             else
                 "Friend request is revoked"
         )
+    }
+
+    @PostMapping("/block")
+    fun addToBlacklist(@RequestParam("user_id") blockedId: Int): ResponseEntity<StatusResponse<Nothing>> {
+        return if (service.addToBlacklist(userId, blockedId))
+            statusOf(HttpStatus.OK, "User is blocked")
+        else
+            statusOf(HttpStatus.CONFLICT, "User is already blocked")
+    }
+
+    @DeleteMapping("/block")
+    fun removeFromBlacklist(@RequestParam("user_id") blockedId: Int): ResponseEntity<StatusResponse<Nothing>> {
+        return if (service.removeFromBlacklist(userId, blockedId))
+            statusOf(HttpStatus.OK, "User is unblocked")
+        else
+            statusOf(HttpStatus.CONFLICT, "User wasn't blocked")
+    }
+
+    @GetMapping("/blocked")
+    fun getBlacklist(): ResponseEntity<StatusResponse<UsersResponse>> {
+        return statusOf(payload = UsersResponse(service.getBlacklist(userId).map { it.toDto(baseUrl) }))
     }
 
     private fun userToDtoWithFriendStatus(user: DataMapper.User): UsersResponse.User {
@@ -100,9 +121,9 @@ class SocialController(
             user.login,
             if (user.image == null) null else "$baseUrl/${user.image}",
             when {
-                socialService.isFriend(id, user.id) -> UsersResponse.FriendStatus.FRIEND
-                socialService.hasRequestFrom(id, user.id) -> UsersResponse.FriendStatus.REQUEST_GOTTEN
-                socialService.hasRequestFrom(user.id, id) -> UsersResponse.FriendStatus.REQUEST_SENT
+                service.isFriend(id, user.id) -> UsersResponse.FriendStatus.FRIEND
+                service.hasRequestFrom(id, user.id) -> UsersResponse.FriendStatus.REQUEST_GOTTEN
+                service.hasRequestFrom(user.id, id) -> UsersResponse.FriendStatus.REQUEST_SENT
                 else -> UsersResponse.FriendStatus.NONE
             }
         )

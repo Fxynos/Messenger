@@ -452,6 +452,49 @@ class DataMapper {
             messageId
         }
 
+    /**
+     * Fail-Fast
+     */
+    fun addToBlacklist(userId: Int, blockedId: Int) {
+        connection.prepareStatement(
+            "insert into black_list (user_id, blocked_id) values (?, ?);"
+        ).use { statement ->
+            statement.setInt(1, userId)
+            statement.setInt(2, blockedId)
+            statement.execute()
+        }
+    }
+
+    fun isInBlacklist(userId: Int, blockedId: Int): Boolean =
+        connection.prepareStatement(
+            "select count(*) as blocked from black_list where user_id = ? and blocked_id = ?;"
+        ).use { statement ->
+            statement.setInt(1, userId)
+            statement.setInt(2, blockedId)
+            statement.executeQuery().also(ResultSet::next).getBoolean("blocked")
+        }
+
+    fun getBlacklist(userId: Int): List<User> =
+        connection.prepareStatement(
+            "select * from black_list inner join user on blocked_id = id where user_id = ?;"
+        ).use { statement ->
+            statement.setInt(1, userId)
+            statement.executeQuery().collectUsers()
+        }
+
+    /**
+     * Fail-Safe
+     */
+    fun removeFromBlacklist(userId: Int, blockedId: Int) {
+        connection.prepareStatement(
+            "delete from black_list where user_id = ? and blocked_id = ?;"
+        ).use { statement ->
+            statement.setInt(1, userId)
+            statement.setInt(2, blockedId)
+            statement.execute()
+        }
+    }
+
     open class User(val id: Int, val login: String, val image: String?)
 
     class VerboseUser(id: Int, login: String, image: String?, val password: ByteArray): User(id, login, image)

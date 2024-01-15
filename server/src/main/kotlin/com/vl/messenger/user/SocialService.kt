@@ -63,4 +63,31 @@ class SocialService(
         } ?: logger.warning("User #$userId attempts to revoke friend request not existing")
         return false
     }
+
+    /**
+     * @return false if user was already in blacklist, true otherwise
+     */
+    fun addToBlacklist(userId: Int, blockedId: Int): Boolean {
+        if (isBlocked(userId, blockedId))
+            return false
+        dataMapper.addToBlacklist(userId, blockedId)
+        return true
+    }
+
+    fun getBlacklist(userId: Int) = dataMapper.getBlacklist(userId)
+
+    /**
+     * @return false if user wasn't blocked, true otherwise
+     */
+    fun removeFromBlacklist(userId: Int, blockedId: Int): Boolean {
+        if (!isBlocked(userId, blockedId))
+            return false
+        dataMapper.removeFromBlacklist(userId, blockedId)
+        return true
+    }
+
+    /**
+     * Blacklisted
+     */
+    private fun isBlocked(userId: Int, blockedId: Int) = dataMapper.isInBlacklist(userId, blockedId)
 }

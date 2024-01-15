@@ -11,7 +11,7 @@ class StorageService {
         private const val PATH_AVATAR_CONVERSATION = "images/avatars/conversations"
         private const val PATH_AVATAR_USER = "images/avatars/users"
 
-        private val (MultipartFile).format: String
+        private val MultipartFile.format: String
             get() = when (contentType) {
                 "image/png" -> "png"
                 "image/jpeg" -> "jpg"
