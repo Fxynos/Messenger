@@ -31,6 +31,18 @@ class DataMapper {
             return list
         }
 
+        private fun ResultSet.collectMessages(): List<Message> {
+            val list = LinkedList<Message>()
+            while (next())
+                list += Message(
+                    getLong("id"),
+                    getInt("sender_id"),
+                    getTimestamp("time").time / 1000,
+                    getString("content")
+                )
+            return list
+        }
+
         private fun ResultSet.collectRoles(): List<ConversationMember.Role> {
             val list = LinkedList<ConversationMember.Role>()
             while (next())
@@ -263,17 +275,7 @@ class DataMapper {
             statement.setInt(++argCounter, userId)
             statement.setInt(++argCounter, companionId)
             statement.setInt(++argCounter, limit)
-            statement.executeQuery().run {
-                val list = LinkedList<Message>()
-                while (next())
-                    list += Message(
-                        getLong("id"),
-                        getInt("sender_id"),
-                        getTimestamp("time").time / 1000,
-                        getString("content")
-                    )
-                list
-            }
+            statement.executeQuery().collectMessages()
         }
 
     fun getDialogs(userId: Int): List<User> =
@@ -412,6 +414,43 @@ class DataMapper {
             statement.execute()
         }
     }
+
+    fun getConversationMessages(conversationId: Long, fromId: Long?, limit: Int): List<Message> =
+        connection.prepareStatement("""
+            select id, sender_id, time, content from message inner join conversation_message on id = message_id 
+            where conversation_id = ?${ if (fromId == null) "" else " and id < ?" } 
+            order by id desc limit ?;
+        """.trimIndent()).use { statement ->
+            var argCounter = 0
+            statement.setLong(++argCounter, conversationId)
+            if (fromId != null)
+                statement.setLong(++argCounter, fromId)
+            statement.setInt(++argCounter, limit)
+            statement.executeQuery().collectMessages()
+        }
+
+    fun addConversationMessage(userId: Int, conversationId: Long, content: String): Long =
+        createTransactionalConnection().use { connection ->
+            connection.prepareStatement(
+                "insert into message (sender_id, content, time) values (?, ?, now());"
+            ).run {
+                setInt(1, userId)
+                setString(2, content)
+                execute()
+            }
+            val messageId = connection.prepareStatement("select last_insert_id() as id;")
+                .executeQuery()
+                .also(ResultSet::next)
+                .getLong("id")
+            connection.prepareStatement(
+                "insert into conversation_message (message_id, conversation_id) values (last_insert_id(), ?);"
+            ).run {
+                setLong(1, conversationId)
+                execute()
+            }
+            connection.commit()
+            messageId
+        }
 
     open class User(val id: Int, val login: String, val image: String?)
 

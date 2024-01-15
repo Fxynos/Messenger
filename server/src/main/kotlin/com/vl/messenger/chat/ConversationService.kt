@@ -63,6 +63,6 @@ class ConversationService(
             dataMapper.setRole(memberId, conversationId, role)
         else throw IllegalAccessException("No edit rights privilege")
 
-    private fun isMember(userId: Int, conversationId: Long) =
+    fun isMember(userId: Int, conversationId: Long) =
         dataMapper.getRole(userId, conversationId) != null
 }
