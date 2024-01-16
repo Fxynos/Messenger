@@ -1,4 +1,4 @@
-package com.vl.messenger.user
+package com.vl.messenger.profile
 
 import com.vl.messenger.DataMapper
 import com.vl.messenger.StorageService
@@ -8,7 +8,7 @@ import org.springframework.web.multipart.MultipartFile
 import java.util.logging.Logger
 
 @Service
-class SocialService(
+class ProfileService(
     @Autowired private val dataMapper: DataMapper,
     @Autowired private val storageService: StorageService
 ) {

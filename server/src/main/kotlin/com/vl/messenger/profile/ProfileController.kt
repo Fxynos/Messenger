@@ -1,4 +1,4 @@
-package com.vl.messenger.user
+package com.vl.messenger.profile
 
 import com.vl.messenger.DataMapper
 import com.vl.messenger.LOGIN_PATTERN
@@ -23,9 +23,9 @@ import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping("/users")
-class SocialController(
+class ProfileController(
     @Value("\${base.url}") private val baseUrl: String,
-    @Autowired private val service: SocialService
+    @Autowired private val service: ProfileService
 ) {
     companion object {
         private val LOGIN_REGEX = Regex(LOGIN_PATTERN)
