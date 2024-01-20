@@ -1,7 +1,7 @@
 package com.vl.messenger.chat
 
 import com.vl.messenger.chat.dto.CreateConversationResponse
-import com.vl.messenger.chat.dto.DescribeConversationResponse
+import com.vl.messenger.chat.dto.ConversationResponse
 import com.vl.messenger.dto.StatusResponse
 import com.vl.messenger.statusOf
 import com.vl.messenger.userId
@@ -44,15 +44,15 @@ class ConversationController(
     }
 
     @GetMapping("/{id}")
-    fun describeConversation(@PathVariable id: Long): ResponseEntity<StatusResponse<DescribeConversationResponse>> {
+    fun describeConversation(@PathVariable id: Long): ResponseEntity<StatusResponse<ConversationResponse>> {
         val conversation = service.getConversation(userId, id)
             ?: return statusOf(HttpStatus.GONE, "No conversation or you are not its member")
-        return statusOf(payload = DescribeConversationResponse(
+        return statusOf(payload = ConversationResponse(
             conversation.id,
             conversation.name,
             if (conversation.image == null) null else "$baseUrl/${conversation.image}",
             service.getMembers(userId, id)!!.map {
-                DescribeConversationResponse.Member(it.id, it.login, it.image, it.role.name)
+                ConversationResponse.Member(it.id, it.login, it.image, it.role.name)
             }
         ))
     }

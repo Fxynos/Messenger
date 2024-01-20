@@ -36,11 +36,11 @@ class ProfileService(
     fun addFriend(userId: Int, friendId: Int): Boolean {
         dataMapper.getFriendRequestId(friendId, userId)?.let { requestId -> // accept existing friend request if received
             dataMapper.addFriend(userId, friendId)
-            dataMapper.removeNotification(requestId) // request id references notification id
+            removeFriendRequest(requestId)
             return true
         }
         try {
-            dataMapper.sendFriendRequest(userId, friendId)
+            dataMapper.addFriendRequest(userId, friendId)
         } catch (e: IllegalStateException) {
             logger.warning("User#$userId attempts to send friend request, but it is already sent")
         }
@@ -58,9 +58,8 @@ class ProfileService(
             dataMapper.deleteFriend(userId, friendId)
             return true
         }
-        dataMapper.getFriendRequestId(userId, friendId)?.also {
-            dataMapper.removeNotification(it)
-        } ?: logger.warning("User #$userId attempts to revoke friend request not existing")
+        dataMapper.getFriendRequestId(userId, friendId)?.also(::removeFriendRequest)
+            ?: logger.warning("User #$userId attempts to revoke friend request not existing")
         return false
     }
 
@@ -90,4 +89,6 @@ class ProfileService(
      * Blacklisted
      */
     private fun isBlocked(userId: Int, blockedId: Int) = dataMapper.isInBlacklist(userId, blockedId)
+
+    private fun removeFriendRequest(notificationId: Long) = dataMapper.removeNotification(notificationId)
 }

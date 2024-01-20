@@ -20,6 +20,8 @@ class DataMapper {
             transactionIsolation = Connection.TRANSACTION_READ_COMMITTED // some DBMS anomalies are still can be there
         }
 
+        private fun ResultSet.getUnixSeconds(label: String): Long = getTimestamp(label).time / 1000
+
         private fun ResultSet.collectUsers(): List<User> {
             val list = LinkedList<User>()
             while (next())
@@ -134,7 +136,7 @@ class DataMapper {
             statement.executeQuery().takeIf(ResultSet::next)?.getLong("id")
         }
 
-    fun sendFriendRequest(userId: Int, friendId: Int) {
+    fun addFriendRequest(userId: Int, friendId: Int) {
         createTransactionalConnection().use { connection -> // concurrent transactions require different JDBC connections
             connection.prepareStatement(
                 """
@@ -221,6 +223,17 @@ class DataMapper {
         }
     }
 
+    fun addNotification(userId: Int, title: String, content: String) {
+        connection.prepareStatement(
+            "insert into notification (user_id, title, content, time) values (?, ?, ?, now());"
+        ).use { statement ->
+            statement.setInt(1, userId)
+            statement.setString(2, title)
+            statement.setString(3, content)
+            statement.execute()
+        }
+    }
+
     /**
      * Deletes notification with supplied id.
      * It also deletes associated friend requests and conversation requests through DBMS cascade deleting.
@@ -233,6 +246,116 @@ class DataMapper {
             statement.execute()
         }
     }
+
+    fun getNotifications(userId: Int, fromId: Long?, limit: Int): List<Notification> =
+        connection.prepareStatement("""
+            select * from notification 
+            left join friend_request as fr on id = notification_id 
+            left join conversation_request as cr on id = cr.notification_id 
+            left join user as friend_sender on fr.sender_id = friend_sender.id 
+            left join user as conversation_sender on cr.sender_id = conversation_sender.id 
+            left join conversation on conversation_id = conversation.id 
+            and user_id = ? ${ if (fromId == null) "" else "and notification.id < ? " }
+            order by notification.id desc limit ?;
+        """.trimIndent()).use { statement ->
+            var argCounter = 0
+            statement.setInt(++argCounter, userId)
+            if (fromId != null)
+                statement.setLong(++argCounter, fromId)
+            statement.setInt(++argCounter, limit)
+            statement.executeQuery().run { // fr and cr are empty for plain notifications
+                val list = LinkedList<Notification>()
+                while (next())
+                    list += when {
+                        getLong("fr.notification_id").let { !wasNull() } -> FriendRequest(
+                            User(
+                                getInt("friend_sender.id"),
+                                getString("friend_sender.login"),
+                                getString("friend_sender.image")
+                            ),
+                            getLong("notification.id"),
+                            getUnixSeconds("time"),
+                            getString("title"),
+                            getString("content"),
+                            getBoolean("seen")
+                        )
+                        getLong("cr.notification_id").let { !wasNull() } -> ConversationRequest(
+                            User(
+                                getInt("conversation_sender.id"),
+                                getString("conversation_sender.login"),
+                                getString("conversation_sender.image")
+                            ),
+                            Conversation(
+                                getLong("conversation.id"),
+                                getString("conversation.name"),
+                                getString("conversation.image")
+                            ),
+                            getLong("notification.id"),
+                            getUnixSeconds("time"),
+                            getString("title"),
+                            getString("content"),
+                            getBoolean("seen")
+                        )
+                        else -> PlainNotification(
+                            getLong("notification.id"),
+                            getUnixSeconds("time"),
+                            getString("title"),
+                            getString("content"),
+                            getBoolean("seen")
+                        )
+                    }
+                list
+            }
+        }
+
+    /**
+     * Returns exactly notifications, not friend and conversation requests
+     */
+    fun getPlainNotifications(userId: Int, fromId: Long?, limit: Int): List<PlainNotification> =
+        connection.prepareStatement("""
+            select id, time, title, content, seen from notification 
+            left join friend_request as fr on id = notification_id 
+            left join conversation_request as cr on id = cr.notification_id 
+            where fr.notification_id is null and cr.notification_id is null 
+            and user_id = ? ${ if (fromId == null) "" else "and id < ? " }
+            order by id desc limit ?;
+        """.trimIndent()).use { statement ->
+            var argCounter = 0
+            statement.setInt(++argCounter, userId)
+            if (fromId != null)
+                statement.setLong(++argCounter, fromId)
+            statement.setInt(++argCounter, limit)
+            statement.executeQuery().run {
+                val list = LinkedList<PlainNotification>()
+                while (next())
+                    list += PlainNotification(
+                        getLong("notification_id"),
+                        getUnixSeconds("time"),
+                        getString("title"),
+                        getString("content"),
+                        getBoolean("seen")
+                    )
+                list
+            }
+        }
+
+    /**
+     * Fail-Safe
+     */
+    fun markNotificationAsSeen(notificationId: Long) {
+        connection.prepareStatement("update notification set seen = true where id = ?;").use { statement ->
+            statement.setLong(1, notificationId)
+            statement.execute()
+        }
+    }
+
+    fun hasNotification(userId: Int, notificationId: Long): Boolean =
+        connection.prepareStatement("select count(*) as has from notification where user_id = ? and id = ?;")
+            .use { statement ->
+                statement.setInt(1, userId)
+                statement.setLong(2, notificationId)
+                statement.executeQuery().also(ResultSet::next).getBoolean("has")
+            }
 
     fun addMessage(senderId: Int, receiverId: Int, content: String): Long =
         createTransactionalConnection().use { connection ->
@@ -513,4 +636,26 @@ class DataMapper {
             val canEditRights: Boolean
         )
     }
+
+    sealed class Notification(
+        val id: Long,
+        val unixSec: Long,
+        val title: String,
+        val content: String,
+        val isSeen: Boolean
+    )
+
+    class PlainNotification(notificationId: Long, unixSec: Long, title: String, content: String, isSeen: Boolean):
+        Notification(notificationId, unixSec, title, content, isSeen)
+
+    class FriendRequest(
+        val sender: User,
+        notificationId: Long, unixSec: Long, title: String, content: String, isSeen: Boolean
+    ): Notification(notificationId, unixSec, title, content, isSeen)
+
+    class ConversationRequest(
+        val sender: User,
+        val conversation: Conversation,
+        notificationId: Long, unixSec: Long, title: String, content: String, isSeen: Boolean
+    ): Notification(notificationId, unixSec, title, content, isSeen)
 }

@@ -94,7 +94,7 @@ class ProfileController(
     }
 
     @PostMapping("/block")
-    fun addToBlacklist(@RequestParam("user_id") blockedId: Int): ResponseEntity<StatusResponse<Nothing>> {
+    fun addToBlacklist(@RequestParam("user_id") blockedId: Int): ResponseEntity<StatusResponse<Nothing>> { // TODO forbid blocked users to send requests and messages
         return if (service.addToBlacklist(userId, blockedId))
             statusOf(HttpStatus.OK, "User is blocked")
         else
