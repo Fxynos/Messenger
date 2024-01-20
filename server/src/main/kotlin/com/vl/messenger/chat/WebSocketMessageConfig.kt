@@ -61,7 +61,7 @@ open class WebSocketMessageConfig: WebSocketMessageBrokerConfigurer {
                 if (
                     accessor.command == StompCommand.SUBSCRIBE &&
                     !accessor.destination!!.startsWith(
-                        "/user/${(accessor.user as Authentication).principal as Int}"
+                        "/users/${(accessor.user as Authentication).principal as Int}/"
                     )
                 ) throw AccessDeniedException("Forbidden")
                 return message
