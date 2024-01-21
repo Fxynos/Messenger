@@ -36,6 +36,12 @@ class ProfileController(
         return statusOf(payload = service.getUser(userId)!!.toDto(baseUrl))
     }
 
+    @PutMapping("/me/visibility")
+    fun setHidden(@RequestParam hidden: Boolean): ResponseEntity<StatusResponse<Nothing>> {
+        service.setHidden(userId, hidden)
+        return statusOf(HttpStatus.OK)
+    }
+
     @PostMapping("/me/set-image", consumes = ["multipart/form-data"])
     fun setProfileImage(@RequestParam image: MultipartFile): ResponseEntity<StatusResponse<Nothing>> {
         if (image.contentType != "image/png" && image.contentType != "image/jpeg")

@@ -15,7 +15,7 @@ class DataMapper {
 
         private fun createConnection() = DriverManager.getConnection(System.getenv("MSG_DB_URL")
             ?: throw IllegalArgumentException("Define environment variable MSG_DB_URL"))
-        private fun createTransactionalConnection() = createConnection().apply { // TODO connections pool
+        private fun createTransactionalConnection() = createConnection().apply {
             autoCommit = false
             transactionIsolation = Connection.TRANSACTION_READ_COMMITTED // some DBMS anomalies are still can be there
         }
@@ -39,7 +39,7 @@ class DataMapper {
                 list += Message(
                     getLong("id"),
                     getInt("sender_id"),
-                    getTimestamp("time").time / 1000,
+                    getUnixSeconds("time"),
                     getString("content")
                 )
             return list
@@ -99,6 +99,14 @@ class DataMapper {
             }
         }
 
+    fun setUserVisibility(userId: Int, isHidden: Boolean) {
+        connection.prepareStatement("update user set hidden = ? where id = ?;").use { statement ->
+            statement.setBoolean(1, isHidden)
+            statement.setInt(2, userId)
+            statement.execute()
+        }
+    }
+
     /**
      * Fail-Safe
      */
@@ -114,7 +122,7 @@ class DataMapper {
         connection.prepareStatement(
             """
                 select id, login, image from user 
-                where ${ if (fromId == null) "" else " id < ? and " }
+                where hidden = 0 and ${ if (fromId == null) "" else "id < ? and " }
                 login like ? order by id desc limit ?;
             """.trimIndent()
         ).use { statement ->

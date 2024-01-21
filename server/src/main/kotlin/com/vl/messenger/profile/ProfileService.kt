@@ -16,6 +16,8 @@ class ProfileService(
 
     private val logger = Logger.getLogger("SocialService")
 
+    fun setHidden(userId: Int, isHidden: Boolean) = dataMapper.setUserVisibility(userId, isHidden)
+
     fun setProfileImage(userId: Int, image: MultipartFile) {
         val path = storageService.saveUserImage(image, userId)
         dataMapper.setProfileImage(userId, path)
