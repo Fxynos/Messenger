@@ -32,6 +32,7 @@ class ConversationController(
     @Value("\${base.url}") private val baseUrl: String,
     @Autowired private val service: ConversationService
 ) { // TODO generate reports
+
     @PostMapping
     fun createConversation(
         @NotBlank @RequestParam name: String
@@ -45,13 +46,14 @@ class ConversationController(
 
     @GetMapping("/{id}")
     fun describeConversation(@PathVariable id: Long): ResponseEntity<StatusResponse<ConversationResponse>> {
-        val conversation = service.getConversation(userId, id)
-            ?: return statusOf(HttpStatus.GONE, "No conversation or you are not its member")
+        if (!service.isMember(userId, id))
+            return statusOf(HttpStatus.GONE, "No conversation or you are not its member")
+        val conversation = service.getConversation(id)!!
         return statusOf(payload = ConversationResponse(
             conversation.id,
             conversation.name,
             if (conversation.image == null) null else "$baseUrl/${conversation.image}",
-            service.getMembers(userId, id)!!.map {
+            service.getMembers(id).map {
                 ConversationResponse.Member(it.id, it.login, it.image, it.role.name)
             }
         ))
@@ -62,12 +64,10 @@ class ConversationController(
         @PathVariable id: Long,
         @RequestParam name: String
     ): ResponseEntity<StatusResponse<Nothing>> {
-        try {
-            service.setConversationName(userId, id, name)
-            return statusOf(HttpStatus.OK, "Conversation name is set")
-        } catch (exception: IllegalAccessException) {
-            return statusOf(HttpStatus.FORBIDDEN, exception.message!!)
-        }
+        if (!service.hasPrivilege(userId, id, ConversationService.Privilege.EDIT_DATA))
+            return statusOf(HttpStatus.FORBIDDEN, "No edit conversation data privilege")
+        service.setConversationName(id, name)
+        return statusOf(HttpStatus.OK, "Conversation name is set")
     }
 
     @PostMapping("/{id}/set-image", consumes = ["multipart/form-data"])
@@ -75,14 +75,12 @@ class ConversationController(
         @RequestParam image: MultipartFile,
         @PathVariable id: Long
     ): ResponseEntity<StatusResponse<Nothing>> {
+        if (!service.hasPrivilege(userId, id, ConversationService.Privilege.EDIT_DATA))
+            return statusOf(HttpStatus.FORBIDDEN, "No edit conversation data privilege")
         if (image.contentType != "image/png" && image.contentType != "image/jpeg")
             return statusOf(HttpStatus.UNPROCESSABLE_ENTITY, "Only png and jpeg images are supported")
-        try {
-            service.setConversationImage(userId, id, image)
-            return statusOf(HttpStatus.OK, "Conversation image is set")
-        } catch (exception: IllegalAccessException) {
-            return statusOf(HttpStatus.FORBIDDEN, exception.message!!)
-        }
+        service.setConversationImage(id, image)
+        return statusOf(HttpStatus.OK, "Conversation image is set")
     }
 
     @PutMapping("/{id}/leave")
@@ -96,12 +94,10 @@ class ConversationController(
         @PathVariable id: Long,
         @RequestParam("user_id") memberId: Int
     ): ResponseEntity<StatusResponse<Nothing>> {
-        try {
-            service.addMember(userId, id, memberId)
-            return statusOf(HttpStatus.OK, "Conversation member is added")
-        } catch (exception: IllegalAccessException) {
-            return statusOf(HttpStatus.FORBIDDEN, exception.message!!)
-        }
+        if (!service.hasPrivilege(userId, id, ConversationService.Privilege.EDIT_MEMBERS))
+            return statusOf(HttpStatus.FORBIDDEN, "No edit members privilege")
+        service.addMember(userId, id, memberId)
+        return statusOf(HttpStatus.OK, "Conversation member is added")
     }
 
     @DeleteMapping("/{id}/member")
@@ -109,12 +105,10 @@ class ConversationController(
         @PathVariable id: Long,
         @RequestParam("user_id") memberId: Int
     ): ResponseEntity<StatusResponse<Nothing>> {
-        try {
-            service.removeMember(userId, id, memberId)
-            return statusOf(HttpStatus.OK, "Conversation member is removed")
-        } catch (exception: IllegalAccessException) {
-            return statusOf(HttpStatus.FORBIDDEN, exception.message!!)
-        }
+        if (!service.hasPrivilege(userId, id, ConversationService.Privilege.EDIT_MEMBERS))
+            return statusOf(HttpStatus.FORBIDDEN, "No edit conversation members privilege")
+        service.removeMember(userId, id, memberId)
+        return statusOf(HttpStatus.OK, "Conversation member is removed")
     }
 
     @PutMapping("/{id}/member/role")
@@ -123,11 +117,9 @@ class ConversationController(
         @RequestParam("user_id") memberId: Int,
         @RequestParam role: String
     ): ResponseEntity<StatusResponse<Nothing>> {
-        try {
-            service.setMemberRole(userId, id, memberId, role)
-            return statusOf(HttpStatus.OK, "Conversation member role is set")
-        } catch (exception: IllegalAccessException) {
-            return statusOf(HttpStatus.FORBIDDEN, exception.message!!)
-        }
+        if (!service.hasPrivilege(userId, id, ConversationService.Privilege.EDIT_RIGHTS))
+            return statusOf(HttpStatus.FORBIDDEN, "No edit conversation members rights privilege")
+        service.setMemberRole(id, memberId, role)
+        return statusOf(HttpStatus.OK, "Conversation member role is set")
     }
 }

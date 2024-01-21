@@ -18,4 +18,8 @@ class NotificationService(@Autowired private val dataMapper: DataMapper) {
     fun markAsSeen(notificationId: Long) = dataMapper.markNotificationAsSeen(notificationId)
 
     fun hasNotification(userId: Int, notificationId: Long) = dataMapper.hasNotification(userId, notificationId)
+
+    fun deliverNotification(notification: DataMapper.Notification) {
+        TODO()
+    }
 }

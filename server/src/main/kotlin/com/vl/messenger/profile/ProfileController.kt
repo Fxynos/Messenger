@@ -120,7 +120,7 @@ class ProfileController(
             user.id,
             user.login,
             if (user.image == null) null else "$baseUrl/${user.image}",
-            when {
+            when { // TODO reduce requests to data mapper
                 service.isFriend(id, user.id) -> UsersResponse.FriendStatus.FRIEND
                 service.hasRequestFrom(id, user.id) -> UsersResponse.FriendStatus.REQUEST_GOTTEN
                 service.hasRequestFrom(user.id, id) -> UsersResponse.FriendStatus.REQUEST_SENT

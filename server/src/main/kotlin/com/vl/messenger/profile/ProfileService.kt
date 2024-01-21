@@ -10,7 +10,8 @@ import java.util.logging.Logger
 @Service
 class ProfileService(
     @Autowired private val dataMapper: DataMapper,
-    @Autowired private val storageService: StorageService
+    @Autowired private val storageService: StorageService,
+    @Autowired private val notificationService: NotificationService
 ) {
 
     private val logger = Logger.getLogger("SocialService")
@@ -37,6 +38,11 @@ class ProfileService(
         dataMapper.getFriendRequestId(friendId, userId)?.let { requestId -> // accept existing friend request if received
             dataMapper.addFriend(userId, friendId)
             removeFriendRequest(requestId)
+            notificationService.addNotification(
+                friendId,
+                "Новый друг",
+                "Пользователь ${dataMapper.getVerboseUser(userId)!!.login} принял ваш запрос в друзья"
+            )
             return true
         }
         try {
@@ -50,15 +56,29 @@ class ProfileService(
     fun getFriends(userId: Int) = dataMapper.getFriends(userId)
 
     /**
-     * Revoke own friend request or remove from friends
+     * Revoke own friend request or remove from friends, also can be used to reject inbound request
      * @return true if friend is removed, false if request is just revoked, also false if it had no effect
      */
     fun removeFriend(userId: Int, friendId: Int): Boolean {
         if (dataMapper.areFriends(userId, friendId)) {
             dataMapper.deleteFriend(userId, friendId)
+            notificationService.addNotification(
+                friendId,
+                "Друзья",
+                "Пользователь ${dataMapper.getVerboseUser(userId)!!.login} удалил вас из друзей"
+            )
             return true
         }
-        dataMapper.getFriendRequestId(userId, friendId)?.also(::removeFriendRequest)
+        dataMapper.getFriendRequestId(friendId, userId)?.also { // reject inbound request
+            removeFriendRequest(it)
+            notificationService.addNotification(
+                friendId,
+                "Друзья",
+                "Пользователь ${dataMapper.getVerboseUser(userId)!!.login} отклонил ваш запрос в друзья"
+            )
+            return false
+        }
+        dataMapper.getFriendRequestId(userId, friendId)?.also(::removeFriendRequest) // revoke outbound request
             ?: logger.warning("User #$userId attempts to revoke friend request not existing")
         return false
     }

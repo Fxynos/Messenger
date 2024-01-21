@@ -2,6 +2,7 @@ package com.vl.messenger.chat
 
 import com.vl.messenger.DataMapper
 import com.vl.messenger.StorageService
+import com.vl.messenger.profile.NotificationService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
@@ -9,60 +10,79 @@ import org.springframework.web.multipart.MultipartFile
 @Service
 class ConversationService(
     @Autowired private val dataMapper: DataMapper,
-    @Autowired private val storageService: StorageService
+    @Autowired private val storageService: StorageService,
+    @Autowired private val notificationService: NotificationService
 ) {
 
     fun createConversation(userId: Int, name: String) = dataMapper.createConversation(userId, name)
 
-    fun getConversation(userId: Int, conversationId: Long) =
-        if (isMember(userId, conversationId))
-            dataMapper.getConversation(conversationId)
-        else null
+    fun getConversation(conversationId: Long) = dataMapper.getConversation(conversationId)
 
-    @Throws(IllegalAccessException::class)
-    fun setConversationName(userId: Int, conversationId: Long, name: String) =
-        if (dataMapper.getRole(userId, conversationId)?.canEditData == true)
-            dataMapper.setConversationName(conversationId, name)
-        else throw IllegalAccessException("No edit conversation privilege")
+    fun setConversationName(conversationId: Long, name: String) = dataMapper.setConversationName(conversationId, name)
 
-    @Throws(IllegalAccessException::class)
-    fun setConversationImage(userId: Int, conversationId: Long, image: MultipartFile) {
-        if (dataMapper.getRole(userId, conversationId)?.canEditData != true)
-            throw IllegalAccessException("No edit conversation privilege")
+    fun setConversationImage(conversationId: Long, image: MultipartFile) {
         val path = storageService.saveConversationImage(image, conversationId)
         dataMapper.setConversationImage(conversationId, path)
     }
 
-    fun getMembers(userId: Int, conversationId: Long) =
-        if (isMember(userId, conversationId))
-            dataMapper.getMembers(conversationId)
-        else null
+    fun getMembers(conversationId: Long) = dataMapper.getMembers(conversationId)
 
     /**
      * @param userId id of competent user having privilege to manage members
      * @param memberId id of user being added
      */
-    @Throws(IllegalAccessException::class)
-    fun addMember(userId: Int, conversationId: Long, memberId: Int) =
-        if (dataMapper.getRole(userId, conversationId)?.canEditMembers == true)
-            dataMapper.addMember(memberId, conversationId)
-        else throw IllegalAccessException("No edit members privilege")
+    fun addMember(userId: Int, conversationId: Long, memberId: Int) { // TODO add members via invite rather than directly
+        dataMapper.addMember(memberId, conversationId)
+        notificationService.addNotification(
+            memberId,
+            "Новая беседа",
+            "Пользователь ${
+                dataMapper.getVerboseUser(userId)!!.login
+            } добавил вас в беседу ${
+                dataMapper.getConversation(conversationId)!!.name
+            }"
+        )
+    }
 
-    @Throws(IllegalAccessException::class)
-    fun removeMember(userId: Int, conversationId: Long, memberId: Int) =
-        if (dataMapper.getRole(userId, conversationId)?.canEditMembers == true)
-            dataMapper.removeMember(memberId, conversationId)
-        else throw IllegalAccessException("No edit members privilege")
+    fun removeMember(userId: Int, conversationId: Long, memberId: Int) {
+        dataMapper.removeMember(memberId, conversationId)
+        notificationService.addNotification(
+            memberId,
+            "Беседы",
+            "Пользователь ${
+                dataMapper.getVerboseUser(userId)!!.login
+            } удалил вас из беседы ${
+                dataMapper.getConversation(conversationId)!!.name
+            }"
+        )
+    }
 
     fun leaveConversation(userId: Int, conversationId: Long) =
         dataMapper.removeMember(userId, conversationId)
 
-    @Throws(IllegalAccessException::class)
-    fun setMemberRole(userId: Int, conversationId: Long, memberId: Int, role: String) =
-        if (dataMapper.getRole(userId, conversationId)?.canEditRights == true)
-            dataMapper.setRole(memberId, conversationId, role)
-        else throw IllegalAccessException("No edit rights privilege")
+    fun setMemberRole(conversationId: Long, memberId: Int, role: String) =
+        dataMapper.setRole(memberId, conversationId, role)
 
     fun isMember(userId: Int, conversationId: Long) =
         dataMapper.getRole(userId, conversationId) != null
+
+    fun hasPrivilege(userId: Int, conversationId: Long, privilege: Privilege): Boolean {
+        val role = dataMapper.getRole(userId, conversationId)
+            ?: return false
+        return when (privilege) {
+            Privilege.PARTICIPATE -> true
+            Privilege.EDIT_DATA -> role.canEditData
+            Privilege.EDIT_MEMBERS -> role.canEditMembers
+            Privilege.EDIT_RIGHTS -> role.canEditRights
+            Privilege.GET_REPORTS -> role.canGetReports
+        }
+    }
+
+    enum class Privilege {
+        PARTICIPATE, // whether user is conversation member
+        EDIT_DATA,
+        EDIT_MEMBERS,
+        EDIT_RIGHTS,
+        GET_REPORTS
+    }
 }
