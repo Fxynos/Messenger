@@ -26,6 +26,8 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-api:0.12.3")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.3")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.3")
+    /* IText PDF */
+    implementation("com.itextpdf:itextpdf:5.5.13.3")
     /* JDBC */
     implementation("mysql:mysql-connector-java:8.0.18")
     /* Liquibase */
@@ -54,7 +56,6 @@ liquibase {
 }
 
 tasks.getByName<Test>("test") {
-    dependsOn(tasks.update)
     useJUnitPlatform()
 }
 

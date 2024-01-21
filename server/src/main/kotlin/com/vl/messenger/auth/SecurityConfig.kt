@@ -48,7 +48,7 @@ open class SecurityConfig(
                 })
                 .and()
             .authorizeHttpRequests()
-                .requestMatchers("/auth/**")
+                .requestMatchers("/auth/**", "/images/avatars/**")
                 .permitAll()
                 .and()
             .authorizeHttpRequests()

@@ -4,3 +4,4 @@
 /static/images/avatars/conversations/*
 /static/images/avatars/users/*
 !.gitkeep
+/src/test/kotlin/com/vl/messenger/GenerationReportsTest.kt

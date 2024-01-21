@@ -1,16 +1,19 @@
 package com.vl.messenger.chat
 
 import com.vl.messenger.DataMapper
+import com.vl.messenger.PdfService
 import com.vl.messenger.StorageService
 import com.vl.messenger.profile.NotificationService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
+import java.io.OutputStream
 
 @Service
 class ConversationService(
     @Autowired private val dataMapper: DataMapper,
     @Autowired private val storageService: StorageService,
+    @Autowired private val pdfService: PdfService,
     @Autowired private val notificationService: NotificationService
 ) {
 
@@ -85,4 +88,10 @@ class ConversationService(
         EDIT_RIGHTS,
         GET_REPORTS
     }
+
+    /**
+     * Writes pdf file to output stream
+     */
+    fun generateReport(conversationId: Long, outputStream: OutputStream): Unit =
+        pdfService.generateConversationActivityReport(dataMapper.getUsersActivity(conversationId), outputStream)
 }

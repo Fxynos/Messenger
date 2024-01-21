@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotBlank
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -19,6 +20,9 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
 
 /**
  * Provides interface to create and manage conversations.
@@ -31,7 +35,7 @@ import org.springframework.web.multipart.MultipartFile
 class ConversationController(
     @Value("\${base.url}") private val baseUrl: String,
     @Autowired private val service: ConversationService
-) { // TODO generate reports
+) {
 
     @PostMapping
     fun createConversation(
@@ -54,7 +58,7 @@ class ConversationController(
             conversation.name,
             if (conversation.image == null) null else "$baseUrl/${conversation.image}",
             service.getMembers(id).map {
-                ConversationResponse.Member(it.id, it.login, it.image, it.role.name)
+                ConversationResponse.Member(it.id, it.login, "$baseUrl/${it.image}", it.role.name)
             }
         ))
     }
@@ -121,5 +125,15 @@ class ConversationController(
             return statusOf(HttpStatus.FORBIDDEN, "No edit conversation members rights privilege")
         service.setMemberRole(id, memberId, role)
         return statusOf(HttpStatus.OK, "Conversation member role is set")
+    }
+
+    @GetMapping("/{id}/report", produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
+    fun generateReport(@PathVariable id: Long): ResponseEntity<ByteArray> {
+        if (!service.hasPrivilege(userId, id, ConversationService.Privilege.GET_REPORTS))
+            return ResponseEntity(HttpStatus.FORBIDDEN)
+        ByteArrayOutputStream().use { outputStream ->
+            service.generateReport(id, outputStream)
+            return ResponseEntity(outputStream.toByteArray(), HttpStatus.OK) // TODO large report can lead to out of memory error
+        }
     }
 }

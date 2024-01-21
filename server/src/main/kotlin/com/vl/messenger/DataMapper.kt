@@ -626,6 +626,31 @@ class DataMapper {
         }
     }
 
+    fun getUsersActivity(conversationId: Long): List<UserActivity> =
+        connection.prepareStatement("""
+            select count(*) as count, sum(length(content)) as chars, user.id, login, image from message 
+            inner join conversation_message on id = message_id 
+            inner join user on sender_id = user.id 
+            where conversation_id = ? 
+            group by sender_id order by count desc;
+        """.trimIndent()).use { statement ->
+            statement.setLong(1, conversationId)
+            statement.executeQuery().run {
+                val list = LinkedList<UserActivity>()
+                while (next())
+                    list += UserActivity(
+                        User(
+                            getInt("id"),
+                            getString("login"),
+                            getString("image")
+                        ),
+                        getLong("count"),
+                        getLong("chars")
+                    )
+                list
+            }
+        }
+
     open class User(val id: Int, val login: String, val image: String?)
 
     class VerboseUser(id: Int, login: String, image: String?, val password: ByteArray): User(id, login, image)
@@ -666,4 +691,6 @@ class DataMapper {
         val conversation: Conversation,
         notificationId: Long, unixSec: Long, title: String, content: String, isSeen: Boolean
     ): Notification(notificationId, unixSec, title, content, isSeen)
+
+    class UserActivity(val user: User, val messages: Long, val characters: Long)
 }
