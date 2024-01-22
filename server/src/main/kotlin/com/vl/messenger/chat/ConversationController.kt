@@ -127,7 +127,7 @@ class ConversationController(
         return statusOf(HttpStatus.OK, "Conversation member role is set")
     }
 
-    @GetMapping("/{id}/report", produces = [MediaType.APPLICATION_OCTET_STREAM_VALUE])
+    @GetMapping("/{id}/report", produces = [MediaType.APPLICATION_PDF_VALUE])
     fun generateReport(@PathVariable id: Long): ResponseEntity<ByteArray> {
         if (!service.hasPrivilege(userId, id, ConversationService.Privilege.GET_REPORTS))
             return ResponseEntity(HttpStatus.FORBIDDEN)
