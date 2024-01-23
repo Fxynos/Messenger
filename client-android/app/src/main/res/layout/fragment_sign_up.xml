@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".auth.SignInFragment">
+    tools:context=".auth.SignUpFragment">
 
     <LinearLayout
         android:orientation="vertical"
@@ -17,7 +17,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="@style/TitleTextAppearance"
-            android:text="@string/sign_in_title"/>
+            android:text="@string/sign_up_title"/>
 
         <TextView
             android:layout_width="wrap_content"
@@ -63,12 +63,32 @@
             android:textSize="16sp"
             android:hint="@string/password_hint"/>
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="@string/repeat_password"/>
+
+        <EditText
+            android:id="@+id/repeat_password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:autofillHints="password"
+            android:maxLength="20"
+            android:singleLine="true"
+            android:inputType="textPassword"
+            android:layout_marginTop="8dp"
+            android:padding="16dp"
+            android:background="@drawable/rounded_shape"
+            android:textSize="16sp"
+            android:hint="@string/password_hint"/>
+
         <Button
-            android:id="@+id/sign_in"
+            android:id="@+id/sign_up"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="48dp"
-            android:text="@string/sign_in"/>
+            android:text="@string/sign_up"/>
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -80,14 +100,14 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/don_t_have_an_account"/>
+                android:text="@string/have_an_account"/>
 
             <Button
-                android:id="@+id/sign_up"
+                android:id="@+id/sign_in"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:text="@string/sign_up"
+                android:text="@string/sign_in"
                 style="@style/TextButtonStyle"/>
 
         </LinearLayout>

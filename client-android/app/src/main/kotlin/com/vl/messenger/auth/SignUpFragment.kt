@@ -6,17 +6,17 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.vl.messenger.R
 
-class SignInFragment: Fragment(), View.OnClickListener {
+class SignUpFragment: Fragment(), View.OnClickListener {
 
     private lateinit var model: AuthViewModel
     private lateinit var username: EditText
     private lateinit var password: EditText
+    private lateinit var repeatPassword: EditText
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,9 +29,10 @@ class SignInFragment: Fragment(), View.OnClickListener {
         savedInstanceState: Bundle?
     ): View {
         val root = LayoutInflater.from(requireContext())
-            .inflate(R.layout.fragment_sign_in, container, false)
+            .inflate(R.layout.fragment_sign_up, container, false)
         username = root.findViewById(R.id.username)
         password = root.findViewById(R.id.password)
+        repeatPassword = root.findViewById(R.id.repeat_password)
         root.findViewById<Button>(R.id.sign_in).setOnClickListener(this)
         root.findViewById<Button>(R.id.sign_up).setOnClickListener(this)
         return root
@@ -41,12 +42,17 @@ class SignInFragment: Fragment(), View.OnClickListener {
         val lifecycleOwner = view.findViewTreeLifecycleOwner()!!
         model.loginError.observe(lifecycleOwner) { username.error = it }
         model.passwordError.observe(lifecycleOwner) { password.error = it }
+        model.repeatPasswordError.observe(lifecycleOwner) { repeatPassword.error = it }
     }
 
     override fun onClick(view: View) {
         when (view.id) {
-            R.id.sign_in -> model.signIn(username.text.toString(), password.text.toString())
-            R.id.sign_up -> model.navigateToSignUp()
+            R.id.sign_in -> model.navigateToSignIn()
+            R.id.sign_up -> model.signUp(
+                username.text.toString(),
+                password.text.toString(),
+                repeatPassword.text.toString()
+            )
         }
     }
 }

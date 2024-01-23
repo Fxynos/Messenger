@@ -18,7 +18,8 @@
         <!-- TODO define address as gradle property -->
         <meta-data android:name="server_address" android:value="localhost:8080"/>
 
-        <activity android:name=".auth.AuthActivity" android:exported="true">
+        <activity android:name=".auth.AuthActivity" android:exported="true"
+            android:windowSoftInputMode="stateHidden">
             <intent-filter>
                 <category android:name="android.intent.category.LAUNCHER"/>
                 <action android:name="android.intent.action.MAIN"/>

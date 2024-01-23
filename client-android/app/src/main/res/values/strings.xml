@@ -1,11 +1,19 @@
 <resources>
-    <string name="app_name">Messenger</string>
-    <string name="sign_in">Sign in</string>
-    <string name="sign_in_hint">Log in to get access to your account</string>
-    <string name="username">Username</string>
-    <string name="username_hint">Enter your username</string>
-    <string name="password">Password</string>
-    <string name="password_hint">Enter your password</string>
-    <string name="don_t_have_an_account">Don\'t have an account?</string>
-    <string name="sign_up">Sign up</string>
+    <string name="app_name">Мессенджер</string>
+    <string name="sign_in">Войти</string>
+    <string name="sign_in_hint">Войдите, чтобы получить доступ к функционалу</string>
+    <string name="username">Логин</string>
+    <string name="username_hint">Введите логин</string>
+    <string name="password">Пароль</string>
+    <string name="password_hint">Ведите пароль</string>
+    <string name="don_t_have_an_account">Ещё нет аккаунта?</string>
+    <string name="sign_up">Зарегистрироваться</string>
+    <string name="have_an_account">Уже есть аккаунт?</string>
+    <string name="repeat_password">Повторите пароль</string>
+    <string name="sign_up_title">Регистрация</string>
+    <string name="sign_in_title">Вход</string>
+    <string name="error_login_length">Логин должен содержать от 3 до 20 символов</string>
+    <string name="error_login_char">Логин должен содержать только латинские символы, цифры и символы подчёркивания</string>
+    <string name="error_password_length">Пароль должен содержать от 8 до 20 символов</string>
+    <string name="error_password_repeat">Пароли не совпадают</string>
 </resources>
