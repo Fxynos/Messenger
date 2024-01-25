@@ -4,47 +4,50 @@ import android.app.Application
 import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.vl.messenger.App
 import com.vl.messenger.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.stream.Stream
 
-class AuthViewModel(app: Application): AndroidViewModel(app) {
-
+class AuthViewModel(app: App): AndroidViewModel(app) {
     val route = MutableLiveData(Route.SIGN_IN)
+    val popup = MutableLiveData<InfoPopup?>()
+    val isButtonEnabled = MutableLiveData(true)
     val loginError = MutableLiveData<String?>()
     val passwordError = MutableLiveData<String?>()
     val repeatPasswordError = MutableLiveData<String?>()
 
     private val context: Context
         get() = getApplication<Application>().applicationContext
-
-    enum class Route {
-        SIGN_IN,
-        SIGN_UP,
-        CLOSE
-    }
+    private val authModel = AuthModel(app.retrofit)
+    private var currentTask: Job? = null // sign in or sign up job
 
     fun navigateToSignIn() {
-        resetErrors()
+        currentTask?.takeUnless(Job::isCompleted)?.cancel()
+        resetState()
         route.value = Route.SIGN_IN
     }
 
     fun navigateToSignUp() {
-        resetErrors()
+        currentTask?.takeUnless(Job::isCompleted)?.cancel()
+        resetState()
         route.value = Route.SIGN_UP
     }
 
-    fun signIn(login: String, password: String) {
-        if (validate(login, password)) {
-            // TODO actually sign in
-            route.value = Route.CLOSE
-        }
+    fun attemptSignIn(login: String, password: String) {
+        if (validate(login, password))
+            currentTask = viewModelScope.launch { signIn(login, password) }
     }
 
-    fun signUp(login: String, password: String, repeatPassword: String) {
-        if (validate(login, password, repeatPassword)) {
-            // TODO actually sign up
-            route.value = Route.CLOSE
-        }
+    fun attemptSignUp(login: String, password: String, repeatPassword: String) {
+        if (validate(login, password, repeatPassword))
+            currentTask = viewModelScope.launch { signUp(login, password) }
     }
 
     private fun validate(login: String, password: String, repeatPassword: String? = null): Boolean {
@@ -70,6 +73,73 @@ class AuthViewModel(app: Application): AndroidViewModel(app) {
             .not() // there are no errors if true
     }
 
-    private fun resetErrors() = Stream.of(loginError, passwordError, repeatPasswordError)
-        .forEach { it.value = null }
+    private suspend fun signIn(login: String, password: String) {
+        withContext(Dispatchers.Main) {
+            isButtonEnabled.value = false
+        }
+        val result = withContext(Dispatchers.IO) { authModel.signIn(login, password) }
+        withContext(Dispatchers.Main) {
+            when (result) {
+                is AuthModel.SignInResult.Token ->
+                    route.value = Route.CLOSE
+                is AuthModel.SignInResult.WrongCredentials -> popup.value = InfoPopup(
+                    context.getString(R.string.title_could_not_sign_in),
+                    context.getString(R.string.info_wrong_credentials)
+                )
+                null -> popup.value = InfoPopup(
+                    context.getString(R.string.title_could_not_sign_in),
+                    context.getString(R.string.info_unexpected_error)
+                )
+            }
+            isButtonEnabled.value = true
+        }
+    }
+
+    private suspend fun signUp(login: String, password: String) {
+        withContext(Dispatchers.Main) {
+            isButtonEnabled.value = false
+        }
+        val result = withContext(Dispatchers.IO) { authModel.signUp(login, password) }
+        withContext(Dispatchers.Main) {
+            when (result) {
+                is AuthModel.SignUpResult.Success ->
+                    signIn(login, password)
+                is AuthModel.SignUpResult.LoginIsTaken -> popup.value = InfoPopup(
+                    context.getString(R.string.title_could_not_sign_in),
+                    context.getString(R.string.info_login_taken)
+                )
+                null -> popup.value = InfoPopup(
+                    context.getString(R.string.title_could_not_sign_in),
+                    context.getString(R.string.info_unexpected_error)
+                )
+            }
+            isButtonEnabled.value = true
+        }
+    }
+
+    private fun resetState() {
+        isButtonEnabled.value = true
+        Stream.of(loginError, passwordError, repeatPasswordError, popup).forEach { it.value = null }
+    }
+
+    enum class Route {
+        SIGN_IN,
+        SIGN_UP,
+        CLOSE
+    }
+
+    inner class InfoPopup(val title: String, val text: String) {
+        fun hide() {
+            popup.value = null
+        }
+    }
+
+    class Factory(private val app: App): ViewModelProvider.AndroidViewModelFactory(app) {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            return if (AuthViewModel::class.java.isAssignableFrom(modelClass))
+                AuthViewModel(app) as T
+            else super.create(modelClass)
+        }
+    }
 }

@@ -17,6 +17,7 @@ class SignUpFragment: Fragment(), View.OnClickListener {
     private lateinit var username: EditText
     private lateinit var password: EditText
     private lateinit var repeatPassword: EditText
+    private lateinit var button: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,13 +34,15 @@ class SignUpFragment: Fragment(), View.OnClickListener {
         username = root.findViewById(R.id.username)
         password = root.findViewById(R.id.password)
         repeatPassword = root.findViewById(R.id.repeat_password)
+        button = root.findViewById(R.id.sign_up)
+        button.setOnClickListener(this)
         root.findViewById<Button>(R.id.sign_in).setOnClickListener(this)
-        root.findViewById<Button>(R.id.sign_up).setOnClickListener(this)
         return root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val lifecycleOwner = view.findViewTreeLifecycleOwner()!!
+        model.isButtonEnabled.observe(lifecycleOwner) { button.isEnabled = it }
         model.loginError.observe(lifecycleOwner) { username.error = it }
         model.passwordError.observe(lifecycleOwner) { password.error = it }
         model.repeatPasswordError.observe(lifecycleOwner) { repeatPassword.error = it }
@@ -48,7 +51,7 @@ class SignUpFragment: Fragment(), View.OnClickListener {
     override fun onClick(view: View) {
         when (view.id) {
             R.id.sign_in -> model.navigateToSignIn()
-            R.id.sign_up -> model.signUp(
+            R.id.sign_up -> model.attemptSignUp(
                 username.text.toString(),
                 password.text.toString(),
                 repeatPassword.text.toString()

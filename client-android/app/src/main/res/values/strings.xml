@@ -16,4 +16,8 @@
     <string name="error_login_char">Логин должен содержать только латинские символы, цифры и символы подчёркивания</string>
     <string name="error_password_length">Пароль должен содержать от 8 до 20 символов</string>
     <string name="error_password_repeat">Пароли не совпадают</string>
+    <string name="title_could_not_sign_in">Не удалось выполнить вход</string>
+    <string name="info_wrong_credentials">Неправильный логин или пароль</string>
+    <string name="info_unexpected_error">Что-то пошло не так</string>
+    <string name="info_login_taken">Логин уже занят</string>
 </resources>

@@ -1,10 +1,11 @@
 package com.vl.messenger.auth
 
 import android.os.Bundle
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.NavController
-import androidx.navigation.fragment.NavHostFragment
+import com.vl.messenger.App
 import com.vl.messenger.R
 
 class AuthActivity: AppCompatActivity() {
@@ -14,7 +15,10 @@ class AuthActivity: AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_auth)
-        model = ViewModelProvider(this)[AuthViewModel::class.java]
+        model = ViewModelProvider(
+            this,
+            AuthViewModel.Factory(application as App)
+        )[AuthViewModel::class.java]
         model.route.observe(this) { route ->
             when (route!!) {
                 AuthViewModel.Route.SIGN_IN -> supportFragmentManager
@@ -27,6 +31,16 @@ class AuthActivity: AppCompatActivity() {
                     .commit()
                 AuthViewModel.Route.CLOSE -> finish()
             }
+        }
+        model.popup.observe(this) { popup ->
+            if (popup == null)
+                return@observe
+            AlertDialog.Builder(this)
+                .setTitle(popup.title)
+                .setMessage(popup.text)
+                .setCancelable(true)
+                .setOnDismissListener { popup.hide() }
+                .show()
         }
     }
 }
