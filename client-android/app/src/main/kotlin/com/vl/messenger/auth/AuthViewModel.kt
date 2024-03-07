@@ -25,7 +25,8 @@ class AuthViewModel(app: App): AndroidViewModel(app) {
 
     private val context: Context
         get() = getApplication<Application>().applicationContext
-    private val authModel = AuthModel(app.retrofit)
+    private val authManager = AuthManager(app.retrofit)
+    val sessionStore = SessionStore(app)
     private var currentTask: Job? = null // sign in or sign up job
 
     fun navigateToSignIn() {
@@ -77,12 +78,14 @@ class AuthViewModel(app: App): AndroidViewModel(app) {
         withContext(Dispatchers.Main) {
             isButtonEnabled.value = false
         }
-        val result = withContext(Dispatchers.IO) { authModel.signIn(login, password) }
+        val result = withContext(Dispatchers.IO) { authManager.signIn(login, password) }
         withContext(Dispatchers.Main) {
             when (result) {
-                is AuthModel.SignInResult.Token ->
+                is AuthManager.SignInResult.Token -> {
+                    saveToken(result)
                     route.value = Route.CLOSE
-                is AuthModel.SignInResult.WrongCredentials -> popup.value = InfoPopup(
+                }
+                is AuthManager.SignInResult.WrongCredentials -> popup.value = InfoPopup(
                     context.getString(R.string.title_could_not_sign_in),
                     context.getString(R.string.info_wrong_credentials)
                 )
@@ -99,12 +102,12 @@ class AuthViewModel(app: App): AndroidViewModel(app) {
         withContext(Dispatchers.Main) {
             isButtonEnabled.value = false
         }
-        val result = withContext(Dispatchers.IO) { authModel.signUp(login, password) }
+        val result = withContext(Dispatchers.IO) { authManager.signUp(login, password) }
         withContext(Dispatchers.Main) {
             when (result) {
-                is AuthModel.SignUpResult.Success ->
+                is AuthManager.SignUpResult.Success ->
                     signIn(login, password)
-                is AuthModel.SignUpResult.LoginIsTaken -> popup.value = InfoPopup(
+                is AuthManager.SignUpResult.LoginIsTaken -> popup.value = InfoPopup(
                     context.getString(R.string.title_could_not_sign_in),
                     context.getString(R.string.info_login_taken)
                 )
@@ -115,6 +118,10 @@ class AuthViewModel(app: App): AndroidViewModel(app) {
             }
             isButtonEnabled.value = true
         }
+    }
+
+    private suspend fun saveToken(token: AuthManager.SignInResult.Token) {
+        sessionStore.setAccessToken(SessionStore.AccessToken(token.token, token.expirationSec))
     }
 
     private fun resetState() {

@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController
 class AuthController(@Autowired private val authService: AuthService) {
 
     @PostMapping("/sign-up")
-    fun register(@Valid @RequestBody form: RegistrationForm): ResponseEntity<StatusResponse<Any>> {
+    fun register(@Valid @RequestBody form: RegistrationForm): ResponseEntity<StatusResponse<Nothing>> {
         if (authService.exists(form.login))
             return statusOf(HttpStatus.CONFLICT, "Login is taken")
         authService.registerUser(form.login, form.password)

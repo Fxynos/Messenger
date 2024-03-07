@@ -42,5 +42,6 @@ class AuthActivity: AppCompatActivity() {
                 .setOnDismissListener { popup.hide() }
                 .show()
         }
+        Toast.makeText(this, model.sessionStore.accessTokenFlow.value?.token ?: "no token", Toast.LENGTH_SHORT).show() // TODO remove
     }
 }
