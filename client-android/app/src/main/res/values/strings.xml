@@ -20,4 +20,8 @@
     <string name="info_wrong_credentials">Неправильный логин или пароль</string>
     <string name="info_unexpected_error">Что-то пошло не так</string>
     <string name="info_login_taken">Логин уже занят</string>
+    <string name="friends">Друзья</string>
+    <string name="dialogs">Диалоги</string>
+    <string name="profile">Профиль</string>
+    <string name="search">Поиск</string>
 </resources>

@@ -25,7 +25,7 @@ class SessionStore(private val context: Context) {
 
     private val coroutineScope = CoroutineScope(Job())
 
-    val accessTokenFlow: StateFlow<AccessToken?> = runBlocking { // TODO make it async
+    val accessTokenFlow: StateFlow<AccessToken?> = runBlocking {
         context.dataStore.data.map { prefs ->
             prefs[KEY_TOKEN]?.let { token ->
                 AccessToken(token, prefs[KEY_EXPIRATION]!!)

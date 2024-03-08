@@ -25,6 +25,8 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".menu.MenuActivity" android:exported="false"/>
+
     </application>
 
 </manifest>

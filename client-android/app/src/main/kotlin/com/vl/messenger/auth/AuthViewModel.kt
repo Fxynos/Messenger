@@ -16,7 +16,7 @@ import kotlinx.coroutines.withContext
 import java.util.stream.Stream
 
 class AuthViewModel(app: App): AndroidViewModel(app) {
-    val route = MutableLiveData(Route.SIGN_IN)
+    val route = MutableLiveData(Route.SIGN_IN) // TODO use StateFlow
     val popup = MutableLiveData<InfoPopup?>()
     val isButtonEnabled = MutableLiveData(true)
     val loginError = MutableLiveData<String?>()
@@ -26,8 +26,13 @@ class AuthViewModel(app: App): AndroidViewModel(app) {
     private val context: Context
         get() = getApplication<Application>().applicationContext
     private val authManager = AuthManager(app.retrofit)
-    val sessionStore = SessionStore(app)
+    private val sessionStore = SessionStore(app)
     private var currentTask: Job? = null // sign in or sign up job
+
+    init {
+        if (sessionStore.accessTokenFlow.value != null)
+            route.value = Route.CLOSE
+    }
 
     fun navigateToSignIn() {
         currentTask?.takeUnless(Job::isCompleted)?.cancel()

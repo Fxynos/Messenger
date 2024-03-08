@@ -1,12 +1,13 @@
 package com.vl.messenger.auth
 
+import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.vl.messenger.App
 import com.vl.messenger.R
+import com.vl.messenger.menu.MenuActivity
 
 class AuthActivity: AppCompatActivity() {
 
@@ -29,7 +30,7 @@ class AuthActivity: AppCompatActivity() {
                     .beginTransaction()
                     .replace(R.id.route_placeholder, SignUpFragment())
                     .commit()
-                AuthViewModel.Route.CLOSE -> finish()
+                AuthViewModel.Route.CLOSE -> onLoggedIn()
             }
         }
         model.popup.observe(this) { popup ->
@@ -42,6 +43,10 @@ class AuthActivity: AppCompatActivity() {
                 .setOnDismissListener { popup.hide() }
                 .show()
         }
-        Toast.makeText(this, model.sessionStore.accessTokenFlow.value?.token ?: "no token", Toast.LENGTH_SHORT).show() // TODO remove
+    }
+
+    private fun onLoggedIn() {
+        startActivity(Intent(this, MenuActivity::class.java))
+        finish()
     }
 }
