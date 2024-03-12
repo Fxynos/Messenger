@@ -24,4 +24,6 @@
     <string name="dialogs">Диалоги</string>
     <string name="profile">Профиль</string>
     <string name="search">Поиск</string>
+    <string name="create_conversation">Создать беседу</string>
+    <string name="no_results">Нет результатов</string>
 </resources>

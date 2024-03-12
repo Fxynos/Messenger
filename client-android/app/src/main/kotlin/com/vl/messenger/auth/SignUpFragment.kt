@@ -7,22 +7,19 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.vl.messenger.R
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class SignUpFragment: Fragment(), View.OnClickListener {
 
-    private lateinit var model: AuthViewModel
+    private val model: AuthViewModel by activityViewModels()
     private lateinit var username: EditText
     private lateinit var password: EditText
     private lateinit var repeatPassword: EditText
     private lateinit var button: Button
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        model = ViewModelProvider(requireActivity())[AuthViewModel::class.java]
-    }
 
     override fun onCreateView(
         inflater: LayoutInflater,

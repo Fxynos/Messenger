@@ -4,18 +4,23 @@ import android.app.Application
 import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.vl.messenger.App
 import com.vl.messenger.R
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.stream.Stream
+import javax.inject.Inject
 
-class AuthViewModel(app: App): AndroidViewModel(app) {
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    private val authManager: AuthManager,
+    private val sessionStore: SessionStore,
+    app: Application
+): AndroidViewModel(app) {
     val route = MutableLiveData(Route.SIGN_IN) // TODO use StateFlow
     val popup = MutableLiveData<InfoPopup?>()
     val isButtonEnabled = MutableLiveData(true)
@@ -24,9 +29,7 @@ class AuthViewModel(app: App): AndroidViewModel(app) {
     val repeatPasswordError = MutableLiveData<String?>()
 
     private val context: Context
-        get() = getApplication<Application>().applicationContext
-    private val authManager = AuthManager(app.retrofit)
-    private val sessionStore = SessionStore(app)
+        get() = getApplication<App>().applicationContext
     private var currentTask: Job? = null // sign in or sign up job
 
     init {
@@ -143,15 +146,6 @@ class AuthViewModel(app: App): AndroidViewModel(app) {
     inner class InfoPopup(val title: String, val text: String) {
         fun hide() {
             popup.value = null
-        }
-    }
-
-    class Factory(private val app: App): ViewModelProvider.AndroidViewModelFactory(app) {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return if (AuthViewModel::class.java.isAssignableFrom(modelClass))
-                AuthViewModel(app) as T
-            else super.create(modelClass)
         }
     }
 }

@@ -7,9 +7,9 @@ import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.http.Body
 import retrofit2.http.POST
-import java.net.SocketTimeoutException
+import javax.inject.Inject
 
-class AuthManager(retrofit: Retrofit) {
+class AuthManager @Inject constructor(retrofit: Retrofit) {
 
     private val api = retrofit.create(Api::class.java)
 
@@ -24,7 +24,7 @@ class AuthManager(retrofit: Retrofit) {
                     SignInResult.WrongCredentials
                 else null // unexpected error
             }
-        } catch (e: SocketTimeoutException) {
+        } catch (e: Exception) {
             null
         }
 
@@ -37,7 +37,7 @@ class AuthManager(retrofit: Retrofit) {
                     SignUpResult.LoginIsTaken
                 else null
             }
-        } catch (e: SocketTimeoutException) {
+        } catch (e: Exception) {
             null
         }
 

@@ -9,7 +9,9 @@ import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
 import com.vl.messenger.R
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MenuActivity: AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
     private lateinit var drawer: DrawerLayout
@@ -33,14 +35,14 @@ class MenuActivity: AppCompatActivity(), NavigationView.OnNavigationItemSelected
 
     override fun onNavigationItemSelected(menuItem: MenuItem): Boolean {
         Toast.makeText(this, menuItem.title!!, Toast.LENGTH_SHORT).show()
-        return when (menuItem.groupId) {
-            R.id.navigation -> {
-                navigateTo(menuItem.itemId)
-                drawer.closeDrawer(GravityCompat.START)
-                true
-            }
-            else -> false
+        drawer.closeDrawer(GravityCompat.START)
+        if (menuItem.groupId == R.id.navigation)
+            navigateTo(menuItem.itemId)
+        else when (menuItem.itemId) {
+            R.id.conversation ->
+                Toast.makeText(this, "Не реализовано", Toast.LENGTH_SHORT).show()
         }
+        return true
     }
 
     private fun navigateTo(@IdRes route: Int) {

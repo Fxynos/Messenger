@@ -2,24 +2,25 @@ package com.vl.messenger.auth
 
 import android.content.Intent
 import android.os.Bundle
+import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
-import com.vl.messenger.App
 import com.vl.messenger.R
 import com.vl.messenger.menu.MenuActivity
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class AuthActivity: AppCompatActivity() {
 
-    private lateinit var model: AuthViewModel
+    @Inject lateinit var authManager: AuthManager
+    @Inject lateinit var sessionStore: SessionStore
+
+    private val model: AuthViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_auth)
-        model = ViewModelProvider(
-            this,
-            AuthViewModel.Factory(application as App)
-        )[AuthViewModel::class.java]
         model.route.observe(this) { route ->
             when (route!!) {
                 AuthViewModel.Route.SIGN_IN -> supportFragmentManager
