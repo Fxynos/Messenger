@@ -26,4 +26,5 @@
     <string name="search">Поиск</string>
     <string name="create_conversation">Создать беседу</string>
     <string name="no_results">Нет результатов</string>
+    <string name="you">Вы:</string>
 </resources>

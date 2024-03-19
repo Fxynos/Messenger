@@ -45,6 +45,10 @@ class MenuActivity: AppCompatActivity(), NavigationView.OnNavigationItemSelected
         return true
     }
 
+    fun openDrawer() {
+        drawer.openDrawer(GravityCompat.START)
+    }
+
     private fun navigateTo(@IdRes route: Int) {
         supportFragmentManager.beginTransaction()
             .replace(R.id.placeholder, routes[route]!!, null)

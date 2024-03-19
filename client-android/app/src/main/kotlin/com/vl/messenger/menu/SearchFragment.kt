@@ -7,14 +7,21 @@ import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.TextView
+import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.vl.messenger.R
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class SearchFragment: Fragment() {
+class SearchFragment: Fragment(), View.OnClickListener {
 
+    private val viewModel: SearchViewModel by viewModels()
     private lateinit var menu: ImageButton
     private lateinit var search: ImageButton
     private lateinit var input: EditText
@@ -31,10 +38,36 @@ class SearchFragment: Fragment() {
         input = findViewById(R.id.input)
         result = findViewById(R.id.result)
         hint = findViewById(R.id.hint)
+        menu.setOnClickListener(this@SearchFragment)
+        search.setOnClickListener(this@SearchFragment)
+        input.doOnTextChanged { pattern, _, _, _ ->
+             pattern?.toString()
+                 ?.trim()
+                 ?.takeIf(String::isNotEmpty)
+                 ?.let(this@SearchFragment::searchUsers)
+        }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        // TODO
+    override fun onClick(view: View) {
+        when (view.id) {
+            R.id.menu -> (requireActivity() as MenuActivity).openDrawer()
+            R.id.search -> input.text.toString()
+                .trim()
+                .takeIf(String::isNotEmpty)
+                ?.let(this::searchUsers)
+        }
+    }
+
+    private fun searchUsers(pattern: String) {
+        val adapter = SearchPagingAdapter(requireContext())
+        hint.visibility = View.GONE
+        result.visibility = View.VISIBLE // TODO check if there are results
+        result.scrollToPosition(0)
+        result.adapter = adapter
+        lifecycleScope.launch(Dispatchers.IO) {
+            viewModel
+                .search(pattern)
+                .collectLatest(adapter::submitData)
+        }
     }
 }

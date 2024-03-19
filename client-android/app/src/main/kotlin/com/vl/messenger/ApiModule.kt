@@ -9,6 +9,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -20,5 +21,6 @@ object ApiModule {
         .build()
 
     @Provides
-    fun bindSessionStore(@ApplicationContext context: Context) = SessionStore(context)
+    @Singleton
+    fun provideSessionStore(@ApplicationContext context: Context) = SessionStore(context)
 }
