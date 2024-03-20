@@ -11,13 +11,11 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Path
 import retrofit2.http.Query
-import javax.inject.Inject
 
-class SearchManager @Inject constructor(
+class SearchManager(
     retrofit: Retrofit,
     private val sessionStore: SessionStore
 ) {
-
     private val api = retrofit.create(Api::class.java)
 
     fun search(pattern: String, limit: Int, key: Int?): List<User> {

@@ -7,9 +7,8 @@ import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.http.Body
 import retrofit2.http.POST
-import javax.inject.Inject
 
-class AuthManager @Inject constructor(retrofit: Retrofit) {
+class AuthManager(retrofit: Retrofit) {
 
     private val api = retrofit.create(Api::class.java)
 

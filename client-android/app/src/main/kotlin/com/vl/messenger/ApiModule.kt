@@ -1,7 +1,10 @@
 package com.vl.messenger
 
 import android.content.Context
+import com.vl.messenger.auth.AuthManager
 import com.vl.messenger.auth.SessionStore
+import com.vl.messenger.menu.DownloadManager
+import com.vl.messenger.menu.SearchManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,4 +26,17 @@ object ApiModule {
     @Provides
     @Singleton
     fun provideSessionStore(@ApplicationContext context: Context) = SessionStore(context)
+
+    @Provides
+    @Singleton
+    fun provideAuthManager(retrofit: Retrofit) = AuthManager(retrofit)
+
+    @Provides
+    @Singleton
+    fun provideSearchManager(retrofit: Retrofit, sessionStore: SessionStore) =
+        SearchManager(retrofit, sessionStore)
+
+    @Provides
+    @Singleton
+    fun provideDownloadManager(retrofit: Retrofit) = DownloadManager(retrofit)
 }

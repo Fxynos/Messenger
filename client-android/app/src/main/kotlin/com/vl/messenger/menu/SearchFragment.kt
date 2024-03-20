@@ -17,10 +17,12 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class SearchFragment: Fragment(), View.OnClickListener {
 
+    @Inject lateinit var downloadManager: DownloadManager
     private val viewModel: SearchViewModel by viewModels()
     private lateinit var menu: ImageButton
     private lateinit var search: ImageButton
@@ -59,7 +61,7 @@ class SearchFragment: Fragment(), View.OnClickListener {
     }
 
     private fun searchUsers(pattern: String) {
-        val adapter = SearchPagingAdapter(requireContext())
+        val adapter = ProfilePagingAdapter(requireContext(), downloadManager)
         hint.visibility = View.GONE
         result.visibility = View.VISIBLE // TODO check if there are results
         result.scrollToPosition(0)
