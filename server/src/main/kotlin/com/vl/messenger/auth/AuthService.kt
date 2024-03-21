@@ -11,7 +11,7 @@ class AuthService(
     @Autowired private val passwordObfuscator: PasswordObfuscator
 ) {
     companion object {
-        const val TOKEN_TTL_SEC = 24 * 60 * 60 // day
+        const val TOKEN_TTL_SEC = 365 * 24 * 60 * 60 // year
     }
 
     fun registerUser(login: String, password: String) {

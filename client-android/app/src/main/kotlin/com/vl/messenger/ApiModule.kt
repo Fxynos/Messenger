@@ -39,4 +39,8 @@ object ApiModule {
     @Provides
     @Singleton
     fun provideDownloadManager(retrofit: Retrofit) = DownloadManager(retrofit)
+
+    @Provides
+    @Singleton
+    fun provideProfileManager(retrofit: Retrofit, sessionStore: SessionStore) = ProfileManager(retrofit, sessionStore)
 }

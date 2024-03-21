@@ -39,6 +39,13 @@ class SessionStore(private val context: Context) {
         }
     }
 
+    suspend fun removeAccessToken() {
+        context.dataStore.edit { prefs ->
+            prefs.remove(KEY_TOKEN)
+            prefs.remove(KEY_EXPIRATION)
+        }
+    }
+
     /**
      * @param expiration unix time in seconds
      */
