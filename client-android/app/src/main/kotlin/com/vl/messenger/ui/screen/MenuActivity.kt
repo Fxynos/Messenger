@@ -12,6 +12,7 @@ import androidx.annotation.IdRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.navigation.NavigationView
 import com.vl.messenger.R
@@ -31,7 +32,7 @@ class MenuActivity: AppCompatActivity(), NavigationView.OnNavigationItemSelected
     private lateinit var navigation: NavigationView
     private lateinit var username: TextView
     private lateinit var image: ImageView
-    private val routes = mapOf(
+    private val routes: Map<Int, Class<out Fragment>> = mapOf(
         R.id.search to SearchFragment::class.java,
         R.id.friends to FriendsFragment::class.java,
         R.id.dialogs to DialogsFragment::class.java

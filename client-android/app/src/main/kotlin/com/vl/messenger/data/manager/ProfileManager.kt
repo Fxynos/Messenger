@@ -22,11 +22,31 @@ class ProfileManager(retrofit: Retrofit, private val sessionStore: SessionStore)
         User(dto.id, dto.login, dto.image)
     }
 
+    fun getFriends(): List<User> {
+        val response = api.getFriends(
+            "Bearer ${sessionStore.accessTokenFlow.value!!.token}"
+        ).execute()
+
+        if (!response.isSuccessful)
+            throw ApiException(response)
+
+        return response.body()!!.requireResponse().users.map { dto ->
+            User(dto.id, dto.login, dto.image)
+        }
+    }
+
     private interface Api {
         @GET("/users/me")
-        fun getProfile(@Header("Authorization") token: String): Call<StatusResponse<Profile>>
+        fun getProfile(@Header("Authorization") token: String): Call<StatusResponse<UserDto>>
 
-        class Profile {
+        @GET("/users/friends")
+        fun getFriends(@Header("Authorization") token: String): Call<StatusResponse<UsersDto>>
+
+        class UsersDto {
+            val users: List<UserDto> = listOf()
+        }
+
+        class UserDto {
             val id: Int = 0
             val login: String = ""
             @SerializedName("image_url")
