@@ -2,6 +2,7 @@ package com.vl.messenger
 
 import android.content.Context
 import com.vl.messenger.data.manager.AuthManager
+import com.vl.messenger.data.manager.DialogManager
 import com.vl.messenger.data.manager.SessionStore
 import com.vl.messenger.data.manager.DownloadManager
 import com.vl.messenger.data.manager.ProfileManager
@@ -44,4 +45,8 @@ object ApiModule {
     @Provides
     @Singleton
     fun provideProfileManager(retrofit: Retrofit, sessionStore: SessionStore) = ProfileManager(retrofit, sessionStore)
+
+    @Provides
+    @Singleton
+    fun provideDialogsManager(retrofit: Retrofit, sessionStore: SessionStore) = DialogManager(retrofit, sessionStore)
 }

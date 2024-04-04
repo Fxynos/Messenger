@@ -2,6 +2,7 @@ package com.vl.messenger.ui.screen
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.MenuItem
 import android.widget.ImageView
 import android.widget.TextView
@@ -21,6 +22,9 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MenuActivity: AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+    companion object {
+        private const val TAG = "Menu"
+    }
 
     private val viewModel: ProfileViewModel by viewModels()
     private lateinit var drawer: DrawerLayout
@@ -53,13 +57,13 @@ class MenuActivity: AppCompatActivity(), NavigationView.OnNavigationItemSelected
     }
 
     override fun onNavigationItemSelected(menuItem: MenuItem): Boolean {
-        Toast.makeText(this, menuItem.title!!, Toast.LENGTH_SHORT).show()
+        Log.d(TAG, "\"${menuItem.title}\" is chosen")
         drawer.closeDrawer(GravityCompat.START)
         if (menuItem.groupId == R.id.navigation)
             navigateTo(menuItem.itemId)
         else when (menuItem.itemId) {
             R.id.conversation ->
-                Toast.makeText(this, "Не реализовано", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Не реализовано", Toast.LENGTH_SHORT).show() // TODO
             R.id.logout -> {
                 viewModel.logOut()
                 startActivity(Intent(this, AuthActivity::class.java))

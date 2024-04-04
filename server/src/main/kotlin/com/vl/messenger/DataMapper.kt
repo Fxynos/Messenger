@@ -409,7 +409,7 @@ class DataMapper {
             statement.executeQuery().collectMessages()
         }
 
-    fun getDialogs(userId: Int): List<User> =
+    fun getDialogs(userId: Int): List<User> = // TODO pagination
         connection.prepareStatement("""
             select id, login, image from (
                 with members as (
@@ -444,7 +444,7 @@ class DataMapper {
             conversationId
         }
 
-    fun getConversation(id: Long): Conversation? =
+    fun getConversation(id: Long): Conversation? = // TODO get all conversations
         connection.prepareStatement("select name, image from conversation where id = ?;").use { statement ->
             statement.setLong(1, id)
             statement.executeQuery().takeIf(ResultSet::next)?.run {
