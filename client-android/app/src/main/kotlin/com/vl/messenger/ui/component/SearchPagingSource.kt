@@ -1,8 +1,9 @@
-package com.vl.messenger.menu
+package com.vl.messenger.ui.component
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import com.vl.messenger.menu.entity.User
+import com.vl.messenger.data.manager.SearchManager
+import com.vl.messenger.data.entity.User
 
 class SearchPagingSource(
     private val searchManager: SearchManager,

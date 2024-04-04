@@ -1,11 +1,12 @@
-package com.vl.messenger.menu
+package com.vl.messenger.ui.component
 
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.vl.messenger.data.manager.DownloadManager
 import com.vl.messenger.R
-import com.vl.messenger.menu.entity.User
+import com.vl.messenger.data.entity.User
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren

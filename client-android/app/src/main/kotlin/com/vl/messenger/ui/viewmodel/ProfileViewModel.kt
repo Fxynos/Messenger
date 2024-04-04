@@ -1,11 +1,12 @@
-package com.vl.messenger.menu
+package com.vl.messenger.ui.viewmodel
 
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vl.messenger.ProfileManager
-import com.vl.messenger.auth.SessionStore
-import com.vl.messenger.menu.entity.User
+import com.vl.messenger.data.manager.DownloadManager
+import com.vl.messenger.data.manager.ProfileManager
+import com.vl.messenger.data.manager.SessionStore
+import com.vl.messenger.data.entity.User
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow

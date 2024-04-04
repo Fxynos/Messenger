@@ -1,4 +1,4 @@
-package com.vl.messenger.menu
+package com.vl.messenger.ui.screen
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -13,6 +13,9 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.vl.messenger.R
+import com.vl.messenger.data.manager.DownloadManager
+import com.vl.messenger.ui.component.ProfilePagingAdapter
+import com.vl.messenger.ui.viewmodel.SearchViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest

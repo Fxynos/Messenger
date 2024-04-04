@@ -1,10 +1,11 @@
 package com.vl.messenger
 
 import android.content.Context
-import com.vl.messenger.auth.AuthManager
-import com.vl.messenger.auth.SessionStore
-import com.vl.messenger.menu.DownloadManager
-import com.vl.messenger.menu.SearchManager
+import com.vl.messenger.data.manager.AuthManager
+import com.vl.messenger.data.manager.SessionStore
+import com.vl.messenger.data.manager.DownloadManager
+import com.vl.messenger.data.manager.ProfileManager
+import com.vl.messenger.data.manager.SearchManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

@@ -1,12 +1,13 @@
-package com.vl.messenger.menu
+package com.vl.messenger.ui.component
 
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
+import com.vl.messenger.data.manager.DownloadManager
 import com.vl.messenger.R
-import com.vl.messenger.menu.entity.User
+import com.vl.messenger.data.entity.User
 
 class ProfilePagingAdapter(
     context: Context,

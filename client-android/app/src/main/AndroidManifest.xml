@@ -17,7 +17,7 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
 
-        <activity android:name=".auth.AuthActivity" android:exported="true"
+        <activity android:name=".ui.screen.AuthActivity" android:exported="true"
             android:windowSoftInputMode="stateHidden">
             <intent-filter>
                 <category android:name="android.intent.category.LAUNCHER"/>
@@ -25,7 +25,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".menu.MenuActivity" android:exported="false"/>
+        <activity android:name=".ui.screen.MenuActivity" android:exported="false"/>
 
     </application>
 

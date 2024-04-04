@@ -1,4 +1,4 @@
-package com.vl.messenger.auth
+package com.vl.messenger.ui.viewmodel
 
 import android.app.Application
 import android.content.Context
@@ -7,6 +7,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.vl.messenger.App
 import com.vl.messenger.R
+import com.vl.messenger.data.manager.AuthManager
+import com.vl.messenger.data.manager.SessionStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

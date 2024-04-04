@@ -1,4 +1,4 @@
-package com.vl.messenger.auth
+package com.vl.messenger.ui.screen
 
 import android.content.Intent
 import android.os.Bundle
@@ -6,7 +6,9 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.vl.messenger.R
-import com.vl.messenger.menu.MenuActivity
+import com.vl.messenger.data.manager.AuthManager
+import com.vl.messenger.data.manager.SessionStore
+import com.vl.messenger.ui.viewmodel.AuthViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 

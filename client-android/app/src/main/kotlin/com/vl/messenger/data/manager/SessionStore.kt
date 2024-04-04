@@ -1,4 +1,4 @@
-package com.vl.messenger.auth
+package com.vl.messenger.data.manager
 
 import android.content.Context
 import androidx.datastore.core.DataStore

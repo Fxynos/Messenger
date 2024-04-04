@@ -1,4 +1,4 @@
-package com.vl.messenger.menu.entity
+package com.vl.messenger.data.entity
 
 data class User(
     val id: Int,

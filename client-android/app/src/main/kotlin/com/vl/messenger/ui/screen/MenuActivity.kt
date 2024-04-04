@@ -1,4 +1,4 @@
-package com.vl.messenger.menu
+package com.vl.messenger.ui.screen
 
 import android.content.Intent
 import android.os.Bundle
@@ -14,7 +14,7 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.navigation.NavigationView
 import com.vl.messenger.R
-import com.vl.messenger.auth.AuthActivity
+import com.vl.messenger.ui.viewmodel.ProfileViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

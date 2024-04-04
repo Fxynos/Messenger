@@ -1,7 +1,7 @@
-package com.vl.messenger.auth
+package com.vl.messenger.data.manager
 
 import com.google.gson.annotations.SerializedName
-import com.vl.messenger.util.StatusResponse
+import com.vl.messenger.data.entity.StatusResponse
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Retrofit

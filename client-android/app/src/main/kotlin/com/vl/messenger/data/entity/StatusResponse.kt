@@ -1,4 +1,4 @@
-package com.vl.messenger.util
+package com.vl.messenger.data.entity
 
 class StatusResponse<T> {
     private val response: T? = null

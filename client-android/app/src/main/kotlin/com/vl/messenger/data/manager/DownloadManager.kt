@@ -1,4 +1,4 @@
-package com.vl.messenger.menu
+package com.vl.messenger.data.manager
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
