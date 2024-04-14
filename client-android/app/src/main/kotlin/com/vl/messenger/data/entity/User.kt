@@ -1,32 +1,31 @@
 package com.vl.messenger.data.entity
 
-data class User(
+import android.os.Parcel
+import android.os.Parcelable
+
+open class User(
     val id: Int,
     val login: String,
     val imageUrl: String?
-) {
-    /*private val scope = CoroutineScope(Dispatchers.Default)
-    @Volatile private var bitmap: Bitmap? = null
-    @Volatile private var state = State.CLEARED
+): Parcelable {
+    override fun describeContents() = 0
 
-    fun clear() {
-        bitmap = null
-        state = State.CLEARED
-    }
-
-    private fun loadImageAsync(loader: (String) -> Bitmap, onLoadListener: () -> Unit) {
-        scope.launch {
-            bitmap = withContext(Dispatchers.IO) {
-                downloadManager.downloadBitmap(imageUrl)
-            }
-            withContext(Dispatchers.Main) { image.setImageBitmap(bitmap) }
-            state = State.CACHED
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.apply {
+            writeInt(id)
+            writeString(login)
+            writeString(imageUrl)
         }
     }
 
-    enum class State {
-        LOADING,
-        CACHED,
-        CLEARED
-    }*/
+    override fun equals(other: Any?) =
+        other.takeIf { it is User }?.let { (it as User).id == id } ?: false // compare by id
+
+    companion object CREATOR: Parcelable.Creator<User> {
+        override fun createFromParcel(parcel: Parcel) = parcel.run {
+            User(readInt(), readString()!!, readString())
+        }
+
+        override fun newArray(size: Int): Array<User?> = arrayOfNulls(size)
+    }
 }

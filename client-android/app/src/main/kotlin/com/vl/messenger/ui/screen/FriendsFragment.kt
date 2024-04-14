@@ -1,6 +1,7 @@
 package com.vl.messenger.ui.screen
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,7 +12,9 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.vl.messenger.R
+import com.vl.messenger.data.entity.User
 import com.vl.messenger.data.manager.DownloadManager
+import com.vl.messenger.ui.component.OnItemClickListener
 import com.vl.messenger.ui.component.ProfileAdapter
 import com.vl.messenger.ui.viewmodel.DialogsViewModel
 import com.vl.messenger.ui.viewmodel.FriendsViewModel
@@ -22,7 +25,7 @@ import java.util.Objects
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class FriendsFragment: Fragment(), View.OnClickListener {
+class FriendsFragment: Fragment(), View.OnClickListener, OnItemClickListener<User> {
 
     @Inject
     lateinit var downloadManager: DownloadManager
@@ -40,6 +43,7 @@ class FriendsFragment: Fragment(), View.OnClickListener {
         menu = view.findViewById(R.id.menu)
         menu.setOnClickListener(this)
         adapter = ProfileAdapter(requireContext(), downloadManager)
+        adapter.onItemClickListener = this
         friends = view.findViewById(R.id.friends)
         friends.adapter = adapter
         return view
@@ -48,7 +52,6 @@ class FriendsFragment: Fragment(), View.OnClickListener {
     @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel.fetchFriends()
         lifecycleScope.launch(Dispatchers.Main) {
             viewModel.friends.collect { items ->
                 if (items == null) return@collect
@@ -59,9 +62,20 @@ class FriendsFragment: Fragment(), View.OnClickListener {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        viewModel.fetchFriends()
+    }
+
     override fun onClick(view: View) {
         when (view.id) {
             R.id.menu -> (requireActivity() as MenuActivity).openDrawer()
         }
+    }
+
+    override fun onClick(item: User, position: Int) {
+        startActivity(Intent(requireContext(), UserProfileActivity::class.java).apply {
+            putExtra("user", item)
+        })
     }
 }

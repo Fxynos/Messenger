@@ -1,5 +1,6 @@
 package com.vl.messenger.ui.screen
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,7 +14,9 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.vl.messenger.R
+import com.vl.messenger.data.entity.User
 import com.vl.messenger.data.manager.DownloadManager
+import com.vl.messenger.ui.component.OnItemClickListener
 import com.vl.messenger.ui.component.ProfilePagingAdapter
 import com.vl.messenger.ui.viewmodel.SearchViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -23,7 +26,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class SearchFragment: Fragment(), View.OnClickListener {
+class SearchFragment: Fragment(), View.OnClickListener, OnItemClickListener<User> {
 
     @Inject lateinit var downloadManager: DownloadManager
     private val viewModel: SearchViewModel by viewModels()
@@ -63,8 +66,15 @@ class SearchFragment: Fragment(), View.OnClickListener {
         }
     }
 
+    override fun onClick(item: User, position: Int) {
+        startActivity(Intent(requireContext(), UserProfileActivity::class.java).apply {
+            putExtra("user", item)
+        })
+    }
+
     private fun searchUsers(pattern: String) {
         val adapter = ProfilePagingAdapter(requireContext(), downloadManager)
+        adapter.onItemClickListener = this
         hint.visibility = View.GONE
         result.visibility = View.VISIBLE // TODO check if there are results
         result.scrollToPosition(0)

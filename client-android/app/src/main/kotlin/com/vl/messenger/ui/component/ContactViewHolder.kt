@@ -14,9 +14,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 class ContactViewHolder(
+    private val adapter: ListAdapter<User>,
     view: View,
     private val downloadManager: DownloadManager
-): RecyclerView.ViewHolder(view) {
+): RecyclerView.ViewHolder(view), View.OnClickListener {
 
     private val title: TextView = view.findViewById(R.id.title)
     private val hint: TextView = view.findViewById(R.id.hint)
@@ -24,7 +25,13 @@ class ContactViewHolder(
     private val image: ImageView = view.findViewById(R.id.image)
     private val scope = CoroutineScope(Dispatchers.Default)
 
+    private lateinit var user: User
+
+    init { view.setOnClickListener(this) }
+
     fun bind(user: User) {
+        this.user = user
+
         hint.visibility = View.GONE
         text.visibility = View.GONE
         title.text = user.login
@@ -37,5 +44,9 @@ class ContactViewHolder(
             val bitmap = withContext(Dispatchers.IO) { downloadManager.downloadBitmap(user.imageUrl) }
             withContext(Dispatchers.Main) { image.setImageBitmap(bitmap) }
         }
+    }
+
+    override fun onClick(view: View) {
+        adapter.onItemClickListener?.onClick(user, absoluteAdapterPosition)
     }
 }

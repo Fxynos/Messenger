@@ -12,9 +12,10 @@ import com.vl.messenger.data.entity.User
 class ProfilePagingAdapter(
     context: Context,
     private val downloadManager: DownloadManager
-): PagingDataAdapter<User, ContactViewHolder>(ProfilePagingAdapter) {
+): PagingDataAdapter<User, ContactViewHolder>(ProfilePagingAdapter), ListAdapter<User> {
 
     private val inflater = LayoutInflater.from(context)
+    override var onItemClickListener: OnItemClickListener<User>? = null
 
     companion object: DiffUtil.ItemCallback<User>() {
         override fun areItemsTheSame(oldItem: User, newItem: User) =
@@ -25,6 +26,7 @@ class ProfilePagingAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
         ContactViewHolder(
+            this,
             inflater.inflate(R.layout.item_user, parent, false),
             downloadManager
         )

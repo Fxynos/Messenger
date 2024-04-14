@@ -28,4 +28,11 @@
     <string name="no_results">Нет результатов</string>
     <string name="you">Вы:</string>
     <string name="logout">Выйти</string>
+    <string name="open_dialog">Открыть диалог</string>
+    <string name="friend_status_friend">У вас в друзьях</string>
+    <string name="friend_status_none">Не в друзьях</string>
+    <string name="friend_status_sent">Заявка в друзья отправлена</string>
+    <string name="friend_status_gotten">Отправил вам заявку в друзья</string>
+    <string name="add_friend">Добавить в друзья</string>
+    <string name="remove_friend">Удалить из друзей</string>
 </resources>

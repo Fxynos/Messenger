@@ -31,6 +31,12 @@ class ProfileController(
         private val LOGIN_REGEX = Regex(LOGIN_PATTERN)
     }
 
+    @GetMapping("/{id}")
+    fun getUser(@PathVariable id: Int): ResponseEntity<StatusResponse<UsersResponse.User>> =
+        service.getUser(id)?.let {
+            statusOf(payload = userToDtoWithFriendStatus(it))
+        } ?: statusOf(HttpStatus.GONE, "No such user")
+
     @GetMapping("/me")
     fun whoAmI(): ResponseEntity<StatusResponse<UsersResponse.User>> {
         return statusOf(payload = service.getUser(userId)!!.toDto(baseUrl))
