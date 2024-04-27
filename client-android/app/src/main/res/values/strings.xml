@@ -35,4 +35,7 @@
     <string name="friend_status_gotten">Отправил вам заявку в друзья</string>
     <string name="add_friend">Добавить в друзья</string>
     <string name="remove_friend">Удалить из друзей</string>
+    <string name="upload_photo">Загрузить фото</string>
+    <string name="unsupported">Не поддерживается вашим устройством</string>
+    <string name="cancelled">Отменено пользователем</string>
 </resources>

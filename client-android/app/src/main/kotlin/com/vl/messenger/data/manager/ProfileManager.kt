@@ -1,16 +1,25 @@
 package com.vl.messenger.data.manager
 
+import android.graphics.Bitmap
 import com.google.gson.annotations.SerializedName
 import com.vl.messenger.ApiException
 import com.vl.messenger.data.entity.User
 import com.vl.messenger.data.entity.StatusResponse
+import okhttp3.MediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Retrofit
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.Multipart
+import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Part
 import retrofit2.http.Query
+import java.io.ByteArrayOutputStream
 
 class ProfileManager(retrofit: Retrofit, private val sessionStore: SessionStore) {
 
@@ -58,6 +67,22 @@ class ProfileManager(retrofit: Retrofit, private val sessionStore: SessionStore)
             throw ApiException(response)
     }
 
+    fun uploadPhoto(image: Bitmap) {
+        val compressedToPng = ByteArrayOutputStream().also {
+            image.compress(Bitmap.CompressFormat.PNG, 100, it)
+        }.toByteArray()
+        val response = api.uploadPhoto(
+            "Bearer ${sessionStore.accessTokenFlow.value!!.token}",
+            MultipartBody.Part.createFormData("image", "profile", RequestBody.create(
+                MediaType.parse("image/png"),
+                compressedToPng
+            ))
+        ).execute()
+
+        if (!response.isSuccessful)
+            throw ApiException(response)
+    }
+
     private interface Api {
         @GET("/users/me")
         fun getProfile(@Header("Authorization") token: String): Call<StatusResponse<UserDto>>
@@ -76,6 +101,13 @@ class ProfileManager(retrofit: Retrofit, private val sessionStore: SessionStore)
             @Header("Authorization") token: String,
             @Query("user_id") userId: Int
         ): Call<StatusResponse<Nothing>>
+
+        @POST("/users/me/set-image")
+        @Multipart
+        fun uploadPhoto(
+            @Header("Authorization") token: String,
+            @Part image: MultipartBody.Part
+        ): Call<ResponseBody>
 
         class UsersDto {
             val users: List<UserDto> = listOf()

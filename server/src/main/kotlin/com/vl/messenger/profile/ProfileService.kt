@@ -14,7 +14,7 @@ class ProfileService(
     @Autowired private val notificationService: NotificationService
 ) {
 
-    private val logger = Logger.getLogger("SocialService")
+    private val logger = Logger.getLogger("ProfileService")
 
     fun setHidden(userId: Int, isHidden: Boolean) = dataMapper.setUserVisibility(userId, isHidden)
 
