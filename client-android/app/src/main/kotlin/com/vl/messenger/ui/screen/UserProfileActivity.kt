@@ -1,5 +1,6 @@
 package com.vl.messenger.ui.screen
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -13,12 +14,16 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.vl.messenger.R
 import com.vl.messenger.data.entity.FriendStatus
+import com.vl.messenger.data.entity.PrivateDialog
 import com.vl.messenger.data.entity.User
 import com.vl.messenger.data.manager.DownloadManager
 import com.vl.messenger.ui.viewmodel.UserProfileViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -90,7 +95,18 @@ class UserProfileActivity: AppCompatActivity(), View.OnClickListener {
                 FriendStatus.NONE, FriendStatus.REQUEST_GOTTEN -> viewModel.addFriend()
                 FriendStatus.FRIEND, FriendStatus.REQUEST_SENT -> viewModel.removeFriend()
             }
-            R.id.open_dialog -> Toast.makeText(this, "Unimplemented", Toast.LENGTH_SHORT).show() // TODO
+            R.id.open_dialog -> startActivity(
+                Intent(this, DialogActivity::class.java).apply {
+                    putExtra(DialogActivity.EXTRA_OWN_ID, runBlocking { getOwnUserId() })
+                    putExtra(DialogActivity.EXTRA_PRIVATE_DIALOG, PrivateDialog(runBlocking { getUser() }))
+                }
+            )
         }
     }
+
+    private suspend fun getOwnUserId() =
+        viewModel.ownProfile.filterNotNull().first().id
+
+    private suspend fun getUser() =
+        viewModel.profile.filterNotNull().first()
 }

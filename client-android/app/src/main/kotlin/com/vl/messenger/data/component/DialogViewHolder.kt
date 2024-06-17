@@ -1,22 +1,24 @@
-package com.vl.messenger.ui.component
+package com.vl.messenger.data.component
 
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import com.vl.messenger.data.manager.DownloadManager
 import com.vl.messenger.R
+import com.vl.messenger.data.entity.Message
 import com.vl.messenger.data.entity.User
+import com.vl.messenger.data.manager.DownloadManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class ContactViewHolder(
+class DialogViewHolder(
     private val adapter: ListAdapter<User>,
     view: View,
-    private val downloadManager: DownloadManager
+    private val downloadManager: DownloadManager,
+    private val ownUserId: Int
 ): RecyclerView.ViewHolder(view), View.OnClickListener {
 
     private val title: TextView = view.findViewById(R.id.title)
@@ -29,11 +31,11 @@ class ContactViewHolder(
 
     init { view.setOnClickListener(this) }
 
-    fun bind(user: User) {
+    fun bind(user: User, message: Message) {
         this.user = user
 
-        hint.visibility = View.GONE
-        text.visibility = View.GONE
+        hint.visibility = if (message.senderId == ownUserId) View.VISIBLE else View.GONE
+        text.text = message.content
         title.text = user.login
 
         scope.coroutineContext.cancelChildren()

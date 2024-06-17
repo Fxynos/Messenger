@@ -38,4 +38,6 @@
     <string name="upload_photo">Загрузить фото</string>
     <string name="unsupported">Не поддерживается вашим устройством</string>
     <string name="cancelled">Отменено пользователем</string>
+    <string name="no_messages">Нет сообщений</string>
+    <string name="loading">Загрузка...</string>
 </resources>

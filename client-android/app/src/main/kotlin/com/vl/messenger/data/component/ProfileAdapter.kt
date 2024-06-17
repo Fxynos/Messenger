@@ -1,4 +1,4 @@
-package com.vl.messenger.ui.component
+package com.vl.messenger.data.component
 
 import android.content.Context
 import android.view.LayoutInflater
@@ -11,19 +11,19 @@ import com.vl.messenger.data.manager.DownloadManager
 class ProfileAdapter(
     context: Context,
     private val downloadManager: DownloadManager
-): RecyclerView.Adapter<ContactViewHolder>(), ListAdapter<User> {
+): RecyclerView.Adapter<ProfileViewHolder>(), ListAdapter<User> {
     private val inflater = LayoutInflater.from(context)
     override var onItemClickListener: OnItemClickListener<User>? = null
-    val items: MutableList<User> = mutableListOf()
+    val items: MutableList<User> = ArrayList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
-        ContactViewHolder(
+        ProfileViewHolder(
             this,
             inflater.inflate(R.layout.item_user, parent, false),
             downloadManager
         )
 
-    override fun onBindViewHolder(holder: ContactViewHolder, position: Int) =
+    override fun onBindViewHolder(holder: ProfileViewHolder, position: Int) =
         holder.bind(items[position])
 
     override fun getItemCount() = items.size

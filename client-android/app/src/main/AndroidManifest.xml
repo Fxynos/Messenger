@@ -29,6 +29,8 @@
 
         <activity android:name=".ui.screen.UserProfileActivity" android:exported="false"/>
 
+        <activity android:name=".ui.screen.DialogActivity" android:exported="false"/>
+
     </application>
 
 </manifest>

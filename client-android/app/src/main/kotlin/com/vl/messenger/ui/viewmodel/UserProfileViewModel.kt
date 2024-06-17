@@ -10,7 +10,11 @@ import com.vl.messenger.data.manager.SearchManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -23,6 +27,10 @@ class UserProfileViewModel @Inject constructor(
     private val _profile: MutableStateFlow<UserProfile?> = MutableStateFlow(null)
     val profile: StateFlow<UserProfile?>
         get() = _profile
+
+    val ownProfile: StateFlow<User?> = flow { emit(profileManager.getProfile()) }
+        .flowOn(Dispatchers.IO)
+        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     fun updateUser(user: User) {
         viewModelScope.launch(Dispatchers.IO) {

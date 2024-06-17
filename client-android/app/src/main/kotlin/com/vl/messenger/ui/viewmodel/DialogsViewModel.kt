@@ -2,6 +2,7 @@ package com.vl.messenger.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vl.messenger.data.entity.Message
 import com.vl.messenger.data.entity.User
 import com.vl.messenger.data.manager.DialogManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,14 +14,21 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class DialogsViewModel @Inject constructor(private val dialogManager: DialogManager): ViewModel() {
-    private val _dialogs = MutableStateFlow<List<User>?>(null)
-    val dialogs: StateFlow<List<User>?>
+class DialogsViewModel @Inject constructor(
+    private val dialogManager: DialogManager
+): ViewModel() {
+    private val _dialogs = MutableStateFlow<List<Pair<User, Message>>>(emptyList())
+    val dialogs: StateFlow<List<Pair<User, Message>>>
         get() = _dialogs
 
     fun fetchDialogs() {
         viewModelScope.launch(Dispatchers.IO) {
-            _dialogs.update { dialogManager.getDialogs() }
+            _dialogs.value = emptyList()
+            val users = dialogManager.getDialogs()
+            for (user in users) {
+                val item = user to dialogManager.getMessages(user.id, 1, null).first()
+                _dialogs.update { ArrayList(it).apply { add(item) } }
+            }
         }
     }
 }

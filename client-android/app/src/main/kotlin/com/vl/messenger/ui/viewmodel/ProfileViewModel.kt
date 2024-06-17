@@ -38,12 +38,10 @@ class ProfileViewModel @Inject constructor(
         get() = getApplication()
 
     private val _profile: MutableStateFlow<User?> = MutableStateFlow(null)
-    val profile: Flow<User?>
-        get() = _profile
+    val profile: StateFlow<User?> get() = _profile
 
     private val _profileImage: MutableStateFlow<Bitmap?> = MutableStateFlow(null)
-    val profileImage: Flow<Bitmap?>
-        get() = _profileImage
+    val profileImage: StateFlow<Bitmap?> get() = _profileImage
 
     init {
         viewModelScope.launch(Dispatchers.IO) {

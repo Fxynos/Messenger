@@ -1,7 +1,6 @@
 package com.vl.messenger.ui.screen
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
@@ -19,14 +18,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import com.google.android.material.navigation.NavigationView
 import com.vl.messenger.R
+import com.vl.messenger.data.entity.User
 import com.vl.messenger.ui.viewmodel.ProfileViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -47,9 +46,13 @@ class MenuActivity: AppCompatActivity(), View.OnClickListener, NavigationView.On
     )
     private lateinit var pickMediaRequestLauncher: ActivityResultLauncher<PickVisualMediaRequest>
 
+    private lateinit var _ownUser: StateFlow<User?>
+    val ownUser: StateFlow<User?> get() = _ownUser
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_menu)
+        _ownUser = viewModel.profile
         pickMediaRequestLauncher = registerForActivityResult(
             ActivityResultContracts.PickVisualMedia()
         ) {

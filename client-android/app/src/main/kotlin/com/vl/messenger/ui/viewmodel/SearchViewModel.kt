@@ -6,7 +6,7 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.vl.messenger.data.manager.SearchManager
 import com.vl.messenger.data.entity.User
-import com.vl.messenger.ui.component.SearchPagingSource
+import com.vl.messenger.data.component.SearchPagingSource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject

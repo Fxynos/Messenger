@@ -22,7 +22,7 @@
 
     <style name="EditTextStyle" parent="Widget.AppCompat.EditText">
         <item name="android:textAppearance">@style/BaseTextAppearance</item>
-        <item name="android:background">@drawable/rounded_shape</item>
+        <item name="android:background">@drawable/shape_rounded_small</item>
         <item name="android:padding">16dp</item>
         <item name="android:colorAccent">@android:color/black</item>
         <item name="android:textCursorDrawable">@drawable/edittext_cursor</item>
@@ -31,7 +31,7 @@
     <style name="ButtonStyle" parent="Widget.AppCompat.Button">
         <item name="android:textAllCaps">false</item>
         <item name="android:textAppearance">@style/BaseTextAppearance</item>
-        <item name="android:background">@drawable/rounded_shape</item>
+        <item name="android:background">@drawable/shape_rounded_small</item>
         <item name="android:padding">12dp</item>
         <item name="android:backgroundTint">@color/button</item>
         <item name="android:textColor">@android:color/white</item>

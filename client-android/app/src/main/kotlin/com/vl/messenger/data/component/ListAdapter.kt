@@ -1,4 +1,4 @@
-package com.vl.messenger.ui.component
+package com.vl.messenger.data.component
 
 interface ListAdapter<T> {
     val onItemClickListener: OnItemClickListener<T>?

@@ -1,4 +1,4 @@
-package com.vl.messenger.ui.component
+package com.vl.messenger.data.component
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
@@ -9,7 +9,7 @@ class SearchPagingSource(
     private val searchManager: SearchManager,
     private val pattern: String
 ): PagingSource<Int, User>() {
-
+    
     override fun getRefreshKey(state: PagingState<Int, User>) = null
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, User> = try {
