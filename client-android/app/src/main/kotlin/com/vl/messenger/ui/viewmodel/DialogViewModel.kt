@@ -1,6 +1,7 @@
 package com.vl.messenger.ui.viewmodel
 
 import android.graphics.Bitmap
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.ExperimentalPagingApi
@@ -18,12 +19,19 @@ import com.vl.messenger.data.manager.DialogManager
 import com.vl.messenger.data.manager.DownloadManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
+
+private const val TAG = "DialogViewModel"
 
 @HiltViewModel
 class DialogViewModel @Inject constructor(
@@ -42,6 +50,12 @@ class DialogViewModel @Inject constructor(
 
     private lateinit var _messages: Flow<PagingData<Message>>
     val messages by this::_messages
+
+    private val _scrollEvents = MutableSharedFlow<Any>(
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_LATEST
+    )
+    val scrollEvents = _scrollEvents.asSharedFlow()
 
     @OptIn(ExperimentalPagingApi::class)
     fun initialize(dialog: Dialog) {
@@ -68,6 +82,21 @@ class DialogViewModel @Inject constructor(
             }
 
             is Conversation -> TODO()
+        }
+    }
+
+    fun send(messageText: String) {
+        if (messageText.isBlank())
+            return
+
+        viewModelScope.launch {
+            val sentMessage = withContext(Dispatchers.IO) {
+                dialogManager.sendMessage(_dialog.value!!.id, messageText.trim())
+            }
+            // DAO triggers paging source invalidation, it will update UI state
+            cachedMessages.addFirst(listOf(sentMessage.id to sentMessage))
+            delay(100L)
+            _scrollEvents.tryEmit(Any())
         }
     }
 

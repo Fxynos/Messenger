@@ -1,6 +1,7 @@
 package com.vl.messenger.ui.screen
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
@@ -9,6 +10,7 @@ import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.vl.messenger.R
 import com.vl.messenger.data.component.PrivateMessagesPagingAdapter
@@ -19,6 +21,9 @@ import com.vl.messenger.ui.viewmodel.DialogViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
+private const val TAG = "DialogActivity"
 
 /**
  * Accepts extras:
@@ -79,6 +84,17 @@ class DialogActivity: AppCompatActivity() {
         lifecycleScope.launch(Dispatchers.Main) {
             launch { viewModel.messages.collect(adapter::submitData) }
             launch { viewModel.uiState.collect(this@DialogActivity::updateState) }
+            launch { viewModel.scrollEvents.collect {
+                val layoutManager = messagesList.layoutManager as LinearLayoutManager
+                val firstVisiblePosition = layoutManager.findFirstVisibleItemPosition()
+
+                if ( // scroll down to new message
+                    messagesList.scrollState == RecyclerView.SCROLL_STATE_IDLE &&
+                    firstVisiblePosition == 1
+                ) withContext(Dispatchers.Main) {
+                    messagesList.smoothScrollToPosition(0)
+                }
+            } }
         }
     }
 
@@ -99,7 +115,10 @@ class DialogActivity: AppCompatActivity() {
         when (view.id) {
             R.id.back -> onBackPressedDispatcher.onBackPressed()
             R.id.options -> TODO()
-            R.id.send -> TODO()
+            R.id.send -> {
+                viewModel.send(input.text.toString())
+                input.text.clear()
+            }
         }
     }
 }

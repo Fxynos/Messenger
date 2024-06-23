@@ -59,13 +59,15 @@ class ChatRestController(
     @PostMapping("/messages/private/send")
     fun sendPrivateMessage(
         @Valid @RequestBody message: PrivateMessageForm
-    ): ResponseEntity<StatusResponse<Nothing?>> {
+    ): ResponseEntity<StatusResponse<MessagesResponse.Message>> {
         if (!chatService.userExists(message.receiverId))
             return statusOf(HttpStatus.GONE, "No such user")
         if (message.content.length > 1000)
             return statusOf(HttpStatus.PAYLOAD_TOO_LARGE, "Message is too long")
-        chatService.sendPrivateMessage(userId, message.receiverId, message.content.trim())
-        return statusOf(HttpStatus.OK, "Message is sent")
+        return statusOf(
+            reason = "Message is sent",
+            payload = chatService.sendPrivateMessage(userId, message.receiverId, message.content.trim())
+        )
     }
 
     @GetMapping("/messages/conversations/{id}")

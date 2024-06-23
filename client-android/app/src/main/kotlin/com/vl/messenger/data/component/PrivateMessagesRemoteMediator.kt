@@ -40,7 +40,7 @@ class PrivateMessagesRemoteMediator(
             LoadType.APPEND -> {
                 val items = state.lastItemOrNull()?.id?.let { fetch(it) }
                     ?: return MediatorResult.Success(endOfPaginationReached = true)
-                dao.insert(items)
+                dao.addLast(items)
                 MediatorResult.Success(items.size < state.config.pageSize)
             }
 
@@ -51,7 +51,7 @@ class PrivateMessagesRemoteMediator(
                 val endOfPaginationReached = items.size < state.config.pageSize
                 Log.d(TAG, "insert ${items.size} items, endReached=$endOfPaginationReached")
 
-                dao.insert(items)
+                dao.addLast(items)
                 MediatorResult.Success(endOfPaginationReached)
             }
         }

@@ -7,8 +7,10 @@ import com.vl.messenger.data.entity.StatusResponse
 import com.vl.messenger.data.entity.User
 import retrofit2.Call
 import retrofit2.Retrofit
+import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.POST
 import retrofit2.http.Query
 
 class DialogManager(
@@ -44,6 +46,20 @@ class DialogManager(
         }
     }
 
+    fun sendMessage(userId: Int, content: String): Message {
+        val response = api.sendMessage(
+            "Bearer ${sessionStore.accessTokenFlow.value!!.token}",
+            Api.MessageForm(userId, content)
+        ).execute()
+
+        if (!response.isSuccessful)
+            throw ApiException(response)
+
+        return response.body()!!.requireResponse().let { dto ->
+            Message(dto.id, dto.senderId, dto.timestamp, dto.content)
+        }
+    }
+
     private interface Api {
         @GET("/dialogs")
         fun getDialogs(
@@ -57,6 +73,12 @@ class DialogManager(
             @Query("from_id") key: Long?,
             @Query("limit") limit: Int
         ): Call<StatusResponse<MessagesDto>>
+
+        @POST("/messages/private/send")
+        fun sendMessage(
+            @Header("Authorization") token: String,
+            @Body message: MessageForm
+        ): Call<StatusResponse<MessageDto>>
 
         class UsersDto {
             val users: List<UserDto> = listOf()
@@ -80,5 +102,11 @@ class DialogManager(
             val timestamp: Long = 0
             val content: String = ""
         }
+
+        class MessageForm(
+            @SerializedName("user_id")
+            val userId: Int,
+            val content: String
+        )
     }
 }

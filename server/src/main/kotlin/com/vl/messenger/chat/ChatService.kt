@@ -1,6 +1,7 @@
 package com.vl.messenger.chat
 
 import com.vl.messenger.DataMapper
+import com.vl.messenger.chat.dto.MessagesResponse
 import com.vl.messenger.chat.dto.StompMessage
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.messaging.simp.SimpMessagingTemplate
@@ -18,7 +19,7 @@ class ChatService(
 
     fun getDialogs(userId: Int) = dataMapper.getDialogs(userId)
 
-    fun sendPrivateMessage(userId: Int, receiverId: Int, content: String) {
+    fun sendPrivateMessage(userId: Int, receiverId: Int, content: String): MessagesResponse.Message {
         val messageId = dataMapper.addMessage(userId, receiverId, content)
         if (registry.getUser(dataMapper.getVerboseUser(receiverId)!!.login) != null)
             template.convertAndSend(getUserDestination(receiverId), StompMessage().apply {
@@ -26,6 +27,7 @@ class ChatService(
                 senderId = userId
                 this.content = content
             })
+        return MessagesResponse.Message(messageId, userId, System.currentTimeMillis(), content) // FIXME timestamp
     }
 
     fun getPrivateMessages(userId: Int, companionId: Int, fromId: Long?, limit: Int) =

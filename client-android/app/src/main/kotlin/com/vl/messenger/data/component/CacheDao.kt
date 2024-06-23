@@ -36,8 +36,17 @@ class CacheDao<K, V>: Dao<K, V> {
             .map(Map.Entry<K, V>::value)
             .toList()
 
-    override fun insert(items: List<Pair<K, V>>) {
+    override fun addLast(items: List<Pair<K, V>>) {
         cache.putAll(items)
+        produceUpdateEvent()
+    }
+
+    override fun addFirst(items: List<Pair<K, V>>) {
+        @Suppress("unchecked")
+        val tail = cache.clone() as Map<K, V>
+        cache.clear()
+        cache.putAll(items)
+        cache.putAll(tail)
         produceUpdateEvent()
     }
 
