@@ -6,8 +6,8 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.vl.messenger.data.manager.DownloadManager
 import com.vl.messenger.R
-import com.vl.messenger.data.entity.Message
 import com.vl.messenger.data.entity.User
+import com.vl.messenger.domain.ListAdapter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelChildren

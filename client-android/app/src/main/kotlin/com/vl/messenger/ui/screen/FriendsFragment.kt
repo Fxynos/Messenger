@@ -14,9 +14,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.vl.messenger.R
 import com.vl.messenger.data.entity.User
 import com.vl.messenger.data.manager.DownloadManager
-import com.vl.messenger.data.component.OnItemClickListener
+import com.vl.messenger.domain.OnItemClickListener
 import com.vl.messenger.data.component.ProfileAdapter
-import com.vl.messenger.ui.viewmodel.DialogsViewModel
 import com.vl.messenger.ui.viewmodel.FriendsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers

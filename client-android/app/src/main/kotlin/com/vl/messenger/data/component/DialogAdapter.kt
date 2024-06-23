@@ -8,6 +8,8 @@ import com.vl.messenger.R
 import com.vl.messenger.data.entity.Message
 import com.vl.messenger.data.entity.User
 import com.vl.messenger.data.manager.DownloadManager
+import com.vl.messenger.domain.ListAdapter
+import com.vl.messenger.domain.OnItemClickListener
 
 class DialogAdapter(
     context: Context,

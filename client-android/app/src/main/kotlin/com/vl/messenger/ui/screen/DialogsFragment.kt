@@ -13,7 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.vl.messenger.R
 import com.vl.messenger.data.component.DialogAdapter
-import com.vl.messenger.data.component.OnItemClickListener
+import com.vl.messenger.domain.OnItemClickListener
 import com.vl.messenger.data.entity.PrivateDialog
 import com.vl.messenger.data.entity.User
 import com.vl.messenger.data.manager.DownloadManager
