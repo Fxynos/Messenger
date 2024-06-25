@@ -5,6 +5,7 @@ import com.vl.messenger.data.manager.AuthManager
 import com.vl.messenger.data.manager.DialogManager
 import com.vl.messenger.data.manager.SessionStore
 import com.vl.messenger.data.manager.DownloadManager
+import com.vl.messenger.data.manager.PrivateChatManager
 import com.vl.messenger.data.manager.ProfileManager
 import com.vl.messenger.data.manager.SearchManager
 import dagger.Module
@@ -21,7 +22,7 @@ import javax.inject.Singleton
 object ApiModule {
     @Provides
     fun provideRetrofit(): Retrofit = Retrofit.Builder()
-        .baseUrl(BuildConfig.BASE_URL)
+        .baseUrl("http://${BuildConfig.ADDRESS}")
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
@@ -49,4 +50,9 @@ object ApiModule {
     @Provides
     @Singleton
     fun provideDialogsManager(retrofit: Retrofit, sessionStore: SessionStore) = DialogManager(retrofit, sessionStore)
+
+    @Provides
+    @Singleton
+    fun provideChatManager(sessionStore: SessionStore, profileManager: ProfileManager) =
+        PrivateChatManager(profileManager, sessionStore)
 }

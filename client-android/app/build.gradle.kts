@@ -23,10 +23,10 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            buildConfigField("String", "BASE_URL", "\"http://192.168.0.10:8080\"")
+            buildConfigField("String", "ADDRESS", "\"192.168.0.111:8080\"")
         }
         debug {
-            buildConfigField("String", "BASE_URL", "\"http://192.168.0.10:8080\"")
+            buildConfigField("String", "ADDRESS", "\"192.168.0.111:8080\"")
         }
     }
 
@@ -45,6 +45,15 @@ android {
 }
 
 dependencies {
+    /* Retrofit */
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    /* STOMP */
+    implementation("com.github.NaikSoftware:StompProtocolAndroid:1.6.6")
+    implementation("com.squareup.okhttp3:okhttp:3.8.0")
+    implementation("io.reactivex.rxjava2:rxjava:2.2.21")
+
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.11.0")
@@ -52,8 +61,6 @@ dependencies {
     implementation("androidx.fragment:fragment-ktx:1.6.2")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("androidx.paging:paging-runtime-ktx:3.3.0-alpha04")
     implementation("com.google.dagger:hilt-android:2.44")
     kapt("com.google.dagger:hilt-android-compiler:2.44")

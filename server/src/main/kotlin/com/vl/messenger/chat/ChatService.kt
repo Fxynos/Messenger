@@ -50,5 +50,5 @@ class ChatService(
             }
     }
 
-    private fun getUserDestination(userId: Int) = "/user/$userId/chat"
+    private fun getUserDestination(userId: Int) = "/users/$userId/chat"
 }

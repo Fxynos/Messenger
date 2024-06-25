@@ -32,7 +32,7 @@ open class WebSocketMessageConfig: WebSocketMessageBrokerConfigurer {
     }
 
     override fun configureMessageBroker(registry: MessageBrokerRegistry) {
-        registry.enableSimpleBroker("/user") // broker for subscriptions and broadcasting
+        registry.enableSimpleBroker("/users") // broker for subscriptions and broadcasting
         registry.setApplicationDestinationPrefixes("/app") // controllers routes
         //registry.setUserDestinationPrefix("/user")
     }

@@ -23,8 +23,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private const val TAG = "DialogActivity"
-
 /**
  * Accepts extras:
  * - [EXTRA_PRIVATE_DIALOG] or [EXTRA_CONVERSATION]

@@ -1,6 +1,5 @@
 package com.vl.messenger.data.component
 
-import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
@@ -10,8 +9,6 @@ import com.vl.messenger.data.manager.DialogManager
 import com.vl.messenger.domain.Dao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-
-private const val TAG = "PrivateMessagesRemoteMediator"
 
 @OptIn(ExperimentalPagingApi::class)
 class PrivateMessagesRemoteMediator(
@@ -26,8 +23,6 @@ class PrivateMessagesRemoteMediator(
         loadType: LoadType,
         state: PagingState<Long, Message>
     ): MediatorResult {
-        Log.d(TAG, "load $loadType")
-
         suspend fun fetch(key: Long?) = withContext(Dispatchers.IO) {
             dialogManager.getMessages(
                 companionUserId,
@@ -48,11 +43,8 @@ class PrivateMessagesRemoteMediator(
 
             LoadType.REFRESH -> {
                 val items = fetch(null)
-                val endOfPaginationReached = items.size < state.config.pageSize
-                Log.d(TAG, "insert ${items.size} items, endReached=$endOfPaginationReached")
-
                 dao.addLast(items)
-                MediatorResult.Success(endOfPaginationReached)
+                MediatorResult.Success(items.size < state.config.pageSize)
             }
         }
     }

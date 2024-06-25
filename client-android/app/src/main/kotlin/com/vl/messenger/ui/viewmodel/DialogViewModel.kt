@@ -17,6 +17,7 @@ import com.vl.messenger.data.entity.Message
 import com.vl.messenger.data.entity.PrivateDialog
 import com.vl.messenger.data.manager.DialogManager
 import com.vl.messenger.data.manager.DownloadManager
+import com.vl.messenger.data.manager.PrivateChatManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.BufferOverflow
@@ -28,15 +29,13 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
-
-private const val TAG = "DialogViewModel"
 
 @HiltViewModel
 class DialogViewModel @Inject constructor(
     private val downloadManager: DownloadManager,
-    private val dialogManager: DialogManager
+    private val dialogManager: DialogManager,
+    private val chatManager: PrivateChatManager
 ): ViewModel() {
     private val cachedMessages = CacheDao<Long, Message>()
     private val _dialog = MutableStateFlow<Dialog?>(null)
@@ -63,6 +62,7 @@ class DialogViewModel @Inject constructor(
             return
 
         this._dialog.value = dialog
+        // fetch old messages
         _messages = when (dialog) {
             is PrivateDialog -> {
                 PrivateMessagesRepository(
@@ -83,21 +83,29 @@ class DialogViewModel @Inject constructor(
 
             is Conversation -> TODO()
         }
+        // subscribe for new messages
+        viewModelScope.launch {
+            chatManager.messageEvents.collect(this@DialogViewModel::insertNewMessage)
+        }
     }
 
     fun send(messageText: String) {
         if (messageText.isBlank())
             return
 
-        viewModelScope.launch {
-            val sentMessage = withContext(Dispatchers.IO) {
-                dialogManager.sendMessage(_dialog.value!!.id, messageText.trim())
-            }
-            // DAO triggers paging source invalidation, it will update UI state
-            cachedMessages.addFirst(listOf(sentMessage.id to sentMessage))
-            delay(100L)
-            _scrollEvents.tryEmit(Any())
+        viewModelScope.launch(Dispatchers.IO) {
+            insertNewMessage(dialogManager.sendMessage(
+                _dialog.value!!.id,
+                messageText.trim())
+            )
         }
+    }
+
+    private suspend fun insertNewMessage(message: Message) {
+        // DAO triggers paging source invalidation, it will update UI state
+        cachedMessages.addFirst(listOf(message.id to message))
+        delay(100L)
+        _scrollEvents.tryEmit(Any())
     }
 
     sealed interface UiState {
