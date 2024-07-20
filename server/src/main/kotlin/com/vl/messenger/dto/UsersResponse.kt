@@ -6,9 +6,9 @@ import jakarta.validation.Valid
 
 class UsersResponse(
     @field:JsonProperty(required = true)
-    val users: List<@Valid User>
+    val users: List<@Valid UserDto>
 ) {
-    class User(
+    class UserDto(
         @field:JsonProperty(required = true)
         val id: Int,
         @field:JsonProperty(required = true)

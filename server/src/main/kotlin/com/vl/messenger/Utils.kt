@@ -18,7 +18,7 @@ fun <T> statusOf(
 val userId: Int
     get() = SecurityContextHolder.getContext().authentication.principal as Int
 
-fun DataMapper.User.toDto(baseUrl: String) = UsersResponse.User(
+fun DataMapper.User.toDto(baseUrl: String) = UsersResponse.UserDto(
     id,
     login,
     if (image == null) null else "$baseUrl/${image}"

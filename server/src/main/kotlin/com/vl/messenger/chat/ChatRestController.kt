@@ -2,6 +2,7 @@ package com.vl.messenger.chat
 
 import com.vl.messenger.DataMapper
 import com.vl.messenger.chat.dto.ConversationMessageForm
+import com.vl.messenger.chat.dto.DialogResponse
 import com.vl.messenger.chat.dto.PrivateMessageForm
 import com.vl.messenger.chat.dto.MessagesResponse
 import com.vl.messenger.dto.StatusResponse
@@ -30,13 +31,29 @@ class ChatRestController(
     companion object {
         private fun messageToDto(message: DataMapper.Message) =
             MessagesResponse.Message(message.id, message.senderId, message.unixSec, message.content)
-    }
+     }
 
+    private fun String?.toImageUrl() = if (this == null) null else "$baseUrl/$this"
+
+    /**
+     * @return private dialogs and conversations
+     */
     @GetMapping("/dialogs")
-    fun getDialogs(): ResponseEntity<StatusResponse<UsersResponse>> {
-        return statusOf(payload = UsersResponse(chatService.getDialogs(userId).map {
-            it.toDto(baseUrl)
-        }))
+    fun getDialogs(
+        @RequestParam(defaultValue = "0") offset: Int,
+        @RequestParam(defaultValue = "50") limit: Int
+    ): ResponseEntity<StatusResponse<List<DialogResponse>>> {
+        return statusOf(payload = chatService.getDialogs(userId, offset, limit).map {
+            DialogResponse(
+                it.isPrivate,
+                DialogResponse.DialogDto(it.id, it.title, it.image.toImageUrl()),
+                it.lastMessage?.run {
+                    DialogResponse.MessageDto(id, unixSec, content, it.lastMessageSender!!.run {
+                        UsersResponse.UserDto(id, login, image.toImageUrl())
+                    })
+                }
+            )
+        })
     }
 
     @GetMapping("/messages/private")

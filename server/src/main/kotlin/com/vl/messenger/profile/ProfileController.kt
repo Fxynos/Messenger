@@ -32,13 +32,13 @@ class ProfileController(
     }
 
     @GetMapping("/{id}")
-    fun getUser(@PathVariable id: Int): ResponseEntity<StatusResponse<UsersResponse.User>> =
+    fun getUser(@PathVariable id: Int): ResponseEntity<StatusResponse<UsersResponse.UserDto>> =
         service.getUser(id)?.let {
             statusOf(payload = userToDtoWithFriendStatus(it))
         } ?: statusOf(HttpStatus.GONE, "No such user")
 
     @GetMapping("/me")
-    fun whoAmI(): ResponseEntity<StatusResponse<UsersResponse.User>> {
+    fun whoAmI(): ResponseEntity<StatusResponse<UsersResponse.UserDto>> {
         return statusOf(payload = service.getUser(userId)!!.toDto(baseUrl))
     }
 
@@ -126,9 +126,9 @@ class ProfileController(
         return statusOf(payload = UsersResponse(service.getBlacklist(userId).map { it.toDto(baseUrl) }))
     }
 
-    private fun userToDtoWithFriendStatus(user: DataMapper.User): UsersResponse.User {
+    private fun userToDtoWithFriendStatus(user: DataMapper.User): UsersResponse.UserDto {
         val id = userId
-        return UsersResponse.User(
+        return UsersResponse.UserDto(
             user.id,
             user.login,
             if (user.image == null) null else "$baseUrl/${user.image}",

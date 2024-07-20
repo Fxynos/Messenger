@@ -17,7 +17,7 @@ class ChatService(
 
     fun userExists(userId: Int) = dataMapper.getVerboseUser(userId) != null
 
-    fun getDialogs(userId: Int) = dataMapper.getDialogs(userId)
+    fun getDialogs(userId: Int, offset: Int, limit: Int) = dataMapper.getDialogs(userId, offset, limit)
 
     fun sendPrivateMessage(userId: Int, receiverId: Int, content: String): MessagesResponse.Message {
         val messageId = dataMapper.addMessage(userId, receiverId, content)

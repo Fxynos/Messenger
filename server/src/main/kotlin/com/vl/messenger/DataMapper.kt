@@ -409,7 +409,8 @@ class DataMapper {
             statement.executeQuery().collectMessages()
         }
 
-    fun getDialogs(userId: Int): List<User> = // TODO pagination
+    @Deprecated("Use getDialogs() method instead, it is more verbose and provides pagination")
+    fun getPrivateDialogs(userId: Int): List<User> =
         connection.prepareStatement("""
             select id, login, image from (
                 with members as (
@@ -444,11 +445,112 @@ class DataMapper {
             conversationId
         }
 
-    fun getConversation(id: Long): Conversation? = // TODO get all conversations
+    fun getConversation(id: Long): Conversation? =
         connection.prepareStatement("select name, image from conversation where id = ?;").use { statement ->
             statement.setLong(1, id)
             statement.executeQuery().takeIf(ResultSet::next)?.run {
                 Conversation(id, getString("name"), getString("image"))
+            }
+        }
+
+    /**
+     * Get dialogs using offset pagination
+     * @return private dialogs and conversations with last message and its sender
+     */
+    fun getDialogs(userId: Int, offset: Int, limit: Int): List<Dialog> =
+        connection.prepareStatement("""
+            select
+                private_dialog,
+                dialog_id,
+                dialog_title,
+                dialog_image,
+                dialog.id as message_id,
+                time,
+                content,
+                user.id,
+                login,
+                image
+            from (
+                -- dialog and its last message if present --
+                select
+                    private_dialog,
+                    dialog_id,
+                    dialog_title,
+                    dialog_image,
+                    message.*
+                from (
+                    -- private dialog --
+                    select 
+                        true as private_dialog,
+                        dialog_id,
+                        login as dialog_title,
+                        image as dialog_image,
+                        message_id
+                    from (
+                        select
+                            max(message_id) as message_id,
+                            if (sender_id = ?, receiver_id, sender_id) as dialog_id    -- id of current user
+                        from message
+                        inner join private_message
+                        on id = message_id 
+                        where (sender_id = ? or receiver_id = ?)    -- id of current user twice
+                        group by dialog_id    -- id of current user
+                    ) as dialog
+                    inner join user
+                    on dialog_id = user.id
+                    union
+                    -- conversation --
+                    select
+                        false as private_dialog,
+                        id as dialog_id,
+                        name as dialog_title,
+                        image as dialog_image,
+                        if (count(*) > 0, max(message_id), null) as message_id
+                    from (
+                        select conversation.*
+                        from participate 
+                        inner join conversation
+                        on conversation_id = id
+                        where user_id = ?   -- id of current user
+                    ) as conversation
+                    left join conversation_message
+                    on id = conversation_id
+                    group by conversation.id
+                ) as dialog
+                left join message
+                on message_id = message.id
+            ) as dialog
+            left join user
+            on sender_id = user.id
+            order by message_id desc, dialog_id desc
+            limit ? offset ?;
+        """.trimIndent()).use { statement ->
+            var argCounter = 0
+            repeat(4) { statement.setInt(++argCounter, userId) }
+            statement.setInt(++argCounter, limit)
+            statement.setInt(++argCounter, offset)
+
+            statement.executeQuery().run {
+                val list = LinkedList<Dialog>()
+                while (next())
+                    list += Dialog(
+                        getBoolean("private_dialog"),
+                        getLong("dialog_id"),
+                        getString("dialog_title"),
+                        getString("dialog_image"),
+                        if (getLong("message_id") == 0L) null else Message(
+                            getLong("message_id"),
+                            getInt("user.id"),
+                            getUnixSeconds("time"),
+                            getString("content")
+                        ),
+                        if (getInt("user.id") == 0) null else User(
+                            getInt("user.id"),
+                            getString("login"),
+                            getString("image")
+                        )
+                    )
+                list
             }
         }
 
@@ -658,6 +760,18 @@ class DataMapper {
     class Message(val id: Long, val senderId: Int, val unixSec: Long, val content: String)
 
     class Conversation(val id: Long, val name: String, val image: String?)
+
+    /**
+     * @param id user id if [isPrivate] `true`, conversation id otherwise
+     */
+    data class Dialog(
+        val isPrivate: Boolean,
+        val id: Long,
+        val title: String,
+        val image: String?,
+        val lastMessage: Message?,
+        val lastMessageSender: User?
+    )
 
     class ConversationMember(id: Int, login: String, image: String?, val role: Role): User(id, login, image) {
         class Role(

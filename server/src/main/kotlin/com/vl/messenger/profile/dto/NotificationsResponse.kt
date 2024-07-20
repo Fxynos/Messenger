@@ -17,7 +17,7 @@ class NotificationsResponse(
         val seen: Boolean,
         @field:JsonInclude(Include.NON_NULL)
         @field:JsonProperty("sender_id")
-        val sender: UsersResponse.User?,
+        val sender: UsersResponse.UserDto?,
         @field:JsonInclude(Include.NON_NULL)
         @field:JsonProperty("conversation_id")
         val conversation: ConversationResponse?,
@@ -29,10 +29,10 @@ class NotificationsResponse(
         constructor(id: Long, time: Long, seen: Boolean, title: String, content: String):
                 this(Type.INFO, id, time, seen, null, null, title, content)
 
-        constructor(id: Long, time: Long, seen: Boolean, sender: UsersResponse.User):
+        constructor(id: Long, time: Long, seen: Boolean, sender: UsersResponse.UserDto):
                 this(Type.FRIEND_REQUEST, id, time, seen, sender, null, null, null)
 
-        constructor(id: Long, time: Long, seen: Boolean, sender: UsersResponse.User, conversation: ConversationResponse):
+        constructor(id: Long, time: Long, seen: Boolean, sender: UsersResponse.UserDto, conversation: ConversationResponse):
                 this(Type.CONVERSATION_INVITE, id, time, seen, sender, conversation, null, null)
 
         enum class Type {
