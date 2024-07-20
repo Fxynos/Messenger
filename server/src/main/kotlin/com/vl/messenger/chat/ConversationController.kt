@@ -49,7 +49,11 @@ class ConversationController(
     }
 
     @GetMapping("/{id}")
-    fun describeConversation(@PathVariable id: Long): ResponseEntity<StatusResponse<ConversationResponse>> {
+    fun describeConversation(
+        @PathVariable id: Long,
+        @RequestParam(defaultValue = "0") offset: Int,
+        @RequestParam(defaultValue = "50") limit: Int
+    ): ResponseEntity<StatusResponse<ConversationResponse>> {
         if (!service.isMember(userId, id))
             return statusOf(HttpStatus.GONE, "No conversation or you are not its member")
         val conversation = service.getConversation(id)!!
@@ -57,7 +61,7 @@ class ConversationController(
             conversation.id,
             conversation.name,
             if (conversation.image == null) null else "$baseUrl/${conversation.image}",
-            service.getMembers(id).map {
+            service.getMembers(id, offset, limit).map {
                 ConversationResponse.Member(it.id, it.login, "$baseUrl/${it.image}", it.role.name)
             }
         ))

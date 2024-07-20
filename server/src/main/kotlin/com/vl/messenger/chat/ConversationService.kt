@@ -28,7 +28,7 @@ class ConversationService(
         dataMapper.setConversationImage(conversationId, path)
     }
 
-    fun getMembers(conversationId: Long) = dataMapper.getMembers(conversationId)
+    fun getMembers(conversationId: Long, offset: Int, limit: Int) = dataMapper.getMembers(conversationId, offset, limit)
 
     /**
      * @param userId id of competent user having privilege to manage members

@@ -257,12 +257,31 @@ class DataMapper {
 
     fun getNotifications(userId: Int, fromId: Long?, limit: Int): List<Notification> =
         connection.prepareStatement("""
-            select * from notification 
+            select
+                fr.notification_id,
+                friend_sender.id,
+                friend_sender.login,
+                friend_sender.image,
+                notification.id,
+                time,
+                title,
+                content,
+                seen,
+                cr.notification_id,
+                conversation_sender.id,
+                conversation_sender.login,
+                conversation_sender.image,
+                conversation.id,
+                conversation.name,
+                conversation.image,
+                count(participate.user_id) as members
+            from notification 
             left join friend_request as fr on id = notification_id 
             left join conversation_request as cr on id = cr.notification_id 
             left join user as friend_sender on fr.sender_id = friend_sender.id 
             left join user as conversation_sender on cr.sender_id = conversation_sender.id 
             left join conversation on conversation_id = conversation.id 
+            left join participate on conversation.id = participate.conversation_id
             and user_id = ? ${ if (fromId == null) "" else "and notification.id < ? " }
             order by notification.id desc limit ?;
         """.trimIndent()).use { statement ->
@@ -296,7 +315,8 @@ class DataMapper {
                             Conversation(
                                 getLong("conversation.id"),
                                 getString("conversation.name"),
-                                getString("conversation.image")
+                                getString("conversation.image"),
+                                getInt("members")
                             ),
                             getLong("notification.id"),
                             getUnixSeconds("time"),
@@ -446,10 +466,20 @@ class DataMapper {
         }
 
     fun getConversation(id: Long): Conversation? =
-        connection.prepareStatement("select name, image from conversation where id = ?;").use { statement ->
+        connection.prepareStatement("""
+            select name, image, count(user_id) as members
+            from conversation 
+            left join participate on id = conversation_id
+            where id = ?;
+        """.trimIndent()).use { statement ->
             statement.setLong(1, id)
             statement.executeQuery().takeIf(ResultSet::next)?.run {
-                Conversation(id, getString("name"), getString("image"))
+                Conversation(
+                    id,
+                    getString("name"),
+                    getString("image"),
+                    getInt("members")
+                )
             }
         }
 
@@ -459,71 +489,51 @@ class DataMapper {
      */
     fun getDialogs(userId: Int, offset: Int, limit: Int): List<Dialog> =
         connection.prepareStatement("""
-            select
-                private_dialog,
+            with private_dialog as (
+                select 
+                    if (sender_id = ?, receiver_id, sender_id) as dialog_id,    -- id of current user
+                    max(message_id) as message_id
+                from message
+                inner join private_message on id = message_id
+                where (sender_id = ? or receiver_id = ?)    -- id of current user twice
+                group by dialog_id
+            ),
+            dialog as (
+                -- private dialog --
+                select
+                    true as is_private,
+                    dialog_id,
+                    login as dialog_title,
+                    image as dialog_image,
+                    message_id
+                from private_dialog inner join user on dialog_id = user.id
+                -- conversation --
+                union select
+                    false as is_private,
+                    id as dialog_id,
+                    name as dialog_title,
+                    image as dialog_image,
+                    if (count(*) > 0, max(message_id), null) as message_id
+                from participate inner join conversation on conversation_id = id
+                left join conversation_message on id = conversation_message.conversation_id
+                where user_id = ?   -- id of current user
+                group by conversation.id
+            ) select
+                is_private,
                 dialog_id,
                 dialog_title,
                 dialog_image,
-                dialog.id as message_id,
+                message.id as message_id,
                 time,
                 content,
                 user.id,
                 login,
                 image
-            from (
-                -- dialog and its last message if present --
-                select
-                    private_dialog,
-                    dialog_id,
-                    dialog_title,
-                    dialog_image,
-                    message.*
-                from (
-                    -- private dialog --
-                    select 
-                        true as private_dialog,
-                        dialog_id,
-                        login as dialog_title,
-                        image as dialog_image,
-                        message_id
-                    from (
-                        select
-                            max(message_id) as message_id,
-                            if (sender_id = ?, receiver_id, sender_id) as dialog_id    -- id of current user
-                        from message
-                        inner join private_message
-                        on id = message_id 
-                        where (sender_id = ? or receiver_id = ?)    -- id of current user twice
-                        group by dialog_id    -- id of current user
-                    ) as dialog
-                    inner join user
-                    on dialog_id = user.id
-                    union
-                    -- conversation --
-                    select
-                        false as private_dialog,
-                        id as dialog_id,
-                        name as dialog_title,
-                        image as dialog_image,
-                        if (count(*) > 0, max(message_id), null) as message_id
-                    from (
-                        select conversation.*
-                        from participate 
-                        inner join conversation
-                        on conversation_id = id
-                        where user_id = ?   -- id of current user
-                    ) as conversation
-                    left join conversation_message
-                    on id = conversation_id
-                    group by conversation.id
-                ) as dialog
-                left join message
-                on message_id = message.id
-            ) as dialog
-            left join user
-            on sender_id = user.id
+            from dialog
+            left join message on message_id = message.id
+            left join user on sender_id = user.id
             order by message_id desc, dialog_id desc
-            limit ? offset ?;
+            limit ? offset ?;   -- offset pagination
         """.trimIndent()).use { statement ->
             var argCounter = 0
             repeat(4) { statement.setInt(++argCounter, userId) }
@@ -573,13 +583,18 @@ class DataMapper {
         }
     }
 
-    fun getMembers(conversationId: Long): List<ConversationMember> = // TODO pagination
+    fun getMembers(conversationId: Long, offset: Int, limit: Int): List<ConversationMember> =
         connection.prepareStatement("""
             select * from participate inner join conversation_rights on rights_id = id 
             inner join user on user_id = user.id 
-            where conversation_id = ?;
+            where conversation_id = ?
+            limit ? offset ?;
         """.trimIndent()).use { statement ->
-            statement.setLong(1, conversationId)
+            var argCounter = 0
+            statement.setLong(++argCounter, conversationId)
+            statement.setInt(++argCounter, limit)
+            statement.setInt(++argCounter, offset)
+
             statement.executeQuery().run {
                 val list = LinkedList<ConversationMember>()
                 while (next())
@@ -621,6 +636,7 @@ class DataMapper {
         get() = connection.createStatement()
             .executeQuery("select * from conversation_rights")
             .collectRoles()
+
     fun getRole(userId: Int, conversationId: Long): ConversationMember.Role? =
         connection.prepareStatement("""
             select * from participate inner join conversation_rights on rights_id = id 
@@ -759,7 +775,7 @@ class DataMapper {
 
     class Message(val id: Long, val senderId: Int, val unixSec: Long, val content: String)
 
-    class Conversation(val id: Long, val name: String, val image: String?)
+    class Conversation(val id: Long, val name: String, val image: String?, val membersCount: Int)
 
     /**
      * @param id user id if [isPrivate] `true`, conversation id otherwise

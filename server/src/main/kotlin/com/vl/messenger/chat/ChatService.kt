@@ -14,6 +14,7 @@ class ChatService(
     @Autowired private val template: SimpMessagingTemplate,
     @Autowired private val registry: SimpUserRegistry
 ) {
+    val roles by dataMapper::roles
 
     fun userExists(userId: Int) = dataMapper.getVerboseUser(userId) != null
 
