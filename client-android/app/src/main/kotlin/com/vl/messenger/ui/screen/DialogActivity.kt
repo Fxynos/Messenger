@@ -1,7 +1,6 @@
 package com.vl.messenger.ui.screen
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageButton
@@ -12,11 +11,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.vl.messenger.R
-import com.vl.messenger.data.component.PrivateMessagesPagingAdapter
-import com.vl.messenger.data.entity.Conversation
+import com.vl.messenger.data.component.PrivateMessagePagingAdapter
 import com.vl.messenger.data.entity.Dialog
-import com.vl.messenger.data.entity.PrivateDialog
 import com.vl.messenger.ui.viewmodel.DialogViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -25,14 +23,13 @@ import kotlinx.coroutines.withContext
 
 /**
  * Accepts extras:
- * - [EXTRA_PRIVATE_DIALOG] or [EXTRA_CONVERSATION]
+ * - [EXTRA_DIALOG]
  * - [EXTRA_OWN_ID]
  */
 @AndroidEntryPoint
 class DialogActivity: AppCompatActivity() {
     companion object {
-        const val EXTRA_PRIVATE_DIALOG = "dialog"
-        const val EXTRA_CONVERSATION = "conversation"
+        const val EXTRA_DIALOG = "dialog"
         const val EXTRA_OWN_ID = "id" // own user id
     }
 
@@ -46,7 +43,7 @@ class DialogActivity: AppCompatActivity() {
     private lateinit var name: TextView
     private lateinit var noMessages: TextView
 
-    private lateinit var adapter: PrivateMessagesPagingAdapter
+    private lateinit var adapter: PrivateMessagePagingAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,8 +51,7 @@ class DialogActivity: AppCompatActivity() {
 
         /* Args */
         val userId: Int = intent.getIntExtra(EXTRA_OWN_ID, -1).takeUnless { it == -1 }!!
-        val dialog: Dialog = intent.getParcelableExtra<PrivateDialog>(EXTRA_PRIVATE_DIALOG)
-            ?: intent.getParcelableExtra<Conversation>(EXTRA_CONVERSATION)!!
+        val dialog: Dialog = intent.getParcelableExtra(EXTRA_DIALOG)!!
 
         viewModel.initialize(dialog)
 
@@ -69,7 +65,7 @@ class DialogActivity: AppCompatActivity() {
         noMessages = findViewById(R.id.no_messages_hint)
         val messagesList = findViewById<RecyclerView>(R.id.messages)
 
-        adapter = PrivateMessagesPagingAdapter(this, userId)
+        adapter = PrivateMessagePagingAdapter(this, userId)
         messagesList.adapter = adapter
 
         back.setOnClickListener(this::onClick)
@@ -104,7 +100,7 @@ class DialogActivity: AppCompatActivity() {
             }
             is DialogViewModel.UiState.DialogShown -> {
                 name.text = state.dialogName
-                image.setImageBitmap(state.dialogImage)
+                image.load(state.dialogImage)
             }
         }
     }

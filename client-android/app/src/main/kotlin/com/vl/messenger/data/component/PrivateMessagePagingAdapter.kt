@@ -11,17 +11,16 @@ import androidx.recyclerview.widget.RecyclerView
 import com.vl.messenger.R
 import com.vl.messenger.data.entity.Message
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Locale
 
 private const val VIEW_TYPE_SENT = 1
 private const val VIEW_TYPE_RECEIVED = 2
 
-class PrivateMessagesPagingAdapter(
+class PrivateMessagePagingAdapter(
     context: Context,
     private val ownUserId: Int
-): PagingDataAdapter<Message, PrivateMessagesPagingAdapter.ViewHolder>(
-    PrivateMessagesPagingAdapter
+): PagingDataAdapter<Message, PrivateMessagePagingAdapter.ViewHolder>(
+    PrivateMessagePagingAdapter
 ) {
     companion object: DiffUtil.ItemCallback<Message>() {
         override fun areItemsTheSame(oldItem: Message, newItem: Message) = oldItem.id == newItem.id

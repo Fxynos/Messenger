@@ -1,6 +1,5 @@
 package com.vl.messenger.ui.screen
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -9,13 +8,14 @@ import android.view.ViewGroup
 import android.widget.ImageButton
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.RecyclerView
 import com.vl.messenger.R
-import com.vl.messenger.data.component.DialogAdapter
+import com.vl.messenger.data.component.DialogPagingAdapter
+import com.vl.messenger.data.entity.Dialog
 import com.vl.messenger.domain.OnItemClickListener
-import com.vl.messenger.data.entity.PrivateDialog
-import com.vl.messenger.data.entity.User
 import com.vl.messenger.data.manager.DownloadManager
 import com.vl.messenger.ui.viewmodel.DialogsViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -28,7 +28,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class DialogsFragment: Fragment(), View.OnClickListener, OnItemClickListener<User> {
+class DialogsFragment: Fragment(), View.OnClickListener, OnItemClickListener<Dialog> {
 
     @Inject lateinit var downloadManager: DownloadManager
     private val viewModel: DialogsViewModel by viewModels()
@@ -47,26 +47,17 @@ class DialogsFragment: Fragment(), View.OnClickListener, OnItemClickListener<Use
         return view
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        viewModel.fetchDialogs()
         lifecycleScope.launch {
-            withContext(Dispatchers.Main) {
-                val adapter = DialogAdapter(
-                    requireContext(),
-                    downloadManager,
-                    withContext(Dispatchers.IO) { getOwnUserId() }
-                )
-                adapter.onItemClickListener = this@DialogsFragment
+            val userId = withContext(Dispatchers.IO) { getOwnUserId() }
+            val adapter = DialogPagingAdapter(requireContext(), userId)
+            adapter.onItemClickListener = this@DialogsFragment
+            dialogs.adapter = adapter
 
-                dialogs.adapter = adapter
-
-                viewModel.dialogs.collect { items ->
-                    adapter.items.clear()
-                    adapter.items.addAll(items)
-                    adapter.notifyDataSetChanged()
-                }
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                adapter.refresh()
+                viewModel.dialogs.collect(adapter::submitData)
             }
         }
     }
@@ -77,10 +68,10 @@ class DialogsFragment: Fragment(), View.OnClickListener, OnItemClickListener<Use
         }
     }
 
-    override fun onClick(item: User, position: Int) {
+    override fun onClick(item: Dialog, position: Int) {
         startActivity(Intent(requireContext(), DialogActivity::class.java).apply {
             putExtra(DialogActivity.EXTRA_OWN_ID, runBlocking { getOwnUserId() })
-            putExtra(DialogActivity.EXTRA_PRIVATE_DIALOG, PrivateDialog(item))
+            putExtra(DialogActivity.EXTRA_DIALOG, item)
         })
     }
 

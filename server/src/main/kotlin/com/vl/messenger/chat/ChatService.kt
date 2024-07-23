@@ -39,7 +39,7 @@ class ChatService(
 
     fun sendConversationMessage(userId: Int, conversationId: Long, content: String) {
         val messageId = dataMapper.addConversationMessage(userId, conversationId, content)
-        dataMapper.getMembers(conversationId)
+        dataMapper.getAllMembers(conversationId)
             .filter { registry.getUser(it.login) != null }
             .forEach { receiver ->
                 template.convertAndSend(getUserDestination(receiver.id), StompMessage().apply {

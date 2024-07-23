@@ -6,6 +6,7 @@ import com.vl.messenger.ApiException
 import com.vl.messenger.data.entity.User
 import com.vl.messenger.data.entity.StatusResponse
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
@@ -74,7 +75,7 @@ class ProfileManager(retrofit: Retrofit, private val sessionStore: SessionStore)
         val response = api.uploadPhoto(
             "Bearer ${sessionStore.accessTokenFlow.value!!.token}",
             MultipartBody.Part.createFormData("image", "profile", RequestBody.create(
-                MediaType.parse("image/png"),
+                "image/png".toMediaType(),
                 compressedToPng
             ))
         ).execute()

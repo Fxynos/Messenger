@@ -11,7 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalPagingApi::class)
-class PrivateMessagesRemoteMediator(
+class PrivateMessageRemoteMediator(
     private val dialogManager: DialogManager,
     private val dao: Dao<Long, Message>,
     private val companionUserId: Int

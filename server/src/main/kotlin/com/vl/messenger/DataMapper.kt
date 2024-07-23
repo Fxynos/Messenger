@@ -544,7 +544,7 @@ class DataMapper {
                 val list = LinkedList<Dialog>()
                 while (next())
                     list += Dialog(
-                        getBoolean("private_dialog"),
+                        getBoolean("is_private"),
                         getLong("dialog_id"),
                         getString("dialog_title"),
                         getString("dialog_image"),
@@ -594,6 +594,27 @@ class DataMapper {
             statement.setLong(++argCounter, conversationId)
             statement.setInt(++argCounter, limit)
             statement.setInt(++argCounter, offset)
+
+            statement.executeQuery().run {
+                val list = LinkedList<ConversationMember>()
+                while (next())
+                    list += ConversationMember(
+                        getInt("user.id"),
+                        getString("login"),
+                        getString("image"),
+                        fetchRole()
+                    )
+                list
+            }
+        }
+
+    fun getAllMembers(conversationId: Long): List<ConversationMember> =
+        connection.prepareStatement("""
+            select * from participate inner join conversation_rights on rights_id = id 
+            inner join user on user_id = user.id 
+            where conversation_id = ?;
+        """.trimIndent()).use { statement ->
+            statement.setLong(0, conversationId)
 
             statement.executeQuery().run {
                 val list = LinkedList<ConversationMember>()

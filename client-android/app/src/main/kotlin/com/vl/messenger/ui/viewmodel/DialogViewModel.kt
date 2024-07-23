@@ -1,20 +1,16 @@
 package com.vl.messenger.ui.viewmodel
 
-import android.graphics.Bitmap
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.vl.messenger.data.component.CacheDao
-import com.vl.messenger.data.component.PrivateMessagesPagingSource
-import com.vl.messenger.data.component.PrivateMessagesRemoteMediator
-import com.vl.messenger.data.component.PrivateMessagesRepository
-import com.vl.messenger.data.entity.Conversation
+import com.vl.messenger.data.component.PrivateMessagePagingSource
+import com.vl.messenger.data.component.PrivateMessageRemoteMediator
+import com.vl.messenger.data.component.PrivateMessageRepository
 import com.vl.messenger.data.entity.Dialog
 import com.vl.messenger.data.entity.Message
-import com.vl.messenger.data.entity.PrivateDialog
 import com.vl.messenger.data.manager.DialogManager
 import com.vl.messenger.data.manager.DownloadManager
 import com.vl.messenger.data.manager.PrivateChatManager
@@ -33,7 +29,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DialogViewModel @Inject constructor(
-    private val downloadManager: DownloadManager,
     private val dialogManager: DialogManager,
     private val chatManager: PrivateChatManager
 ): ViewModel() {
@@ -44,7 +39,7 @@ class DialogViewModel @Inject constructor(
         if (it == null)
             UiState.Loading
         else
-            UiState.DialogShown(it.name, it.image?.let(downloadManager::downloadBitmap))
+            UiState.DialogShown(it.title, it.image)
     }.flowOn(Dispatchers.IO)
 
     private lateinit var _messages: Flow<PagingData<Message>>
@@ -62,40 +57,40 @@ class DialogViewModel @Inject constructor(
             return
 
         this._dialog.value = dialog
+
         // fetch old messages
-        _messages = when (dialog) {
-            is PrivateDialog -> {
-                PrivateMessagesRepository(
-                    remoteMediator = PrivateMessagesRemoteMediator(
+        _messages =
+            if (dialog.isPrivate)
+                PrivateMessageRepository(
+                    remoteMediator = PrivateMessageRemoteMediator(
                         dialogManager,
                         cachedMessages,
-                        dialog.id
+                        dialog.id.toInt() // actually user id
                     ),
                     pagingSourceFactory = {
-                        PrivateMessagesPagingSource(cachedMessages).apply {
+                        PrivateMessagePagingSource(cachedMessages).apply {
                             viewModelScope.launch {
                                 cachedMessages.updateEvents.collect { invalidate() }
                             }
                         }
                     }
                 ).getMessages().cachedIn(viewModelScope)
-            }
+            else
+                TODO()
 
-            is Conversation -> TODO()
-        }
         // subscribe for new messages
         viewModelScope.launch {
             chatManager.messageEvents.collect(this@DialogViewModel::insertNewMessage)
         }
     }
 
-    fun send(messageText: String) {
+    fun send(messageText: String) { // TODO sending messages to conversation
         if (messageText.isBlank())
             return
 
         viewModelScope.launch(Dispatchers.IO) {
             insertNewMessage(dialogManager.sendMessage(
-                _dialog.value!!.id,
+                _dialog.value!!.id.toInt(), // private dialog id is the companion user id
                 messageText.trim())
             )
         }
@@ -110,6 +105,6 @@ class DialogViewModel @Inject constructor(
 
     sealed interface UiState {
         object Loading: UiState
-        data class DialogShown(val dialogName: String, val dialogImage: Bitmap?): UiState
+        data class DialogShown(val dialogName: String, val dialogImage: String?): UiState
     }
 }

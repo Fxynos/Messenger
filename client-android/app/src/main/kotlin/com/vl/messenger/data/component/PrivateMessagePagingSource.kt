@@ -5,7 +5,7 @@ import androidx.paging.PagingState
 import com.vl.messenger.data.entity.Message
 import com.vl.messenger.domain.Dao
 
-class PrivateMessagesPagingSource(
+class PrivateMessagePagingSource(
     private val dao: Dao<Long, Message>
 ): PagingSource<Long, Message>() {
 

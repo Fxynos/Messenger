@@ -23,10 +23,10 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            buildConfigField("String", "ADDRESS", "\"192.168.0.111:8080\"")
+            buildConfigField("String", "ADDRESS", "\"192.168.0.10:8080\"")
         }
         debug {
-            buildConfigField("String", "ADDRESS", "\"192.168.0.111:8080\"")
+            buildConfigField("String", "ADDRESS", "\"192.168.0.10:8080\"")
         }
     }
 
@@ -45,6 +45,9 @@ android {
 }
 
 dependencies {
+    /* Coil */
+    implementation("io.coil-kt:coil:2.7.0")
+
     /* Retrofit */
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")

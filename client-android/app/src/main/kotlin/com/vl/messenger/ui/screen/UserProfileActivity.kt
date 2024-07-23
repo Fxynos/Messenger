@@ -11,11 +11,11 @@ import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import coil.load
 import com.vl.messenger.R
+import com.vl.messenger.data.entity.Dialog
 import com.vl.messenger.data.entity.FriendStatus
-import com.vl.messenger.data.entity.PrivateDialog
 import com.vl.messenger.data.entity.User
-import com.vl.messenger.data.manager.DownloadManager
 import com.vl.messenger.ui.viewmodel.UserProfileViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -23,13 +23,10 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class UserProfileActivity: AppCompatActivity(), View.OnClickListener {
 
-    @Inject lateinit var downloadManager: DownloadManager
     private val viewModel: UserProfileViewModel by viewModels()
     private lateinit var back: ImageButton
     private lateinit var login: TextView
@@ -58,6 +55,7 @@ class UserProfileActivity: AppCompatActivity(), View.OnClickListener {
         back.setOnClickListener(this)
         addFriend.setOnClickListener(this)
         openDialog.setOnClickListener(this)
+        image.load(user.imageUrl)
 
         lifecycleScope.launch(Dispatchers.Main) {
             viewModel.profile.collect {
@@ -80,10 +78,7 @@ class UserProfileActivity: AppCompatActivity(), View.OnClickListener {
                 }
             }
         }
-        if (user.imageUrl != null) lifecycleScope.launch {
-            val image = withContext(Dispatchers.IO) { downloadManager.downloadBitmap(user.imageUrl) }
-            withContext(Dispatchers.Main) { this@UserProfileActivity.image.setImageBitmap(image) }
-        }
+
         viewModel.updateUser(user) // fetch friend status
     }
 
@@ -97,7 +92,17 @@ class UserProfileActivity: AppCompatActivity(), View.OnClickListener {
             R.id.open_dialog -> startActivity(
                 Intent(this, DialogActivity::class.java).apply {
                     putExtra(DialogActivity.EXTRA_OWN_ID, runBlocking { getOwnUserId() })
-                    putExtra(DialogActivity.EXTRA_PRIVATE_DIALOG, PrivateDialog(runBlocking { getUser() }))
+                    putExtra(DialogActivity.EXTRA_DIALOG, runBlocking {
+                        val user = getUser()
+                        Dialog(
+                            user.id.toLong(),
+                            true,
+                            user.login,
+                            user.imageUrl,
+                            null,
+                            null
+                        )
+                    })
                 }
             )
         }

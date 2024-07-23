@@ -10,7 +10,7 @@ import com.vl.messenger.data.entity.Message
 import kotlinx.coroutines.flow.Flow
 
 @OptIn(ExperimentalPagingApi::class)
-class PrivateMessagesRepository(
+class PrivateMessageRepository(
     private val remoteMediator: RemoteMediator<Long, Message>,
     private val pagingSourceFactory: () -> PagingSource<Long, Message>
 ) {

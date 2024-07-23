@@ -2,6 +2,11 @@ package com.vl.messenger.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingSource
+import androidx.paging.cachedIn
+import com.vl.messenger.data.component.DialogPagingSource
 import com.vl.messenger.data.entity.Message
 import com.vl.messenger.data.entity.User
 import com.vl.messenger.data.manager.DialogManager
@@ -15,20 +20,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DialogsViewModel @Inject constructor(
-    private val dialogManager: DialogManager
+    dialogManager: DialogManager
 ): ViewModel() {
-    private val _dialogs = MutableStateFlow<List<Pair<User, Message>>>(emptyList())
-    val dialogs: StateFlow<List<Pair<User, Message>>>
-        get() = _dialogs
-
-    fun fetchDialogs() {
-        viewModelScope.launch(Dispatchers.IO) {
-            _dialogs.value = emptyList()
-            val users = dialogManager.getDialogs()
-            for (user in users) {
-                val item = user to dialogManager.getMessages(user.id, 1, null).first()
-                _dialogs.update { ArrayList(it).apply { add(item) } }
-            }
-        }
-    }
+    val dialogs = Pager(
+        config = PagingConfig(pageSize = 10),
+        pagingSourceFactory = { DialogPagingSource(dialogManager) }
+    ).flow.cachedIn(viewModelScope)
 }

@@ -2,6 +2,7 @@ package com.vl.messenger.data.manager
 
 import com.google.gson.annotations.SerializedName
 import com.vl.messenger.ApiException
+import com.vl.messenger.data.entity.Dialog
 import com.vl.messenger.data.entity.Message
 import com.vl.messenger.data.entity.StatusResponse
 import com.vl.messenger.data.entity.User
@@ -19,16 +20,34 @@ class DialogManager(
 ) {
     private val api = retrofit.create(Api::class.java)
 
-    fun getDialogs(): List<User> {
+    fun getDialogs(limit: Int, offset: Int? = null): List<Dialog> {
         val response = api.getDialogs(
-            "Bearer ${sessionStore.accessTokenFlow.value!!.token}"
+            "Bearer ${sessionStore.accessTokenFlow.value!!.token}",
+            limit,
+            offset
         ).execute()
 
         if (!response.isSuccessful)
             throw ApiException(response)
 
-        return response.body()!!.requireResponse().users.map { dto ->
-            User(dto.id, dto.login, dto.image)
+        return response.body()!!.requireResponse().map {
+            Dialog(
+                it.dialog.id,
+                it.isPrivate,
+                it.dialog.title,
+                it.dialog.image,
+                if (it.lastMessage == null) null else Message(
+                    it.lastMessage.id,
+                    it.lastMessage.sender.id,
+                    it.lastMessage.timestamp,
+                    it.lastMessage.content
+                ),
+                if (it.lastMessage == null) null else User(
+                    it.lastMessage.sender.id,
+                    it.lastMessage.sender.login,
+                    it.lastMessage.sender.image
+                )
+            )
         }
     }
 
@@ -63,8 +82,10 @@ class DialogManager(
     private interface Api {
         @GET("/dialogs")
         fun getDialogs(
-            @Header("Authorization") token: String
-        ): Call<StatusResponse<UsersDto>>
+            @Header("Authorization") token: String, // TODO put the header via okhttp interceptor only once
+            @Query("limit") limit: Int,
+            @Query("offset") offset: Int?
+        ): Call<StatusResponse<List<DialogResponse>>>
 
         @GET("/messages/private")
         fun getMessages(
@@ -80,8 +101,25 @@ class DialogManager(
             @Body message: MessageForm
         ): Call<StatusResponse<MessageDto>>
 
-        class UsersDto {
-            val users: List<UserDto> = listOf()
+        class DialogResponse {
+            @SerializedName("is_private")
+            val isPrivate: Boolean = false
+            lateinit var dialog: DialogDto
+            @SerializedName("last_message")
+            val lastMessage: MessageDto? = null
+
+            class MessageDto {
+                val id: Long = 0
+                val timestamp: Long = 0
+                val content: String = ""
+                lateinit var sender: UserDto
+            }
+        }
+
+        class DialogDto {
+            val id: Long = 0L
+            val title: String = ""
+            val image: String? = null
         }
 
         class UserDto {
