@@ -1,0 +1,39 @@
+[versions]
+hilt = "2.44"
+retrofit = "2.9.0"
+
+agp = "8.3.1"
+kotlin = "2.0.0"
+
+[libraries]
+androidx-core = { group = "androidx.core", name = "core-ktx", version = "1.12.0" }
+theme-appcompat = { group = "androidx.appcompat", name = "appcompat", version = "1.6.1" }
+theme-material = { group = "com.google.android.material", name = "material", version = "1.11.0" }
+
+androidx-activity = { group = "androidx.activity", name = "activity-ktx", version = "1.8.2" }
+androidx-fragment = { group = "androidx.fragment", name = "fragment-ktx", version = "1.6.2" }
+
+lifecycle-viewmodel = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version = "2.7.0" }
+
+datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version = "1.0.0" }
+
+paging-runtime = { group = "androidx.paging", name = "paging-runtime-ktx", version = "3.3.0" }
+
+hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
+hilt-compiler= { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" } # kapt
+
+coil = { group = "io.coil-kt", name = "coil", version = "2.7.0" }
+
+retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
+retrofit-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
+
+stomp = { group = "com.github.NaikSoftware", name = "StompProtocolAndroid", version = "1.6.6" }
+okhttp = { group = "com.squareup.okhttp3", name = "okhttp3", version = "3.8.0" }
+rxjava = { group = "io.reactivex.rxjava2", name = "rxjava", version = "2.2.21" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
