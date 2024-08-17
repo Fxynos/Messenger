@@ -1,8 +1,8 @@
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    kotlin("kapt")
-    id("com.google.dagger.hilt.android")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -47,6 +47,34 @@ android {
 dependencies {
     implementation(project(":data"))
     implementation(project(":domain"))
+
+    /* Android */
+    implementation(libs.androidx.core)
+    implementation(libs.theme.appcompat)
+    implementation(libs.theme.material)
+    implementation(libs.androidx.activity)
+    implementation(libs.androidx.fragment)
+    implementation(libs.lifecycle.viewmodel)
+
+    /* Jetpack */
+    implementation(libs.datastore.preferences)
+    implementation(libs.paging.runtime)
+
+    /* Hilt */
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
+
+    /* Coil */
+    implementation(libs.coil)
+
+    /* Retrofit */
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+
+    /* STOMP */
+    implementation(libs.stomp)
+    implementation(libs.okhttp)
+    implementation(libs.rxjava)
 }
 
 kapt {
