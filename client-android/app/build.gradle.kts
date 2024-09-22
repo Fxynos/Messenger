@@ -32,6 +32,7 @@ android {
 
     buildFeatures {
         buildConfig = true
+        viewBinding = true
     }
 
     compileOptions {
@@ -66,6 +67,11 @@ dependencies {
 
     /* Coil */
     implementation(libs.coil)
+
+    /* Adapter Delegates */
+    implementation(libs.adapter.delegates.dsl)
+    implementation(libs.adapter.delegates.pagination)
+    implementation(libs.adapter.delegates.viewbinding)
 
     /* Retrofit */
     implementation(libs.retrofit)
