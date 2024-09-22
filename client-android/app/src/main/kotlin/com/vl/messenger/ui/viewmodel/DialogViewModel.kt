@@ -8,7 +8,7 @@ import androidx.paging.cachedIn
 import com.vl.messenger.data.component.CacheDao
 import com.vl.messenger.data.paging.PrivateMessagePagingSource
 import com.vl.messenger.data.paging.PrivateMessageRemoteMediator
-import com.vl.messenger.data.paging.PrivateMessageDataSource
+import com.vl.messenger.data.paging.MessageDataSourceImpl
 import com.vl.messenger.data.entity.Dialog
 import com.vl.messenger.data.entity.Message
 import com.vl.messenger.data.manager.DialogManager
@@ -60,7 +60,7 @@ class DialogViewModel @Inject constructor(
         // fetch old messages
         _messages =
             if (dialog.isPrivate)
-                PrivateMessageDataSource(
+                MessageDataSourceImpl(
                     remoteMediator = PrivateMessageRemoteMediator(
                         dialogManager,
                         cachedMessages,
