@@ -2,6 +2,7 @@ package com.vl.messenger.ui.viewmodel
 
 import android.app.Application
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -16,6 +17,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.stream.Stream
 import javax.inject.Inject
+
+private const val TAG = "AuthViewModel"
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
@@ -99,10 +102,13 @@ class AuthViewModel @Inject constructor(
                     context.getString(R.string.title_could_not_sign_in),
                     context.getString(R.string.info_wrong_credentials)
                 )
-                null -> popup.value = InfoPopup(
-                    context.getString(R.string.title_could_not_sign_in),
-                    context.getString(R.string.info_unexpected_error)
-                )
+                is AuthManager.SignInResult.Error -> {
+                    Log.w(TAG, result.throwable.stackTraceToString())
+                    popup.value = InfoPopup(
+                        context.getString(R.string.title_could_not_sign_in),
+                        context.getString(R.string.info_unexpected_error)
+                    )
+                }
             }
             isButtonEnabled.value = true
         }
@@ -121,10 +127,13 @@ class AuthViewModel @Inject constructor(
                     context.getString(R.string.title_could_not_sign_in),
                     context.getString(R.string.info_login_taken)
                 )
-                null -> popup.value = InfoPopup(
-                    context.getString(R.string.title_could_not_sign_in),
-                    context.getString(R.string.info_unexpected_error)
-                )
+                is AuthManager.SignUpResult.Error -> {
+                    Log.w(TAG, result.throwable.stackTraceToString())
+                    popup.value = InfoPopup(
+                        context.getString(R.string.title_could_not_sign_in),
+                        context.getString(R.string.info_unexpected_error)
+                    )
+                }
             }
             isButtonEnabled.value = true
         }

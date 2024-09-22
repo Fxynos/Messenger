@@ -20,13 +20,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "ADDRESS", "\"192.168.0.10:5000\"")
+        }
         release {
+            initWith(buildTypes.getByName("debug"))
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            buildConfigField("String", "ADDRESS", "\"192.168.0.10:8080\"")
-        }
-        debug {
-            buildConfigField("String", "ADDRESS", "\"192.168.0.10:8080\"")
         }
     }
 
