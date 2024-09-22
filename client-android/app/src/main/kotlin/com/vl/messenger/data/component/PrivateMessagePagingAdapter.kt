@@ -37,8 +37,8 @@ class PrivateMessagePagingAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder =
         layoutInflater.inflate(when (viewType) {
-            VIEW_TYPE_SENT -> R.layout.item_private_message_sent
-            VIEW_TYPE_RECEIVED -> R.layout.item_private_message_received
+            VIEW_TYPE_SENT -> R.layout.item_unsigned_message_sent
+            VIEW_TYPE_RECEIVED -> R.layout.item_unsigned_message_received
             else -> throw RuntimeException() // unreachable
         }, parent, false).let(::ViewHolder)
 

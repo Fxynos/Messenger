@@ -75,7 +75,7 @@
             android:layout_height="match_parent"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:reverseLayout="true"
-            tools:listitem="@layout/item_private_message_sent"/>
+            tools:listitem="@layout/item_unsigned_message_sent"/>
 
         <TextView
             android:id="@+id/no_messages_hint"
