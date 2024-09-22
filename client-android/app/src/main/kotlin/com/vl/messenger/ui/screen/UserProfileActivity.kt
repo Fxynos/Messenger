@@ -14,7 +14,7 @@ import androidx.lifecycle.lifecycleScope
 import coil.load
 import com.vl.messenger.R
 import com.vl.messenger.data.entity.Dialog
-import com.vl.messenger.data.entity.FriendStatus
+import com.vl.messenger.domain.entity.FriendStatus
 import com.vl.messenger.data.entity.User
 import com.vl.messenger.ui.viewmodel.UserProfileViewModel
 import dagger.hilt.android.AndroidEntryPoint

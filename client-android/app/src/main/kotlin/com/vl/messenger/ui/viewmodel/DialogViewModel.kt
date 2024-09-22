@@ -3,16 +3,15 @@ package com.vl.messenger.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.ExperimentalPagingApi
-import androidx.paging.PagingData
+import androidx.paging.PagedList
 import androidx.paging.cachedIn
 import com.vl.messenger.data.component.CacheDao
-import com.vl.messenger.data.component.PrivateMessagePagingSource
-import com.vl.messenger.data.component.PrivateMessageRemoteMediator
-import com.vl.messenger.data.component.PrivateMessageRepository
+import com.vl.messenger.data.paging.PrivateMessagePagingSource
+import com.vl.messenger.data.paging.PrivateMessageRemoteMediator
+import com.vl.messenger.data.paging.PrivateMessageDataSource
 import com.vl.messenger.data.entity.Dialog
 import com.vl.messenger.data.entity.Message
 import com.vl.messenger.data.manager.DialogManager
-import com.vl.messenger.data.manager.DownloadManager
 import com.vl.messenger.data.manager.PrivateChatManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -42,7 +41,7 @@ class DialogViewModel @Inject constructor(
             UiState.DialogShown(it.title, it.image)
     }.flowOn(Dispatchers.IO)
 
-    private lateinit var _messages: Flow<PagingData<Message>>
+    private lateinit var _messages: Flow<PagedList<Message>>
     val messages by this::_messages
 
     private val _scrollEvents = MutableSharedFlow<Any>(
@@ -61,7 +60,7 @@ class DialogViewModel @Inject constructor(
         // fetch old messages
         _messages =
             if (dialog.isPrivate)
-                PrivateMessageRepository(
+                PrivateMessageDataSource(
                     remoteMediator = PrivateMessageRemoteMediator(
                         dialogManager,
                         cachedMessages,

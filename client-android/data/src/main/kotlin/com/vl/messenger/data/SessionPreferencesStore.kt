@@ -1,57 +1,48 @@
-package com.vl.messenger.data.manager
+package com.vl.messenger.data
 
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.StateFlow
+import com.vl.messenger.domain.boundary.SessionStore
+import com.vl.messenger.domain.entity.AccessToken
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.runBlocking
 
-class SessionStore(private val context: Context) {
+class SessionPreferencesStore(private val context: Context): SessionStore {
     companion object {
         private val KEY_TOKEN = stringPreferencesKey("token")
         private val KEY_EXPIRATION = longPreferencesKey("expiration")
+        private val KEY_USER_ID = intPreferencesKey("userId")
 
         private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("session")
     }
 
-    private val coroutineScope = CoroutineScope(Job())
-
-    val accessTokenFlow: StateFlow<AccessToken?> = runBlocking {
-        context.dataStore.data.map { prefs ->
-            prefs[KEY_TOKEN]?.let { token ->
-                AccessToken(token, prefs[KEY_EXPIRATION]!!)
-            }
-        }.stateIn(coroutineScope)
+    private val accessTokenFlow: Flow<AccessToken?> = context.dataStore.data.map { prefs ->
+        prefs[KEY_TOKEN]?.let { token ->
+            AccessToken(token, prefs[KEY_EXPIRATION]!!, prefs[KEY_USER_ID]!!)
+        }
     }
 
-    suspend fun setAccessToken(token: AccessToken) {
+    override suspend fun setToken(token: AccessToken) {
         context.dataStore.edit { prefs ->
             prefs[KEY_TOKEN] = token.token
             prefs[KEY_EXPIRATION] = token.expiration
+            prefs[KEY_USER_ID] = token.userId
         }
     }
 
-    suspend fun removeAccessToken() {
+    override suspend fun removeToken() {
         context.dataStore.edit { prefs ->
             prefs.remove(KEY_TOKEN)
             prefs.remove(KEY_EXPIRATION)
+            prefs.remove(KEY_USER_ID)
         }
     }
 
-    /**
-     * @param expiration unix time in seconds
-     */
-    data class AccessToken(val token: String, val expiration: Long) {
-        companion object {
-            const val EXPIRATION_LIMITLESS = 0
-        }
-    }
+    override fun observeToken(): Flow<AccessToken?> = accessTokenFlow
 }

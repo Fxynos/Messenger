@@ -32,4 +32,7 @@ android {
     }
 }
 
-dependencies {}
+dependencies {
+    /* Paging */
+    implementation(libs.paging.common)
+}

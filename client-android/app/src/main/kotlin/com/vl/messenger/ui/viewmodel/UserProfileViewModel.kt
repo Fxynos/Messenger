@@ -2,7 +2,7 @@ package com.vl.messenger.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vl.messenger.data.entity.FriendStatus
+import com.vl.messenger.domain.entity.FriendStatus
 import com.vl.messenger.data.entity.User
 import com.vl.messenger.data.entity.UserProfile
 import com.vl.messenger.data.manager.ProfileManager

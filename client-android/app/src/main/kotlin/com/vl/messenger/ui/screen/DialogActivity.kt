@@ -13,8 +13,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.vl.messenger.R
-import com.vl.messenger.data.component.PrivateMessagePagingAdapter
 import com.vl.messenger.data.entity.Dialog
+import com.vl.messenger.ui.adapter.MessageListPagedAdapter
 import com.vl.messenger.ui.viewmodel.DialogViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
@@ -43,7 +43,7 @@ class DialogActivity: AppCompatActivity() {
     private lateinit var name: TextView
     private lateinit var noMessages: TextView
 
-    private lateinit var adapter: PrivateMessagePagingAdapter
+    private lateinit var adapter: MessageListPagedAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,7 +65,7 @@ class DialogActivity: AppCompatActivity() {
         noMessages = findViewById(R.id.no_messages_hint)
         val messagesList = findViewById<RecyclerView>(R.id.messages)
 
-        adapter = PrivateMessagePagingAdapter(this, userId)
+        adapter = MessageListPagedAdapter()
         messagesList.adapter = adapter
 
         back.setOnClickListener(this::onClick)
@@ -76,7 +76,7 @@ class DialogActivity: AppCompatActivity() {
 
         /* State */
         lifecycleScope.launch(Dispatchers.Main) {
-            launch { viewModel.messages.collect(adapter::submitData) }
+            launch { viewModel.messages.collect(adapter::submitList) }
             launch { viewModel.uiState.collect(this@DialogActivity::updateState) }
             launch { viewModel.scrollEvents.collect {
                 val layoutManager = messagesList.layoutManager as LinearLayoutManager

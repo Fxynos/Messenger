@@ -1,6 +1,6 @@
-package com.vl.messenger.data.entity
+package com.vl.messenger.data.network.dto
 
-class StatusResponse<T> {
+internal class StatusResponse<T> {
     private val response: T? = null
     val code: Int = 0
     val message: String = ""

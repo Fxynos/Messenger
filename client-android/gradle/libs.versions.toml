@@ -1,6 +1,7 @@
 [versions]
 hilt = "2.51"
 retrofit = "2.9.0"
+paging = "3.3.0"
 adapterDelegates = "4.3.2"
 
 agp = "8.3.1"
@@ -18,7 +19,8 @@ lifecycle-viewmodel = { group = "androidx.lifecycle", name = "lifecycle-viewmode
 
 datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version = "1.0.0" }
 
-paging-runtime = { group = "androidx.paging", name = "paging-runtime-ktx", version = "3.3.0" }
+paging-common = { group = "androidx.paging", name = "paging-runtime-ktx", version.ref = "paging" } # for testing and domain
+paging-runtime = { group = "androidx.paging", name = "paging-common-ktx", version.ref = "paging" }
 
 adapter-delegates-dsl = { group = "com.hannesdorfmann", name = "adapterdelegates4-kotlin-dsl", version.ref = "adapterDelegates" }
 adapter-delegates-pagination = { group = "com.hannesdorfmann", name = "adapterdelegates4-pagination", version.ref = "adapterDelegates" }

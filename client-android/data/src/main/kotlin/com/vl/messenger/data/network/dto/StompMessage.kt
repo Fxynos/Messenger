@@ -1,4 +1,4 @@
-package com.vl.messenger.data.entity
+package com.vl.messenger.data.network.dto
 
 import com.google.gson.annotations.SerializedName
 

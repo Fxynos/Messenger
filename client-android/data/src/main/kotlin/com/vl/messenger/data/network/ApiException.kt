@@ -1,4 +1,4 @@
-package com.vl.messenger
+package com.vl.messenger.data.network
 
 import retrofit2.Response
 

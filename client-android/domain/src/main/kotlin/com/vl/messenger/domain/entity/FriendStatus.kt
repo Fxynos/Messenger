@@ -1,4 +1,4 @@
-package com.vl.messenger.data.entity
+package com.vl.messenger.domain.entity
 
 enum class FriendStatus {
     NONE,
