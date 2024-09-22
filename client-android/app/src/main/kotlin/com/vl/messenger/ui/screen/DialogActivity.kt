@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.vl.messenger.R
-import com.vl.messenger.data.entity.Dialog
 import com.vl.messenger.ui.adapter.MessageListPagedAdapter
 import com.vl.messenger.ui.viewmodel.DialogViewModel
 import dagger.hilt.android.AndroidEntryPoint

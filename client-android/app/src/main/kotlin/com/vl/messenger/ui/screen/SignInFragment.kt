@@ -45,7 +45,7 @@ class SignInFragment: Fragment(), View.OnClickListener {
 
     override fun onClick(view: View) {
         when (view.id) {
-            R.id.sign_in -> model.attemptSignIn(username.text.toString(), password.text.toString())
+            R.id.sign_in -> model.signIn(username.text.toString(), password.text.toString())
             R.id.sign_up -> model.navigateToSignUp()
         }
     }

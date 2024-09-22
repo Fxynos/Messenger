@@ -49,7 +49,7 @@ class SignUpFragment: Fragment(), View.OnClickListener {
     override fun onClick(view: View) {
         when (view.id) {
             R.id.sign_in -> model.navigateToSignIn()
-            R.id.sign_up -> model.attemptSignUp(
+            R.id.sign_up -> model.signUp(
                 username.text.toString(),
                 password.text.toString(),
                 repeatPassword.text.toString()

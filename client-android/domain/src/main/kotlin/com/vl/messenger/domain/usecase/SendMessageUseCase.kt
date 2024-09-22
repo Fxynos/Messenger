@@ -9,7 +9,7 @@ import kotlinx.coroutines.runBlocking
 class SendMessageUseCase(
     private val messengerApi: MessengerRestApi,
     private val sessionStore: SessionStore
-): SuspendedUseCase<SendMessageUseCase.Param, Message> {
+): GetIsLoggedInUseCase<SendMessageUseCase.Param, Message> {
 
     private val token: String get() = runBlocking { sessionStore.getToken()!!.token }
 

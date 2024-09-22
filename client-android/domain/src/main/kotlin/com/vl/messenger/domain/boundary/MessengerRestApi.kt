@@ -4,6 +4,8 @@ import com.vl.messenger.domain.entity.AccessToken
 import com.vl.messenger.domain.entity.ExtendedDialog
 import com.vl.messenger.domain.entity.FriendStatus
 import com.vl.messenger.domain.entity.Message
+import com.vl.messenger.domain.entity.SignInResult
+import com.vl.messenger.domain.entity.SignUpResult
 import com.vl.messenger.domain.entity.User
 import java.io.InputStream
 
