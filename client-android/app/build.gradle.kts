@@ -1,8 +1,8 @@
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    kotlin("kapt")
-    id("com.google.dagger.hilt.android")
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -20,13 +20,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            buildConfigField("String", "ADDRESS", "\"192.168.0.10:5000\"")
+        }
         release {
+            initWith(buildTypes.getByName("debug"))
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            buildConfigField("String", "ADDRESS", "\"192.168.0.10:8080\"")
-        }
-        debug {
-            buildConfigField("String", "ADDRESS", "\"192.168.0.10:8080\"")
         }
     }
 
@@ -45,28 +45,36 @@ android {
 }
 
 dependencies {
+    implementation(project(":data"))
+    implementation(project(":domain"))
+
+    /* Android */
+    implementation(libs.androidx.core)
+    implementation(libs.theme.appcompat)
+    implementation(libs.theme.material)
+    implementation(libs.androidx.activity)
+    implementation(libs.androidx.fragment)
+    implementation(libs.lifecycle.viewmodel)
+
+    /* Jetpack */
+    implementation(libs.datastore.preferences)
+    implementation(libs.paging.runtime)
+
+    /* Hilt */
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
+
     /* Coil */
-    implementation("io.coil-kt:coil:2.7.0")
+    implementation(libs.coil)
 
     /* Retrofit */
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
 
     /* STOMP */
-    implementation("com.github.NaikSoftware:StompProtocolAndroid:1.6.6")
-    implementation("com.squareup.okhttp3:okhttp:3.8.0")
-    implementation("io.reactivex.rxjava2:rxjava:2.2.21")
-
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.11.0")
-    implementation("androidx.activity:activity-ktx:1.8.2")
-    implementation("androidx.fragment:fragment-ktx:1.6.2")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
-    implementation("androidx.paging:paging-runtime-ktx:3.3.0-alpha04")
-    implementation("com.google.dagger:hilt-android:2.44")
-    kapt("com.google.dagger:hilt-android-compiler:2.44")
+    implementation(libs.stomp)
+    implementation(libs.okhttp)
+    implementation(libs.rxjava)
 }
 
 kapt {

@@ -1,6 +1,7 @@
 package com.vl.messenger.data.manager
 
 import com.google.gson.annotations.SerializedName
+import com.vl.messenger.ApiException
 import com.vl.messenger.data.entity.StatusResponse
 import okhttp3.ResponseBody
 import retrofit2.Call
@@ -12,7 +13,7 @@ class AuthManager(retrofit: Retrofit) {
 
     private val api = retrofit.create(Api::class.java)
 
-    fun signIn(login: String, password: String): SignInResult? =
+    fun signIn(login: String, password: String): SignInResult =
         try {
             api.signIn(Api.Credentials(login, password)).execute().run {
                 if (isSuccessful)
@@ -21,33 +22,37 @@ class AuthManager(retrofit: Retrofit) {
                     }
                 else if (code() == 401) // unauthorized
                     SignInResult.WrongCredentials
-                else null // unexpected error
+                else
+                    SignInResult.Error(ApiException(this@run))
             }
         } catch (e: Exception) {
-            null
+            SignInResult.Error(e)
         }
 
-    fun signUp(login: String, password: String): SignUpResult? =
+    fun signUp(login: String, password: String): SignUpResult =
         try {
             api.signUp(Api.Credentials(login, password)).execute().run {
                 if (isSuccessful)
                     SignUpResult.Success
                 else if (code() == 409) // conflict
                     SignUpResult.LoginIsTaken
-                else null
+                else
+                    SignUpResult.Error(ApiException(this@run))
             }
         } catch (e: Exception) {
-            null
+            SignUpResult.Error(e)
         }
 
     sealed interface SignUpResult {
-        object LoginIsTaken: SignUpResult
-        object Success: SignUpResult
+        data object LoginIsTaken: SignUpResult
+        data object Success: SignUpResult
+        data class Error(val throwable: Throwable): SignUpResult
     }
 
     sealed interface SignInResult {
-        class Token(val token: String, val expirationSec: Long, val userId: Int): SignInResult
-        object WrongCredentials: SignInResult
+        data class Token(val token: String, val expirationSec: Long, val userId: Int): SignInResult
+        data object WrongCredentials: SignInResult
+        data class Error(val throwable: Throwable): SignInResult
     }
 
     private interface Api {
