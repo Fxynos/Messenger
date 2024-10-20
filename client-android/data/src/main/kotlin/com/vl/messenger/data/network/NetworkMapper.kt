@@ -1,5 +1,6 @@
 package com.vl.messenger.data.network
 
+import com.vl.messenger.data.network.dto.DialogDto
 import com.vl.messenger.data.network.dto.DialogResponse
 import com.vl.messenger.data.network.dto.FriendStatusDto
 import com.vl.messenger.data.network.dto.MessageDto
@@ -14,6 +15,7 @@ import com.vl.messenger.domain.entity.ExtendedDialog
 import com.vl.messenger.domain.entity.FriendStatus
 import com.vl.messenger.domain.entity.Message
 import com.vl.messenger.domain.entity.User
+import com.vl.messenger.domain.entity.VerboseUser
 
 internal object NetworkMapper {
     fun TokenDto.toDomain() = AccessToken(token, expirationSec, userId)
@@ -25,18 +27,31 @@ internal object NetworkMapper {
         FriendStatusDto.REQUEST_GOTTEN -> FriendStatus.REQUEST_GOTTEN
         FriendStatusDto.FRIEND -> FriendStatus.FRIEND
     }
-    fun UserDto.toDomainWithFriendStatus() = toDomain() to friendStatus!!.toDomain()
+    fun UserDto.toDomainWithFriendStatus() = VerboseUser(
+        user = toDomain(),
+        friendStatus = friendStatus!!.toDomain()
+    )
     fun UsersDto.toDomainWithFriendStatus() = users.map { it.toDomainWithFriendStatus() }
+    fun DialogDto.toDomain() = Dialog(
+        id = id,
+        isPrivate = when {
+            id.startsWith('u') -> true
+            id.startsWith('c') -> false
+            else -> throw IllegalArgumentException()
+        },
+        title = title,
+        image = image
+    )
     fun DialogResponse.toDomain() = ExtendedDialog(
-        dialog = Dialog(dialog.id, isPrivate, dialog.title, dialog.image),
+        dialog = dialog.toDomain(),
         lastMessage = lastMessage?.run {
-            Message(id, sender.id, null, timestamp, content)
+            Message(id, sender.id, "", timestamp, content)
         },
         sender = lastMessage?.sender?.run {
             User(id, login, image)
         }
     )
-    fun MessageDto.toDomain(dialogId: Long?) = Message(id, senderId, dialogId, timestamp, content)
-    fun MessagesDto.toDomain(dialogId: Long?) = messages.map { it.toDomain(dialogId) }
-    fun StompMessage.toDomain() = Message(id!!, senderId!!, conversationId, System.currentTimeMillis(), content)
+    fun MessageDto.toDomain(dialogId: String) = Message(id, senderId, dialogId, timestamp, content)
+    fun MessagesDto.toDomain(dialogId: String) = messages.map { it.toDomain(dialogId) }
+    fun StompMessage.toDomain() = Message(id!!, senderId!!, dialogId!!, System.currentTimeMillis(), content)
 }

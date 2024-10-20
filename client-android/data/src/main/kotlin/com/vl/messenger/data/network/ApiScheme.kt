@@ -1,6 +1,7 @@
 package com.vl.messenger.data.network
 
 import com.vl.messenger.data.network.dto.Credentials
+import com.vl.messenger.data.network.dto.DialogDto
 import com.vl.messenger.data.network.dto.DialogResponse
 import com.vl.messenger.data.network.dto.MessageDto
 import com.vl.messenger.data.network.dto.MessageForm
@@ -91,15 +92,21 @@ internal interface ApiScheme {
         @Query("offset") offset: Int?
     ): StatusResponse<List<DialogResponse>>
 
-    @GET("/messages/private")
+    @GET("/dialogs/{id}")
+    suspend fun getDialog(
+        @Header("Authorization") token: String,
+        @Path("id") id: String
+    ): StatusResponse<DialogDto>
+
+    @GET("/dialogs/{id}/messages")
     suspend fun getMessages(
         @Header("Authorization") token: String,
-        @Query("user_id") userId: Int,
+        @Query("id") dialogId: String,
         @Query("limit") limit: Int,
         @Query("from_id") key: Long?
     ): StatusResponse<MessagesDto>
 
-    @POST("/messages/private/send")
+    @POST("/dialogs/{id}/messages")
     suspend fun sendMessage(
         @Header("Authorization") token: String,
         @Body message: MessageForm

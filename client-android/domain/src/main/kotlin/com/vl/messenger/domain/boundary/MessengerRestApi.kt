@@ -1,12 +1,11 @@
 package com.vl.messenger.domain.boundary
 
 import com.vl.messenger.domain.entity.AccessToken
+import com.vl.messenger.domain.entity.Dialog
 import com.vl.messenger.domain.entity.ExtendedDialog
-import com.vl.messenger.domain.entity.FriendStatus
 import com.vl.messenger.domain.entity.Message
-import com.vl.messenger.domain.entity.SignInResult
-import com.vl.messenger.domain.entity.SignUpResult
 import com.vl.messenger.domain.entity.User
+import com.vl.messenger.domain.entity.VerboseUser
 import java.io.InputStream
 
 interface MessengerRestApi {
@@ -43,19 +42,18 @@ interface MessengerRestApi {
 
     /* Users */
 
-    suspend fun getUserById(token: String, id: Int): Pair<User, FriendStatus>
+    suspend fun getUserById(token: String, id: Int): VerboseUser
     suspend fun searchUserByName(
         token: String,
         pattern: String,
         limit: Int,
         key: Int?
-    ): List<Pair<User, FriendStatus>>
+    ): List<VerboseUser>
 
     /* Dialogs */
 
     suspend fun getDialogs(token: String, limit: Int, offset: Int?): List<ExtendedDialog>
-    suspend fun getMessages(token: String, userId: Int, limit: Int, key: Long?): List<Message>
-    suspend fun getMessages(token: String, conversationId: Long, limit: Int, key: Long?): List<Message>
-    suspend fun sendMessage(token: String, message: String, userId: Int): Message
-    suspend fun sendMessage(token: String, message: String, conversationId: Long): Message
+    suspend fun getDialog(token: String, id: String): Dialog
+    suspend fun getMessages(token: String, dialogId: String, limit: Int, key: Long?): List<Message>
+    suspend fun sendMessage(token: String, message: String, dialogId: String): Message
 }

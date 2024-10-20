@@ -7,22 +7,17 @@ import com.vl.messenger.data.network.dto.StompMessage
 import com.vl.messenger.domain.boundary.MessengerStompApi
 import com.vl.messenger.domain.entity.AccessToken
 import com.vl.messenger.domain.entity.Message
-import io.reactivex.disposables.Disposable
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import ua.naiksoftware.stomp.BuildConfig
 import ua.naiksoftware.stomp.Stomp
 import ua.naiksoftware.stomp.StompClient
 import ua.naiksoftware.stomp.dto.LifecycleEvent
 
-class MessengerStompApiImpl: MessengerStompApi {
+/**
+ * @param address e.g. `localhost:8080`
+ */
+class MessengerStompApiImpl(private val address: String): MessengerStompApi {
     @SuppressLint("CheckResult")
     override fun subscribeOnIncomingMessages(accessToken: AccessToken): Flow<Message> = flow {
 
@@ -41,7 +36,7 @@ class MessengerStompApiImpl: MessengerStompApi {
 
         Stomp.over(
             Stomp.ConnectionProvider.OKHTTP,
-            "ws://${BuildConfig.ADDRESS}/ws",
+            "ws://$address/ws",
             mapOf("Authorization" to accessToken.token.toBearerAuthHeader())
         ).also { connection ->
             connection.connect()

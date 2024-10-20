@@ -7,10 +7,11 @@ import com.vl.messenger.data.network.dto.MessageForm
 import com.vl.messenger.domain.boundary.MessengerRestApi
 import com.vl.messenger.domain.boundary.MessengerRestApi.SignInResult
 import com.vl.messenger.domain.boundary.MessengerRestApi.SignUpResult
+import com.vl.messenger.domain.entity.Dialog
 import com.vl.messenger.domain.entity.ExtendedDialog
-import com.vl.messenger.domain.entity.FriendStatus
 import com.vl.messenger.domain.entity.Message
 import com.vl.messenger.domain.entity.User
+import com.vl.messenger.domain.entity.VerboseUser
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -88,7 +89,7 @@ class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
 
     /* Users */
 
-    override suspend fun getUserById(token: String, id: Int): Pair<User, FriendStatus> =
+    override suspend fun getUserById(token: String, id: Int): VerboseUser =
         api.getUser(token.toBearerAuthHeader(), id)
             .requireResponse()
             .toDomainWithFriendStatus()
@@ -98,7 +99,7 @@ class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
         pattern: String,
         limit: Int,
         key: Int?
-    ): List<Pair<User, FriendStatus>> =
+    ): List<VerboseUser> =
         api.search(token.toBearerAuthHeader(), pattern, limit, key)
             .requireResponse()
             .toDomainWithFriendStatus()
@@ -114,30 +115,22 @@ class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
             .requireResponse()
             .map { it.toDomain() }
 
-    override suspend fun getMessages(
-        token: String,
-        userId: Int,
-        limit: Int,
-        key: Long?
-    ): List<Message> = api.getMessages(token.toBearerAuthHeader(), userId, limit, key)
+    override suspend fun getDialog(token: String, id: String): Dialog =
+        api.getDialog(token.toBearerAuthHeader(), id)
             .requireResponse()
-            .toDomain(null)
+            .toDomain()
 
     override suspend fun getMessages(
         token: String,
-        conversationId: Long,
+        dialogId: String,
         limit: Int,
         key: Long?
-    ): List<Message> = TODO("Not yet implemented")
-
-    override suspend fun sendMessage(token: String, message: String, userId: Int) =
-        api.sendMessage(token.toBearerAuthHeader(), MessageForm(userId, message))
+    ): List<Message> = api.getMessages(token.toBearerAuthHeader(), dialogId, limit, key)
             .requireResponse()
-            .toDomain(null)
+            .toDomain(dialogId)
 
-    override suspend fun sendMessage(
-        token: String,
-        message: String,
-        conversationId: Long
-    ): Message = TODO("Not yet implemented")
+    override suspend fun sendMessage(token: String, message: String, dialogId: String) =
+        api.sendMessage(token.toBearerAuthHeader(), MessageForm(message))
+            .requireResponse()
+            .toDomain(dialogId)
 }

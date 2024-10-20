@@ -1,29 +1,19 @@
 package com.vl.messenger.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingSource
-import androidx.paging.cachedIn
-import com.vl.messenger.data.component.DialogPagingSource
-import com.vl.messenger.data.entity.Message
-import com.vl.messenger.data.entity.User
-import com.vl.messenger.data.manager.DialogManager
+import androidx.paging.map
+import com.vl.messenger.domain.usecase.GetPagedDialogsUseCase
+import com.vl.messenger.ui.UiMapper.toUi
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 @HiltViewModel
 class DialogsViewModel @Inject constructor(
-    dialogManager: DialogManager
+    getPagedDialogsUseCase: GetPagedDialogsUseCase
 ): ViewModel() {
-    val dialogs = Pager(
-        config = PagingConfig(pageSize = 10),
-        pagingSourceFactory = { DialogPagingSource(dialogManager) }
-    ).flow.cachedIn(viewModelScope)
+    val uiState = getPagedDialogsUseCase(Unit)
+        .map { pagingData ->
+            pagingData.map { it.toUi() }
+        }
 }

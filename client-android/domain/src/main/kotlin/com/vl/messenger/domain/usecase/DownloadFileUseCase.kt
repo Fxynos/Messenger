@@ -5,6 +5,6 @@ import java.io.InputStream
 
 class DownloadFileUseCase(
     private val messengerApi: MessengerRestApi
-): GetIsLoggedInUseCase<String, InputStream> {
+): SuspendedUseCase<String, InputStream> {
     override suspend fun invoke(param: String) = messengerApi.downloadFile(param)
 }

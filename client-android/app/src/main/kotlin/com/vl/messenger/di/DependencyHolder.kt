@@ -1,0 +1,165 @@
+package com.vl.messenger.di
+
+import android.content.Context
+import com.vl.messenger.BuildConfig
+import com.vl.messenger.data.SessionPreferencesStore
+import com.vl.messenger.data.network.MessengerStompApiImpl
+import com.vl.messenger.data.network.RetrofitMessengerRestApi
+import com.vl.messenger.data.paging.dialog.DialogDataSourceImpl
+import com.vl.messenger.data.paging.message.MessageDataSourceImpl
+import com.vl.messenger.data.paging.user.UserDataSourceImpl
+import com.vl.messenger.domain.boundary.DialogDataSource
+import com.vl.messenger.domain.boundary.MessageDataSource
+import com.vl.messenger.domain.boundary.MessengerRestApi
+import com.vl.messenger.domain.boundary.MessengerStompApi
+import com.vl.messenger.domain.boundary.SessionStore
+import com.vl.messenger.domain.boundary.UserDataSource
+import com.vl.messenger.domain.usecase.AddFriendUseCase
+import com.vl.messenger.domain.usecase.DownloadFileUseCase
+import com.vl.messenger.domain.usecase.GetDialogByIdUseCase
+import com.vl.messenger.domain.usecase.GetFriendsUseCase
+import com.vl.messenger.domain.usecase.GetIsLoggedInUseCase
+import com.vl.messenger.domain.usecase.GetLoggedUserProfileUseCase
+import com.vl.messenger.domain.usecase.GetPagedDialogsUseCase
+import com.vl.messenger.domain.usecase.GetPagedMessagesUseCase
+import com.vl.messenger.domain.usecase.GetPagedUsersByNameUseCase
+import com.vl.messenger.domain.usecase.GetUserByIdUseCase
+import com.vl.messenger.domain.usecase.ObserveAllIncomingMessagesUseCase
+import com.vl.messenger.domain.usecase.RemoveFriendUseCase
+import com.vl.messenger.domain.usecase.SendMessageUseCase
+import com.vl.messenger.domain.usecase.SignInUseCase
+import com.vl.messenger.domain.usecase.SignUpUseCase
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import javax.inject.Singleton
+
+@Module
+@InstallIn(SingletonComponent::class)
+object DependencyHolder {
+
+    /* Environment */
+
+    @Provides
+    @MessengerRestAddress
+    fun provideMessengerRestApiAddress(): String = BuildConfig.ADDRESS
+
+    @Provides
+    @MessengerStompAddress
+    fun provideMessengerStompApiAddress(): String = BuildConfig.ADDRESS
+
+    /* Use case */
+
+    @Provides
+    @Singleton
+    fun provideAddFriendUseCase(sessionStore: SessionStore, api: MessengerRestApi) =
+        AddFriendUseCase(sessionStore, api)
+
+    @Provides
+    @Singleton
+    fun provideDownloadFileUseCase(api: MessengerRestApi) = DownloadFileUseCase(api)
+
+    @Provides
+    @Singleton
+    fun provideGetDialogByIdUseCase(sessionStore: SessionStore, api: MessengerRestApi) =
+        GetDialogByIdUseCase(sessionStore, api)
+
+    @Provides
+    @Singleton
+    fun provideGetFriendsUseCase(sessionStore: SessionStore, api: MessengerRestApi) =
+        GetFriendsUseCase(sessionStore, api)
+
+    @Provides
+    @Singleton
+    fun provideGetIsLoggedInUseCase(sessionStore: SessionStore) = GetIsLoggedInUseCase(sessionStore)
+
+    @Provides
+    @Singleton
+    fun provideGetLoggedUserProfileUseCase(sessionStore: SessionStore, api: MessengerRestApi) =
+        GetLoggedUserProfileUseCase(sessionStore, api)
+
+    @Provides
+    @Singleton
+    fun provideGetPagedDialogsUseCase(sessionStore: SessionStore, dialogDataSource: DialogDataSource) =
+        GetPagedDialogsUseCase(sessionStore, dialogDataSource)
+
+    @Provides
+    @Singleton
+    fun provideGetPagedMessagesUseCase(sessionStore: SessionStore, messageDataSource: MessageDataSource) =
+        GetPagedMessagesUseCase(sessionStore, messageDataSource)
+
+    @Provides
+    @Singleton
+    fun provideGetPagedUsersByNameUseCase(sessionStore: SessionStore, userDataSource: UserDataSource) =
+        GetPagedUsersByNameUseCase(sessionStore, userDataSource)
+
+    @Provides
+    @Singleton
+    fun provideGetUserByIdUseCase(sessionStore: SessionStore, api: MessengerRestApi) =
+        GetUserByIdUseCase(sessionStore, api)
+
+    @Provides
+    @Singleton
+    fun provideObserveAllIncomingMessagesUseCase(sessionStore: SessionStore, api: MessengerStompApi) =
+        ObserveAllIncomingMessagesUseCase(api, sessionStore)
+
+    @Provides
+    @Singleton
+    fun provideRemoveFriendUseCase(sessionStore: SessionStore, api: MessengerRestApi) =
+        RemoveFriendUseCase(sessionStore, api)
+
+    @Provides
+    @Singleton
+    fun provideSendMessageUseCase(sessionStore: SessionStore, api: MessengerRestApi) =
+        SendMessageUseCase(api, sessionStore)
+
+    @Provides
+    @Singleton
+    fun provideSignInUseCase(sessionStore: SessionStore, api: MessengerRestApi) =
+        SignInUseCase(api, sessionStore)
+
+    @Provides
+    @Singleton
+    fun provideSignUpUseCase(api: MessengerRestApi, signInUseCase: SignInUseCase) =
+        SignUpUseCase(api, signInUseCase)
+
+    /* Boundary */
+
+    @Provides
+    @Singleton
+    fun provideSessionStore(@ApplicationContext context: Context) = SessionPreferencesStore(context)
+
+    @Provides
+    @Singleton
+    fun provideMessengerRestApi(retrofit: Retrofit): MessengerRestApi =
+        RetrofitMessengerRestApi(retrofit)
+
+    @Provides
+    @Singleton
+    fun provideStompApi(@MessengerStompAddress address: String): MessengerStompApi =
+        MessengerStompApiImpl(address)
+
+    @Provides
+    @Singleton
+    fun provideDialogDataSource(api: MessengerRestApi): DialogDataSource = DialogDataSourceImpl(api)
+
+    @Provides
+    @Singleton
+    fun provideMessageDataSource(api: MessengerRestApi): MessageDataSource = MessageDataSourceImpl(api)
+
+    @Provides
+    @Singleton
+    fun provideUserDataSource(api: MessengerRestApi): UserDataSource = UserDataSourceImpl(api)
+
+    /* Data layer */
+
+    @Provides
+    fun provideRetrofit(@MessengerRestAddress address: String): Retrofit = Retrofit.Builder()
+        .baseUrl("http://$address")
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+}
