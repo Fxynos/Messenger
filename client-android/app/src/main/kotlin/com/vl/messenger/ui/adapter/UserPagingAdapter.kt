@@ -5,7 +5,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
-import com.vl.messenger.R
+import com.vl.messenger.databinding.ItemUserBinding
 import com.vl.messenger.domain.entity.User
 import com.vl.messenger.ui.adapter.viewholder.UserViewHolder
 
@@ -27,7 +27,7 @@ class UserPagingAdapter(
         holder.bind(getItem(position)!!)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): UserViewHolder = UserViewHolder(
-        view = inflater.inflate(R.layout.item_user, parent, false),
+        ItemUserBinding.inflate(inflater, parent, false),
         onClick = onClick
     )
 }

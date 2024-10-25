@@ -20,6 +20,28 @@ class ChatService(
 
     fun getDialogs(userId: Int, offset: Int, limit: Int) = dataMapper.getDialogs(userId, offset, limit)
 
+    fun getPrivateDialog(userId: Int) = dataMapper.getVerboseUser(userId)?.run {
+        DataMapper.Dialog(
+            isPrivate = true,
+            id = userId.toLong(),
+            title = login,
+            image = image,
+            lastMessage = null,
+            lastMessageSender = null
+        )
+    }
+
+    fun getConversationDialog(conversationId: Long) = dataMapper.getConversation(conversationId)?.run {
+        DataMapper.Dialog(
+            isPrivate = false,
+            id = conversationId,
+            title = name,
+            image = image,
+            lastMessage = null,
+            lastMessageSender = null
+        )
+    }
+
     fun sendPrivateMessage(userId: Int, receiverId: Int, content: String): MessagesResponse.Message {
         val messageId = dataMapper.addMessage(userId, receiverId, content)
         if (registry.getUser(dataMapper.getVerboseUser(receiverId)!!.login) != null)

@@ -13,8 +13,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.vl.messenger.R
 import com.vl.messenger.ui.adapter.UserAdapter
-import com.vl.messenger.domain.OnItemClickListener
-import com.vl.messenger.domain.entity.User
 import com.vl.messenger.ui.viewmodel.FriendsViewModel
 import com.vl.messenger.ui.viewmodel.UserProfileViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -36,14 +34,12 @@ class FriendsFragment: Fragment() {
     ): View {
         val view = inflater.inflate(R.layout.fragment_friends, container, false)
         menu = view.findViewById(R.id.menu)
-        adapter = UserAdapter(requireContext())
         friends = view.findViewById(R.id.friends)
         friends.adapter = adapter
 
-        // callbacks
-        adapter.onItemClickListener = OnItemClickListener { item: User, _ ->
+        adapter = UserAdapter(requireContext()) { clickedUser ->
             startActivity(Intent(requireContext(), UserProfileActivity::class.java).apply {
-                putExtra(UserProfileViewModel.ARG_KEY_USER_ID, item.id)
+                putExtra(UserProfileViewModel.ARG_KEY_USER_ID, clickedUser.id)
             })
         }
         menu.setOnClickListener {

@@ -1,26 +1,20 @@
 package com.vl.messenger.chat
 
 import com.vl.messenger.DataMapper
+import com.vl.messenger.chat.DtoMapper.toDto
 import com.vl.messenger.chat.dto.ConversationMessageForm
 import com.vl.messenger.chat.dto.DialogResponse
-import com.vl.messenger.chat.dto.PrivateMessageForm
 import com.vl.messenger.chat.dto.MessagesResponse
+import com.vl.messenger.chat.dto.PrivateMessageForm
 import com.vl.messenger.dto.StatusResponse
-import com.vl.messenger.dto.UsersResponse
 import com.vl.messenger.statusOf
-import com.vl.messenger.toDto
 import com.vl.messenger.userId
 import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 class ChatRestController(
@@ -43,17 +37,43 @@ class ChatRestController(
         @RequestParam(defaultValue = "0") offset: Int,
         @RequestParam(defaultValue = "50") limit: Int
     ): ResponseEntity<StatusResponse<List<DialogResponse>>> {
-        return statusOf(payload = chatService.getDialogs(userId, offset, limit).map {
-            DialogResponse(
-                it.isPrivate,
-                DialogResponse.DialogDto(it.id, it.title, it.image.toImageUrl()),
-                it.lastMessage?.run {
-                    DialogResponse.MessageDto(id, unixSec, content, it.lastMessageSender!!.run {
-                        UsersResponse.UserDto(id, login, image.toImageUrl())
-                    })
-                }
-            )
-        })
+        return statusOf(
+            payload = chatService.getDialogs(userId, offset, limit)
+                .map { it.toDto(baseUrl) }
+        )
+    }
+
+    /**
+     * @param id starts with `u` or `c` prefix for private dialogs and conversations respectively,
+     * ends with its actual id. For example, to retrieve private dialog for user with id `1234`, `u1234` should be used
+     */
+    @GetMapping("/dialogs/{id}")
+    fun getDialog(
+        @PathVariable id: String
+    ): ResponseEntity<StatusResponse<DialogResponse>> {
+        return when {
+            id.startsWith('u') -> { // private dialog
+                val userId = id.substring(1).toIntOrNull()
+                    ?: return statusOf(HttpStatus.BAD_REQUEST, "Invalid user id")
+
+                val dialog = chatService.getPrivateDialog(userId)
+                    ?: return statusOf(HttpStatus.NOT_FOUND, "No such user")
+
+                statusOf(payload = dialog.toDto(baseUrl))
+            }
+
+            id.startsWith('c') -> { // conversation dialog
+                val conversationId = id.substring(1).toLongOrNull()
+                    ?: return statusOf(HttpStatus.BAD_REQUEST, "Invalid conversation id")
+
+                val dialog = chatService.getConversationDialog(conversationId)
+                    ?: return statusOf(HttpStatus.NOT_FOUND, "No such conversation")
+
+                statusOf(payload = dialog.toDto(baseUrl))
+            }
+
+            else -> statusOf(HttpStatus.BAD_REQUEST, "Invalid id prefix")
+        }
     }
 
     @GetMapping("/messages/private")

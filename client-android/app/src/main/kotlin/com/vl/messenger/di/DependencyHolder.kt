@@ -2,6 +2,7 @@ package com.vl.messenger.di
 
 import android.content.Context
 import com.vl.messenger.BuildConfig
+import com.vl.messenger.data.FileStorageAccessorImpl
 import com.vl.messenger.data.SessionPreferencesStore
 import com.vl.messenger.data.network.MessengerStompApiImpl
 import com.vl.messenger.data.network.RetrofitMessengerRestApi
@@ -9,6 +10,7 @@ import com.vl.messenger.data.paging.dialog.DialogDataSourceImpl
 import com.vl.messenger.data.paging.message.MessageDataSourceImpl
 import com.vl.messenger.data.paging.user.UserDataSourceImpl
 import com.vl.messenger.domain.boundary.DialogDataSource
+import com.vl.messenger.domain.boundary.FileStorageAccessor
 import com.vl.messenger.domain.boundary.MessageDataSource
 import com.vl.messenger.domain.boundary.MessengerRestApi
 import com.vl.messenger.domain.boundary.MessengerStompApi
@@ -24,11 +26,13 @@ import com.vl.messenger.domain.usecase.GetPagedDialogsUseCase
 import com.vl.messenger.domain.usecase.GetPagedMessagesUseCase
 import com.vl.messenger.domain.usecase.GetPagedUsersByNameUseCase
 import com.vl.messenger.domain.usecase.GetUserByIdUseCase
+import com.vl.messenger.domain.usecase.LogOutUseCase
 import com.vl.messenger.domain.usecase.ObserveAllIncomingMessagesUseCase
 import com.vl.messenger.domain.usecase.RemoveFriendUseCase
 import com.vl.messenger.domain.usecase.SendMessageUseCase
 import com.vl.messenger.domain.usecase.SignInUseCase
 import com.vl.messenger.domain.usecase.SignUpUseCase
+import com.vl.messenger.domain.usecase.UpdatePhotoUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -79,8 +83,20 @@ object DependencyHolder {
 
     @Provides
     @Singleton
+    fun provideLogOutUseCase(sessionStore: SessionStore) = LogOutUseCase(sessionStore)
+
+    @Provides
+    @Singleton
     fun provideGetLoggedUserProfileUseCase(sessionStore: SessionStore, api: MessengerRestApi) =
         GetLoggedUserProfileUseCase(sessionStore, api)
+
+    @Provides
+    @Singleton
+    fun provideUpdatePhotoUseCase(
+        sessionStore: SessionStore,
+        api: MessengerRestApi,
+        fileStorageAccessor: FileStorageAccessor
+    ) = UpdatePhotoUseCase(sessionStore, api, fileStorageAccessor)
 
     @Provides
     @Singleton
@@ -131,7 +147,8 @@ object DependencyHolder {
 
     @Provides
     @Singleton
-    fun provideSessionStore(@ApplicationContext context: Context) = SessionPreferencesStore(context)
+    fun provideSessionStore(@ApplicationContext context: Context): SessionStore =
+        SessionPreferencesStore(context)
 
     @Provides
     @Singleton
@@ -154,6 +171,10 @@ object DependencyHolder {
     @Provides
     @Singleton
     fun provideUserDataSource(api: MessengerRestApi): UserDataSource = UserDataSourceImpl(api)
+
+    @Provides
+    fun provideFileStorageAccessor(@ApplicationContext context: Context): FileStorageAccessor =
+        FileStorageAccessorImpl(context)
 
     /* Data layer */
 

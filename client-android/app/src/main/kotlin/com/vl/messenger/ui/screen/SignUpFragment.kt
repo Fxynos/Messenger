@@ -36,6 +36,14 @@ class SignUpFragment: Fragment() {
 
     @SuppressLint("UnsafeRepeatOnLifecycleDetector")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        binding.signIn.setOnClickListener { viewModel.navigateToSignIn() }
+        binding.signUp.setOnClickListener {
+            viewModel.signUp(
+                binding.username.text.toString().trim(),
+                binding.password.text.toString().trim(),
+                binding.repeatPassword.text.toString().trim()
+            )
+        }
         view.findViewTreeLifecycleOwner()!!.lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect(this@SignUpFragment::updateState)

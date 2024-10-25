@@ -1,66 +1,73 @@
 package com.vl.messenger.ui.viewmodel
 
-import android.app.Application
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vl.messenger.domain.entity.User
+import com.vl.messenger.domain.usecase.GetLoggedUserProfileUseCase
+import com.vl.messenger.domain.usecase.LogOutUseCase
+import com.vl.messenger.domain.usecase.UpdatePhotoUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    app: Application,
-    private val sessionStore: SessionStore,
-    private val profileManager: ProfileManager,
-    downloadManager: DownloadManager
-): AndroidViewModel(app) {
-    private val context: Context
-        get() = getApplication()
+    private val getLoggedUserProfileUseCase: GetLoggedUserProfileUseCase,
+    private val logOutUseCase: LogOutUseCase,
+    private val updatePhotoUseCase: UpdatePhotoUseCase
+): ViewModel() {
+    private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
+    val uiState = _uiState.asStateFlow()
 
-    private val _profile: MutableStateFlow<User?> = MutableStateFlow(null)
-    val profile: StateFlow<User?> get() = _profile
-
-    private val _profileImage: MutableStateFlow<Bitmap?> = MutableStateFlow(null)
-    val profileImage: StateFlow<Bitmap?> get() = _profileImage
+    private val _events = MutableSharedFlow<DataDrivenEvent>()
+    val events = _events.asSharedFlow()
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            fetchProfile()
-            val imageUrl = _profile.value!!.imageUrl
-            if (imageUrl != null) _profileImage.update { downloadManager.downloadBitmap(imageUrl) }
+            _uiState.value = getLoggedUserProfileUseCase(Unit).toUi()
         }
     }
 
     fun logOut() {
         viewModelScope.launch {
-            sessionStore.removeAccessToken()
+            logOutUseCase(Unit)
+
         }
     }
 
-    fun uploadPhoto(imageUri: Uri) {
-        val stream = context.contentResolver.openInputStream(imageUri)!!
+    fun updatePhoto(imageUri: Uri) {
+        if (uiState.value is UiState.Loading)
+            return
+
         viewModelScope.launch(Dispatchers.IO) {
-            val bitmap = BitmapFactory.decodeStream(stream)
-            profileManager.uploadPhoto(bitmap)
-            fetchProfile()
-            _profileImage.update { bitmap }
+            _uiState.value = UiState.Loading
+            updatePhotoUseCase(imageUri.toString())
+            _uiState.value = getLoggedUserProfileUseCase(Unit).toUi()
         }
     }
 
-    /**
-     * Blocking
-     */
-    private fun fetchProfile() {
-        _profile.update {
-            profileManager.getProfile()
-        }
+    sealed interface UiState {
+
+        data class Loaded(
+            val name: String,
+            val imageUrl: String?
+        ): UiState
+
+        data object Loading: UiState
+    }
+
+    sealed interface DataDrivenEvent {
+        data object NavigateToAuthScreen: DataDrivenEvent
     }
 }
+
+private fun User.toUi() = ProfileViewModel.UiState.Loaded(
+    name = login,
+    imageUrl = imageUrl
+)

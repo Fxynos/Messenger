@@ -31,8 +31,12 @@ class AuthViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            if (getIsLoggedInUseCase(Unit))
-                emitEvent(DataDrivenEvent.LOGGED_IN)
+            _events.emit(
+                if (getIsLoggedInUseCase(Unit))
+                    DataDrivenEvent.LOGGED_IN
+                else
+                    DataDrivenEvent.NAVIGATE_SIGN_IN
+            )
         }
     }
 
