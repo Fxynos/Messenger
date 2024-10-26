@@ -6,9 +6,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import com.vl.messenger.R
 import com.vl.messenger.databinding.ActivityAuthBinding
 import com.vl.messenger.ui.viewmodel.AuthViewModel
@@ -27,11 +25,7 @@ class AuthActivity: AppCompatActivity() {
         setContentView(binding.root)
         navigateToFragment(SignInFragment::class.java)
 
-        lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch { viewModel.events.collect(this@AuthActivity::handleEvent) }
-            }
-        }
+        lifecycleScope.launch { viewModel.events.collect(this@AuthActivity::handleEvent) }
     }
 
     private fun handleEvent(event: AuthViewModel.DataDrivenEvent) {
