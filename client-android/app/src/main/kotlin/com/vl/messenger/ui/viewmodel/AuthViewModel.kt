@@ -1,6 +1,7 @@
 package com.vl.messenger.ui.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.vl.messenger.domain.usecase.GetIsLoggedInUseCase
@@ -8,12 +9,15 @@ import com.vl.messenger.domain.usecase.SignInUseCase
 import com.vl.messenger.domain.usecase.SignUpUseCase
 import com.vl.messenger.domain.usecase.param.CredentialsParam
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+private const val TAG = "AuthViewModel"
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
@@ -31,33 +35,32 @@ class AuthViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            _events.emit(
-                if (getIsLoggedInUseCase(Unit))
-                    DataDrivenEvent.LOGGED_IN
-                else
-                    DataDrivenEvent.NAVIGATE_SIGN_IN
-            )
+            if (getIsLoggedInUseCase(Unit))
+                _events.emit(DataDrivenEvent.NavigateLoggedIn)
         }
     }
 
     fun navigateToSignIn() {
         if (uiState.value != UiState.LOADING)
-            emitEvent(DataDrivenEvent.NAVIGATE_SIGN_IN)
+            emitEvent(DataDrivenEvent.NavigateSignIn)
     }
 
     fun navigateToSignUp() {
         if (uiState.value != UiState.LOADING)
-            emitEvent(DataDrivenEvent.NAVIGATE_SIGN_UP)
+            emitEvent(DataDrivenEvent.NavigateSignUp)
     }
 
     fun signIn(login: String, password: String) {
         updateState(UiState.LOADING)
         if (validate(login, password))
-            viewModelScope.launch {
-                when (signInUseCase(CredentialsParam(login, password))) {
-                    SignInUseCase.Result.SUCCESS -> emitEvent(DataDrivenEvent.LOGGED_IN)
-                    SignInUseCase.Result.WRONG_CREDENTIALS -> emitEvent(DataDrivenEvent.NOTIFY_WRONG_CREDENTIALS)
-                    SignInUseCase.Result.ERROR -> emitEvent(DataDrivenEvent.NOTIFY_ERROR)
+            viewModelScope.launch(Dispatchers.IO) {
+                when (val result = signInUseCase(CredentialsParam(login, password))) {
+                    SignInUseCase.Result.Success -> emitEvent(DataDrivenEvent.NavigateLoggedIn)
+                    SignInUseCase.Result.WrongCredentials -> emitEvent(DataDrivenEvent.NotifyWrongCredentials)
+                    is SignInUseCase.Result.Error -> {
+                        Log.w(TAG, result.cause)
+                        emitEvent(DataDrivenEvent.NotifyError(null))
+                    }
                 }
                 updateState(UiState.REGULAR)
             }
@@ -66,11 +69,14 @@ class AuthViewModel @Inject constructor(
     fun signUp(login: String, password: String, repeatPassword: String) {
         updateState(UiState.LOADING)
         if (validate(login, password, repeatPassword))
-            viewModelScope.launch {
-                when (signUpUseCase(CredentialsParam(login, password))) {
-                    SignUpUseCase.Result.SUCCESS -> emitEvent(DataDrivenEvent.LOGGED_IN)
-                    SignUpUseCase.Result.LOGIN_TAKEN -> emitEvent(DataDrivenEvent.NOTIFY_LOGIN_TAKEN)
-                    SignUpUseCase.Result.ERROR -> emitEvent(DataDrivenEvent.NOTIFY_ERROR)
+            viewModelScope.launch(Dispatchers.IO) {
+                when (val result = signUpUseCase(CredentialsParam(login, password))) {
+                    SignUpUseCase.Result.Success -> emitEvent(DataDrivenEvent.NavigateLoggedIn)
+                    SignUpUseCase.Result.LoginTaken -> emitEvent(DataDrivenEvent.NotifyLoginTaken)
+                    is SignUpUseCase.Result.Error -> {
+                        Log.w(TAG, result.cause)
+                        emitEvent(DataDrivenEvent.NotifyError(null))
+                    }
                 }
                 updateState(UiState.REGULAR)
             }
@@ -106,12 +112,12 @@ class AuthViewModel @Inject constructor(
         PASSWORD_ILLEGAL_LENGTH
     }
 
-    enum class DataDrivenEvent {
-        LOGGED_IN,
-        NAVIGATE_SIGN_IN,
-        NAVIGATE_SIGN_UP,
-        NOTIFY_LOGIN_TAKEN,
-        NOTIFY_WRONG_CREDENTIALS,
-        NOTIFY_ERROR
+    sealed interface DataDrivenEvent {
+        data object NavigateLoggedIn: DataDrivenEvent
+        data object NavigateSignIn: DataDrivenEvent
+        data object NavigateSignUp: DataDrivenEvent
+        data object NotifyLoginTaken: DataDrivenEvent
+        data object NotifyWrongCredentials: DataDrivenEvent
+        data class NotifyError(val message: String?): DataDrivenEvent
     }
 }

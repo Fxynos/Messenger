@@ -21,7 +21,7 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "ADDRESS", "\"192.168.0.12:8080\"")
+            buildConfigField("String", "ADDRESS", "\"192.168.0.11:8080\"")
         }
         release {
             initWith(buildTypes.getByName("debug"))
@@ -74,12 +74,13 @@ dependencies {
     implementation(libs.adapter.delegates.viewbinding)
 
     /* Retrofit */
-    implementation(libs.retrofit)
+    implementation(libs.retrofit.client)
     implementation(libs.retrofit.gson)
+    implementation(libs.okhttp.logging)
 
     /* STOMP */
     implementation(libs.stomp)
-    implementation(libs.okhttp)
+    implementation(libs.okhttp.client)
     implementation(libs.rxjava)
 }
 

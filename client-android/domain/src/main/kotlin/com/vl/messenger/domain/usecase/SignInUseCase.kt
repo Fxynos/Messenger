@@ -13,15 +13,15 @@ class SignInUseCase(
         when (val result = messengerApi.signIn(param.login, param.password)) {
             is MessengerRestApi.SignInResult.Success -> {
                 sessionStore.setToken(result.token)
-                Result.SUCCESS
+                Result.Success
             }
-            MessengerRestApi.SignInResult.WrongCredentials -> Result.WRONG_CREDENTIALS
-            is MessengerRestApi.SignInResult.Error -> Result.ERROR
+            MessengerRestApi.SignInResult.WrongCredentials -> Result.WrongCredentials
+            is MessengerRestApi.SignInResult.Error -> Result.Error(result.throwable)
         }
 
-    enum class Result {
-        SUCCESS,
-        WRONG_CREDENTIALS,
-        ERROR
+    sealed interface Result {
+        data object Success: Result
+        data object WrongCredentials: Result
+        data class Error(val cause: Throwable): Result
     }
 }

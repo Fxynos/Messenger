@@ -34,7 +34,7 @@ dependencies {
     implementation(project(":domain"))
 
     /* Retrofit */
-    implementation(libs.retrofit)
+    implementation(libs.retrofit.client)
     implementation(libs.retrofit.gson)
 
     /* Jetpack */
@@ -43,6 +43,6 @@ dependencies {
 
     /* STOMP */
     implementation(libs.stomp)
-    implementation(libs.okhttp)
+    implementation(libs.okhttp.client)
     implementation(libs.rxjava)
 }

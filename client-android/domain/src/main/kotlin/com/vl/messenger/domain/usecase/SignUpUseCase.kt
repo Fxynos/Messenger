@@ -9,22 +9,28 @@ class SignUpUseCase(
 ): SuspendedUseCase<CredentialsParam, SignUpUseCase.Result> {
 
     override suspend fun invoke(param: CredentialsParam) =
-        when (messengerApi.signUp(param.login, param.password)) {
+        when (val result = messengerApi.signUp(param.login, param.password)) {
 
             MessengerRestApi.SignUpResult.Success ->
-                if (signInUseCase(param) == SignInUseCase.Result.SUCCESS)
-                    Result.SUCCESS
-                else
-                    Result.ERROR
+                when (val signInResult = signInUseCase(param)) {
+                    is SignInUseCase.Result.Error ->
+                        Result.Error(signInResult.cause)
 
-            MessengerRestApi.SignUpResult.LoginIsTaken -> Result.LOGIN_TAKEN
+                    SignInUseCase.Result.Success ->
+                        Result.Success
 
-            is MessengerRestApi.SignUpResult.Error -> Result.ERROR
+                    SignInUseCase.Result.WrongCredentials ->
+                        Result.Error(RuntimeException("Wrong credentials"))
+                }
+
+            MessengerRestApi.SignUpResult.LoginIsTaken -> Result.LoginTaken
+
+            is MessengerRestApi.SignUpResult.Error -> Result.Error(result.throwable)
         }
 
-    enum class Result {
-        SUCCESS,
-        LOGIN_TAKEN,
-        ERROR
+    sealed interface Result {
+        data object Success: Result
+        data object LoginTaken: Result
+        data class Error(val cause: Throwable): Result
     }
 }
