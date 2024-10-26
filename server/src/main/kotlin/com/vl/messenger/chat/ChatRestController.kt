@@ -76,24 +76,51 @@ class ChatRestController(
         }
     }
 
-    @GetMapping("/messages/private")
-    fun getPrivateMessages(
-        @RequestParam("user_id") companionId: Int,
+    @GetMapping("dialogs/{id}/messages")
+    fun getMessages(
+        @PathVariable id: String,
         @RequestParam("from_id", required = false) fromId: Long?,
         @RequestParam(defaultValue = "50") limit: Int
     ): ResponseEntity<StatusResponse<MessagesResponse>> {
-        if (fromId != null && fromId < 0)
-            return statusOf(HttpStatus.BAD_REQUEST, "\"from_id\" must be positive")
-        if (limit <= 0)
-            return statusOf(HttpStatus.BAD_REQUEST, "\"limit\" must be positive")
-        if (!chatService.userExists(companionId))
-            return statusOf(HttpStatus.GONE, "No such user")
-        return statusOf(payload = MessagesResponse(
-            chatService.getPrivateMessages(userId, companionId, fromId, limit).map(::messageToDto)
-        ))
+        return when {
+            id.startsWith('u') -> { // private dialog
+                val companionId = id.substring(1).toIntOrNull()
+                    ?: return statusOf(HttpStatus.BAD_REQUEST, "Invalid user id")
+
+                chatService.getPrivateDialog(companionId)
+                    ?: return statusOf(HttpStatus.NOT_FOUND, "No such user")
+
+                statusOf(
+                    payload = chatService.getPrivateMessages(
+                        userId = userId,
+                        companionId = companionId,
+                        fromId = fromId,
+                        limit = limit
+                    ).toDto()
+                )
+            }
+
+            id.startsWith('c') -> { // conversation dialog
+                val conversationId = id.substring(1).toLongOrNull()
+                    ?: return statusOf(HttpStatus.BAD_REQUEST, "Invalid conversation id")
+
+                chatService.getConversationDialog(conversationId)
+                    ?: return statusOf(HttpStatus.NOT_FOUND, "No such conversation")
+
+                statusOf(
+                    payload = chatService.getConversationMessages(
+                        conversationId = conversationId,
+                        fromId = fromId,
+                        limit = limit
+                    ).toDto()
+                )
+            }
+
+            else -> statusOf(HttpStatus.BAD_REQUEST, "Invalid id prefix")
+        }
     }
 
-    @PostMapping("/messages/private/send")
+    @PostMapping("/messages/private/send") // TODO [tva] use shared endpoint for private dialogs and conversations
     fun sendPrivateMessage(
         @Valid @RequestBody message: PrivateMessageForm
     ): ResponseEntity<StatusResponse<MessagesResponse.Message>> {
@@ -105,23 +132,6 @@ class ChatRestController(
             reason = "Message is sent",
             payload = chatService.sendPrivateMessage(userId, message.receiverId, message.content.trim())
         )
-    }
-
-    @GetMapping("/messages/conversations/{id}")
-    fun getConversationMessages(
-        @PathVariable("id") conversationId: Long,
-        @RequestParam("from_id", required = false) fromId: Long?,
-        @RequestParam(defaultValue = "50") limit: Int
-    ): ResponseEntity<StatusResponse<MessagesResponse>> {
-        if (fromId != null && fromId < 0)
-            return statusOf(HttpStatus.BAD_REQUEST, "\"from_id\" must be positive")
-        if (limit <= 0)
-            return statusOf(HttpStatus.BAD_REQUEST, "\"limit\" must be positive")
-        if (!conversationService.isMember(userId, conversationId))
-            return statusOf(HttpStatus.GONE, "Not member")
-        return statusOf(payload = MessagesResponse(
-            chatService.getConversationMessages(conversationId, fromId, limit).map(::messageToDto)
-        ))
     }
 
     @PostMapping("/messages/conversations/{id}/send")

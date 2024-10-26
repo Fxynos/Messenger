@@ -44,40 +44,34 @@ class UserProfileActivity: AppCompatActivity() {
 
         //callbacks
         back.setOnClickListener { onBackPressedDispatcher.onBackPressed() }
-        addFriend.setOnClickListener { viewModel.addFriend() }
-        openDialog.setOnClickListener { viewModel.removeFriend() }
+        addFriend.setOnClickListener {
+            when (viewModel.uiState.value.availableAction) {
+                UserProfileViewModel.UiState.AvailableAction.ADD_FRIEND -> viewModel.addFriend()
+                UserProfileViewModel.UiState.AvailableAction.REMOVE_FRIEND -> viewModel.removeFriend()
+                null -> Unit
+            }
+        }
+        openDialog.setOnClickListener { viewModel.openDialog() }
 
         // subscriptions
         lifecycleScope.apply {
             launch {
                 viewModel.uiState.collectLatest { state ->
-                    when (state) {
-                        is UserProfileViewModel.UiState.Loaded -> {
-                            val user by state.profile::user
-                            val friendStatus by state.profile::friendStatus
+                    login.text = state.name ?: getString(R.string.loading)
+                    name.text = login.text
+                    image.load(state.imageUrl)
 
-                            login.text = user.login
-                            name.text = user.login
-                            image.load(user.imageUrl)
-
-                            status.text = when (friendStatus) {
-                                FriendStatus.FRIEND -> getString(R.string.friend_status_friend)
-                                FriendStatus.NONE -> getString(R.string.friend_status_none)
-                                FriendStatus.REQUEST_SENT -> getString(R.string.friend_status_sent)
-                                FriendStatus.REQUEST_GOTTEN -> getString(R.string.friend_status_gotten)
-                            }
-                            addFriend.text = when (friendStatus) {
-                                FriendStatus.NONE, FriendStatus.REQUEST_GOTTEN -> getString(R.string.add_friend)
-                                FriendStatus.FRIEND, FriendStatus.REQUEST_SENT -> getString(R.string.remove_friend)
-                            }
-                        }
-                        UserProfileViewModel.UiState.Loading -> {
-                            login.text = ""
-                            name.text = ""
-                            image.setImageBitmap(null)
-                            status.text = ""
-                            addFriend.text = getString(R.string.add_friend)
-                        }
+                    status.text = when (state.status) {
+                        FriendStatus.FRIEND -> getString(R.string.friend_status_friend)
+                        FriendStatus.NONE -> getString(R.string.friend_status_none)
+                        FriendStatus.REQUEST_SENT -> getString(R.string.friend_status_sent)
+                        FriendStatus.REQUEST_GOTTEN -> getString(R.string.friend_status_gotten)
+                        else -> getString(R.string.loading)
+                    }
+                    addFriend.text = when (state.availableAction) {
+                        UserProfileViewModel.UiState.AvailableAction.ADD_FRIEND -> getString(R.string.add_friend)
+                        UserProfileViewModel.UiState.AvailableAction.REMOVE_FRIEND -> getString(R.string.remove_friend)
+                        null -> getString(R.string.loading)
                     }
                 }
             }

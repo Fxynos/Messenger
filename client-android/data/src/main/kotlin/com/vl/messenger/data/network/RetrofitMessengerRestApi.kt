@@ -119,6 +119,7 @@ class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
         api.getDialog(token.toBearerAuthHeader(), id)
             .requireResponse()
             .toDomain()
+            .dialog
 
     override suspend fun getMessages(
         token: String,

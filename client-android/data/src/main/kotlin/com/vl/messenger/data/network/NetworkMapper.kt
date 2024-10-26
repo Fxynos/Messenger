@@ -37,7 +37,7 @@ internal object NetworkMapper {
         isPrivate = when {
             id.startsWith('u') -> true
             id.startsWith('c') -> false
-            else -> throw IllegalArgumentException()
+            else -> throw IllegalArgumentException("id=$id")
         },
         title = title,
         image = image

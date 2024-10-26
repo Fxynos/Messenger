@@ -2,6 +2,7 @@ package com.vl.messenger.chat
 
 import com.vl.messenger.DataMapper
 import com.vl.messenger.chat.dto.DialogResponse
+import com.vl.messenger.chat.dto.MessagesResponse
 import com.vl.messenger.toDto
 
 object DtoMapper {
@@ -20,5 +21,14 @@ object DtoMapper {
                 sender = lastMessageSender!!.toDto(baseUrl)
             )
         }
+    )
+    fun DataMapper.Message.toDto() = MessagesResponse.Message(
+        id = id,
+        timestamp = unixSec,
+        content = content,
+        senderId = senderId
+    )
+    fun List<DataMapper.Message>.toDto() = MessagesResponse(
+        messages = map { it.toDto() }
     )
 }

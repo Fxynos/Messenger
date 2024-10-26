@@ -28,74 +28,65 @@ class UserProfileViewModel @Inject constructor(
         const val ARG_KEY_USER_ID = "user_id"
     }
 
-    private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
+    private val _uiState = MutableStateFlow(UiState())
     val uiState = _uiState.asStateFlow()
 
     private val _events = MutableSharedFlow<DataDrivenEvent>()
     val events = _events.asSharedFlow()
 
+    private val userId = savedStateHandle.get<Int>(ARG_KEY_USER_ID)!!
+
     init {
-        val userId = savedStateHandle.get<Int>(ARG_KEY_USER_ID)!!
         viewModelScope.launch(Dispatchers.IO) {
-            _uiState.value = UiState.Loaded(getUserByIdUseCase(userId))
+            _uiState.value = getUserByIdUseCase(userId).toUi()
         }
     }
 
     fun addFriend() {
-        val profile = (uiState.value as? UiState.Loaded)
-            ?.profile
-            ?: return
-
         viewModelScope.launch(Dispatchers.IO) {
-            addFriendUseCase(profile.user.id)
-            val newFriendStatus = when (profile.friendStatus) {
-                FriendStatus.REQUEST_GOTTEN -> FriendStatus.FRIEND
-                FriendStatus.NONE -> FriendStatus.REQUEST_SENT
-                else -> null
-            }
-            if (newFriendStatus != null)
-                _uiState.value = UiState.Loaded(
-                    profile.copy(friendStatus = newFriendStatus)
-                )
+            addFriendUseCase(userId)
+            _uiState.value = getUserByIdUseCase(userId).toUi()
         }
     }
 
     fun removeFriend() {
-        val profile = (uiState.value as? UiState.Loaded)
-            ?.profile
-            ?: return
-
         viewModelScope.launch(Dispatchers.IO) {
-            removeFriendUseCase(profile.user.id)
-            val newFriendStatus = when (profile.friendStatus) {
-                FriendStatus.REQUEST_SENT -> FriendStatus.NONE
-                FriendStatus.FRIEND -> FriendStatus.NONE
-                else -> null
-            }
-            if (newFriendStatus != null)
-                _uiState.value = UiState.Loaded(
-                    profile.copy(friendStatus = newFriendStatus)
-                )
+            removeFriendUseCase(userId)
+            _uiState.value = getUserByIdUseCase(userId).toUi()
         }
     }
 
     fun openDialog() {
-        val user = (uiState.value as? UiState.Loaded)
-            ?.profile
-            ?.user
-            ?: return
-
         viewModelScope.launch {
-            _events.emit(DataDrivenEvent.NavigateToDialog("u${user.id}"))
+            _events.emit(DataDrivenEvent.NavigateToDialog("u$userId"))
         }
     }
 
-    sealed interface UiState {
-        data object Loading: UiState
-        data class Loaded(val profile: VerboseUser): UiState
+    data class UiState(
+        val name: String? = null,
+        val status: FriendStatus? = null,
+        val imageUrl: String? = null,
+        val availableAction: AvailableAction? = null
+    ) {
+        enum class AvailableAction {
+            ADD_FRIEND,
+            REMOVE_FRIEND
+        }
     }
 
     sealed interface DataDrivenEvent {
         data class NavigateToDialog(val dialogId: String): DataDrivenEvent
     }
 }
+
+private fun VerboseUser.toUi() = UserProfileViewModel.UiState(
+    name = user.login,
+    imageUrl = user.imageUrl,
+    status = friendStatus,
+    availableAction = when (friendStatus) {
+        FriendStatus.REQUEST_GOTTEN, FriendStatus.NONE ->
+            UserProfileViewModel.UiState.AvailableAction.ADD_FRIEND
+        FriendStatus.REQUEST_SENT, FriendStatus.FRIEND ->
+            UserProfileViewModel.UiState.AvailableAction.REMOVE_FRIEND
+    }
+)
