@@ -2,6 +2,7 @@ package com.vl.messenger.ui.screen
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,6 +12,7 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.paging.LoadState
 import com.vl.messenger.databinding.FragmentSearchBinding
 import com.vl.messenger.ui.adapter.UserPagingAdapter
 import com.vl.messenger.ui.viewmodel.SearchViewModel
@@ -40,6 +42,7 @@ class SearchFragment: Fragment() {
             })
         }
         with(binding) {
+            result.adapter = adapter
             menu.setOnClickListener { (requireActivity() as MenuActivity).openDrawer() }
             search.setOnClickListener { viewModel.search(input.text.toString().trim()) }
         }
@@ -52,12 +55,18 @@ class SearchFragment: Fragment() {
         // subscriptions
         lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collectLatest { pagingData ->
-                    adapter.submitData(pagingData)
-                    with(binding) {
-                        hint.isVisible = adapter.itemCount == 0
-                        result.isVisible = adapter.itemCount != 0
-                        result.scrollToPosition(0)
+                launch { // items
+                    viewModel.uiState.collectLatest(adapter::submitData)
+                }
+                launch { // load state
+                    adapter.loadStateFlow.collectLatest {
+                        if (it.refresh is LoadState.Loading)
+                            return@collectLatest
+
+                        with(binding) {
+                            hint.isVisible = adapter.itemCount == 0
+                            result.isVisible = adapter.itemCount != 0
+                        }
                     }
                 }
             }

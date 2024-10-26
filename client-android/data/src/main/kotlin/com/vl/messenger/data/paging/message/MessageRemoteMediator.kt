@@ -6,6 +6,8 @@ import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import com.vl.messenger.domain.boundary.PagingCache
 import com.vl.messenger.domain.entity.Message
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalPagingApi::class)
 internal class MessageRemoteMediator(
@@ -21,13 +23,17 @@ internal class MessageRemoteMediator(
             LoadType.PREPEND -> MediatorResult.Success(true)
 
             LoadType.APPEND -> {
-                val items = fetch(state.lastItemOrNull()?.id, pageSize)
+                val items = withContext(Dispatchers.IO) {
+                    fetch(state.lastItemOrNull()?.id, pageSize)
+                }
                 cache.addLast(items)
                 MediatorResult.Success(items.size < pageSize)
             }
 
             LoadType.REFRESH -> {
-                val items = fetch(null, pageSize)
+                val items = withContext(Dispatchers.IO) {
+                    fetch(null, pageSize)
+                }
                 cache.addLast(items)
                 MediatorResult.Success(items.size < pageSize)
             }

@@ -3,6 +3,7 @@ package com.vl.messenger.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import com.vl.messenger.domain.entity.User
 import com.vl.messenger.domain.usecase.GetPagedUsersByNameUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,8 +23,12 @@ class SearchViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
     fun search(pattern: String) {
+        if (pattern.isBlank())
+            return
+
         pagingJob?.cancel()
         pagingJob = getPagedUsersByNameUseCase(pattern)
+            .cachedIn(viewModelScope)
             .onEach(_uiState::emit)
             .launchIn(viewModelScope)
     }

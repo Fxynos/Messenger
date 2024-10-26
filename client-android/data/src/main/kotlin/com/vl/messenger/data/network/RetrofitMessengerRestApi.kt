@@ -12,7 +12,7 @@ import com.vl.messenger.domain.entity.ExtendedDialog
 import com.vl.messenger.domain.entity.Message
 import com.vl.messenger.domain.entity.User
 import com.vl.messenger.domain.entity.VerboseUser
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Retrofit
@@ -69,7 +69,7 @@ class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
         api.uploadPhoto(
             token.toBearerAuthHeader(),
             MultipartBody.Part.createFormData("image", "profile", RequestBody.create(
-                MediaType.get("image/png"),
+                "image/png".toMediaType(),
                 image
             ))
         )
