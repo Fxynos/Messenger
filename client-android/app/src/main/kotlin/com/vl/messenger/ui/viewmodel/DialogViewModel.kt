@@ -107,8 +107,7 @@ class DialogViewModel @Inject constructor(
     private suspend fun insertMessage(message: Message) {
         cachedMessages.addFirst(listOf(message))
         delay(100L) // FIXME dirty hack to scroll after refreshing recycler view
-//        _events.emit(DataDrivenEvent.RefreshMessages)
-//        _events.emit(DataDrivenEvent.ScrollToLast)
+        _events.emit(DataDrivenEvent.ScrollToLast)
     }
 
     private fun Flow<PagingData<Message>>.toUi(): Flow<PagingData<MessagePagingAdapter.MessageItem>> {
@@ -137,6 +136,5 @@ class DialogViewModel @Inject constructor(
 
     sealed interface DataDrivenEvent {
         data object ScrollToLast: DataDrivenEvent
-        data object RefreshMessages: DataDrivenEvent
     }
 }

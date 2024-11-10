@@ -76,8 +76,6 @@ private val viewModel: DialogViewModel by viewModels()
     private suspend fun handleEvent(event: DialogViewModel.DataDrivenEvent) {
         Log.d(TAG, "Event: $event")
         when (event) {
-            DialogViewModel.DataDrivenEvent.RefreshMessages -> adapter.refresh()
-
             DialogViewModel.DataDrivenEvent.ScrollToLast -> {
                 val layoutManager = binding.messages.layoutManager as LinearLayoutManager
                 val firstVisiblePosition = layoutManager.findFirstVisibleItemPosition()
