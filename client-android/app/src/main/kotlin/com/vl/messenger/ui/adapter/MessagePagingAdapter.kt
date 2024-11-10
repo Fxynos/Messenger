@@ -26,8 +26,9 @@ class MessagePagingAdapter(
 
     private val inflater = LayoutInflater.from(context)
 
-    override fun onBindViewHolder(holder: ViewHolder<*, *>, position: Int) {
-
+    override fun onBindViewHolder(holder: ViewHolder<*, *>, position: Int) = when (holder) {
+        is ViewHolder.ReceivedMessage -> holder.bind(getItem(position) as MessageItem.Received)
+        is ViewHolder.SentMessage -> holder.bind(getItem(position) as MessageItem.Sent)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder<*, *> =

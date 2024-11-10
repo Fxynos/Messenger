@@ -131,7 +131,7 @@ class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
             .toDomain(dialogId)
 
     override suspend fun sendMessage(token: String, message: String, dialogId: String) =
-        api.sendMessage(token.toBearerAuthHeader(), MessageForm(message))
+        api.sendMessage(token.toBearerAuthHeader(), dialogId, MessageForm(message))
             .requireResponse()
             .toDomain(dialogId)
 }

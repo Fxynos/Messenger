@@ -16,7 +16,9 @@ internal class MessagePagingSource(
         return LoadResult.Page(
             data = messages,
             prevKey = null,
-            nextKey = messages.lastOrNull()?.id
+            nextKey =
+                if (messages.size < params.loadSize) null
+                else messages.last().id
         )
     }
 }

@@ -14,5 +14,5 @@ class GetPagedMessagesUseCase (
      * @param param dialog id
      */
     override suspend fun invoke(param: String): CachedPagingData<Long, Message> =
-        messageDataSource.getMessages(runBlocking {sessionStore.getToken()!!.token }, param)
+        messageDataSource.getMessages(sessionStore.getToken()!!.token, param)
 }

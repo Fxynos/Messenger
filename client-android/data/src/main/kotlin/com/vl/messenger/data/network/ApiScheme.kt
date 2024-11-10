@@ -108,6 +108,7 @@ internal interface ApiScheme {
     @POST("/dialogs/{id}/messages")
     suspend fun sendMessage(
         @Header("Authorization") token: String,
+        @Path("id") dialogId: String,
         @Body message: MessageForm
     ): StatusResponse<MessageDto>
 }

@@ -1,25 +1,30 @@
 package com.vl.messenger.data.paging.message
 
+import android.util.Log
 import com.vl.messenger.domain.boundary.PagingCache
 import com.vl.messenger.domain.entity.Message
-import java.util.LinkedList
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+
+private const val TAG = "MessagePagingCache"
 
 internal class MessagePagingCache: PagingCache<Long, Message> {
 
-    private val cache = LinkedList<Message>()
+    private var cache = LinkedHashSet<Message>()
+    private val _updateEvents = MutableSharedFlow<Any>(extraBufferCapacity = 1)
 
     override val first: Message? get() = cache.firstOrNull()
     override val last: Message? get() = cache.lastOrNull()
+    override val updateEvents: SharedFlow<Any> = _updateEvents.asSharedFlow()
 
     override fun get(key: Long): Message = cache.first { it.id == key }
+        .also { Log.d(TAG, "get $it") }
 
     override fun set(key: Long, value: Message) {
-        val iterator = cache.listIterator()
-        while (iterator.hasNext())
-            if (iterator.next().id == key) {
-                iterator.set(value)
-                return
-            }
+        Log.d(TAG, "set $value")
+        cache.add(value)
+        produceUpdateEvent()
     }
 
     override fun getPage(key: Long?, size: Int): List<Message> =
@@ -30,12 +35,26 @@ internal class MessagePagingCache: PagingCache<Long, Message> {
                 else this
             }.take(size)
             .toList()
+            .also {
+                Log.d(TAG, "getPage(key=$key, size=$size): ${it.toTypedArray().contentToString()}")
+            }
 
     override fun addLast(items: List<Message>) {
+        Log.d(TAG, "addLast(${items.toTypedArray().contentToString()})")
         cache.addAll(items)
+        Log.d(TAG, "Cache: $cache")
+        produceUpdateEvent()
     }
 
     override fun addFirst(items: List<Message>) {
-        cache.addAll(0, items)
+        Log.d(TAG, "addFirst(${items.toTypedArray().contentToString()})")
+        cache = LinkedHashSet(items.filter { !cache.contains(it) } + cache) // FIXME expensive operation
+        Log.d(TAG, "Cache: $cache")
+        produceUpdateEvent()
+    }
+
+    private fun produceUpdateEvent() {
+        val emitted = _updateEvents.tryEmit(Any())
+        Log.d(TAG, "produceUpdateEvent(): $emitted")
     }
 }

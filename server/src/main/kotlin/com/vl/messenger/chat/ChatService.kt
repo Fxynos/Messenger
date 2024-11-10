@@ -48,6 +48,7 @@ class ChatService(
             template.convertAndSend(getUserDestination(receiverId), StompMessage().apply {
                 id = messageId
                 senderId = userId
+                dialogId = "u$senderId"
                 this.content = content
             })
         return MessagesResponse.Message(messageId, userId, System.currentTimeMillis(), content) // FIXME timestamp
@@ -59,7 +60,7 @@ class ChatService(
     fun getConversationMessages(conversationId: Long, fromId: Long?, limit: Int) =
         dataMapper.getConversationMessages(conversationId, fromId, limit)
 
-    fun sendConversationMessage(userId: Int, conversationId: Long, content: String) {
+    fun sendConversationMessage(userId: Int, conversationId: Long, content: String): MessagesResponse.Message {
         val messageId = dataMapper.addConversationMessage(userId, conversationId, content)
         dataMapper.getAllMembers(conversationId)
             .filter { registry.getUser(it.login) != null }
@@ -68,9 +69,10 @@ class ChatService(
                     id = messageId
                     senderId = userId
                     this.content = content
-                    this.conversationId = conversationId
+                    this.dialogId = "c$conversationId"
                 })
             }
+        return MessagesResponse.Message(messageId, userId, System.currentTimeMillis(), content)
     }
 
     private fun getUserDestination(userId: Int) = "/users/$userId/chat"
