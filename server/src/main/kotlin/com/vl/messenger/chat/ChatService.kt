@@ -51,7 +51,7 @@ class ChatService(
                 dialogId = "u$senderId"
                 this.content = content
             })
-        return MessagesResponse.Message(messageId, userId, System.currentTimeMillis(), content) // FIXME timestamp
+        return MessagesResponse.Message(messageId, userId, System.currentTimeMillis() / 1000, content)
     }
 
     fun getPrivateMessages(userId: Int, companionId: Int, fromId: Long?, limit: Int) =

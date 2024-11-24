@@ -7,8 +7,9 @@ import com.vl.messenger.data.network.dto.StompMessage
 import com.vl.messenger.domain.boundary.MessengerStompApi
 import com.vl.messenger.domain.entity.AccessToken
 import com.vl.messenger.domain.entity.Message
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.runBlocking
 import ua.naiksoftware.stomp.Stomp
 import ua.naiksoftware.stomp.StompClient
@@ -19,14 +20,14 @@ import ua.naiksoftware.stomp.dto.LifecycleEvent
  */
 class MessengerStompApiImpl(private val address: String): MessengerStompApi {
     @SuppressLint("CheckResult")
-    override fun subscribeOnIncomingMessages(accessToken: AccessToken): Flow<Message> = flow {
+    override fun subscribeOnIncomingMessages(accessToken: AccessToken): Flow<Message> = channelFlow {
 
         fun subscribe(connection: StompClient) {
             connection.topic(
                 "/users/${accessToken.userId}/chat"
             ).subscribe { stompMessage ->
                 runBlocking {
-                    emit(
+                    send(
                         Gson().fromJson(stompMessage.payload, StompMessage::class.java)
                             .toDomain()
                     )
@@ -52,6 +53,6 @@ class MessengerStompApiImpl(private val address: String): MessengerStompApi {
                 }
             }
         }
-
+        awaitClose()
     }
 }

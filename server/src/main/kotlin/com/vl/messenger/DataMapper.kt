@@ -20,8 +20,6 @@ class DataMapper {
             transactionIsolation = Connection.TRANSACTION_READ_COMMITTED // some DBMS anomalies are still can be there
         }
 
-        private fun ResultSet.getUnixSeconds(label: String): Long = getTimestamp(label).time / 1000
-
         private fun ResultSet.collectUsers(): List<User> {
             val list = LinkedList<User>()
             while (next())
@@ -39,7 +37,7 @@ class DataMapper {
                 list += Message(
                     getLong("id"),
                     getInt("sender_id"),
-                    getUnixSeconds("time"),
+                    getLong("time"),
                     getString("content")
                 )
             return list
@@ -301,7 +299,7 @@ class DataMapper {
                                 getString("friend_sender.image")
                             ),
                             getLong("notification.id"),
-                            getUnixSeconds("time"),
+                            getLong("time"),
                             getString("title"),
                             getString("content"),
                             getBoolean("seen")
@@ -319,14 +317,14 @@ class DataMapper {
                                 getInt("members")
                             ),
                             getLong("notification.id"),
-                            getUnixSeconds("time"),
+                            getLong("time"),
                             getString("title"),
                             getString("content"),
                             getBoolean("seen")
                         )
                         else -> PlainNotification(
                             getLong("notification.id"),
-                            getUnixSeconds("time"),
+                            getLong("time"),
                             getString("title"),
                             getString("content"),
                             getBoolean("seen")
@@ -358,7 +356,7 @@ class DataMapper {
                 while (next())
                     list += PlainNotification(
                         getLong("notification_id"),
-                        getUnixSeconds("time"),
+                        getLong("time"),
                         getString("title"),
                         getString("content"),
                         getBoolean("seen")
@@ -551,7 +549,7 @@ class DataMapper {
                         if (getLong("message_id") == 0L) null else Message(
                             getLong("message_id"),
                             getInt("user.id"),
-                            getUnixSeconds("time"),
+                            getLong("time"),
                             getString("content")
                         ),
                         if (getInt("user.id") == 0) null else User(
