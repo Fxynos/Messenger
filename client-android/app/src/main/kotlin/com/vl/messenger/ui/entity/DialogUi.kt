@@ -1,8 +1,5 @@
 package com.vl.messenger.ui.entity
 
-/**
- * @param isLastMessageSent is logged user a sender of the message
- */
 data class DialogUi (
     val id: String,
     val isPrivate: Boolean,

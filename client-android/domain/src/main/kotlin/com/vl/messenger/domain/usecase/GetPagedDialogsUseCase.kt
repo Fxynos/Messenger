@@ -12,5 +12,5 @@ class GetPagedDialogsUseCase(
     private val dialogDataSource: DialogDataSource
 ): FlowUseCase<Unit, PagingData<ExtendedDialog>> {
     override fun invoke(param: Unit): Flow<PagingData<ExtendedDialog>> =
-        dialogDataSource.getDialogs(runBlocking {sessionStore.getToken()!!.token })
+        dialogDataSource.getDialogs(runBlocking { sessionStore.getToken()!!.token })
 }

@@ -26,7 +26,7 @@
     <string name="search">Поиск</string>
     <string name="create_conversation">Создать беседу</string>
     <string name="no_results">Нет результатов</string>
-    <string name="you">Вы:</string>
+    <string name="dialog_last_message_sender">%1$s:</string>
     <string name="logout">Выйти</string>
     <string name="open_dialog">Открыть диалог</string>
     <string name="friend_status_friend">У вас в друзьях</string>

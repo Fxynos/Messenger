@@ -37,6 +37,7 @@ class DialogsFragment: Fragment() {
                 putExtra(DialogViewModel.ARG_DIALOG_ID, dialog.id)
             })
         }
+        binding.dialogs.adapter = adapter
         return binding.root
     }
 

@@ -8,11 +8,12 @@ import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
+import com.vl.messenger.R
 import com.vl.messenger.databinding.ItemUserBinding
 import com.vl.messenger.ui.entity.DialogUi
 
 class DialogPagingAdapter(
-    context: Context,
+    private val context: Context,
     private val onClick: (DialogUi) -> Unit
 ): PagingDataAdapter<DialogUi, DialogPagingAdapter.ViewHolder>(DialogPagingAdapter) {
 
@@ -47,9 +48,15 @@ class DialogPagingAdapter(
             with(binding) {
                 conversationMarker.isVisible = !item.isPrivate
                 title.text = item.name
-                image.load(item.imageUrl)
-                hint.text = item.lastMessageSenderName
                 text.text = item.lastMessageText
+                hint.isVisible = item.lastMessageSenderName != null
+                if (!item.lastMessageSenderName.isNullOrBlank())
+                    hint.text = context.getString(
+                        R.string.dialog_last_message_sender,
+                        item.lastMessageSenderName
+                    )
+
+                image.load(item.imageUrl)
             }
         }
     }
