@@ -10,11 +10,13 @@ import com.vl.messenger.domain.boundary.MessengerRestApi.SignUpResult
 import com.vl.messenger.domain.entity.Dialog
 import com.vl.messenger.domain.entity.ExtendedDialog
 import com.vl.messenger.domain.entity.Message
+import com.vl.messenger.domain.entity.Profile
 import com.vl.messenger.domain.entity.User
 import com.vl.messenger.domain.entity.VerboseUser
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Retrofit
 import java.io.InputStream
 
@@ -60,7 +62,7 @@ class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
 
     /* Profile */
 
-    override suspend fun getProfile(token: String): User =
+    override suspend fun getProfile(token: String): Profile =
         api.getProfile(token.toBearerAuthHeader())
             .requireResponse()
             .toDomain()
@@ -68,10 +70,17 @@ class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
     override suspend fun uploadPhoto(token: String, image: ByteArray) =
         api.uploadPhoto(
             token.toBearerAuthHeader(),
-            MultipartBody.Part.createFormData("image", "profile", RequestBody.create(
-                "image/png".toMediaType(),
-                image
-            ))
+            MultipartBody.Part.createFormData(
+                "image",
+                "profile",
+                image.toRequestBody("image/png".toMediaType())
+            )
+        )
+
+    override suspend fun setProfileHidden(token: String, isHidden: Boolean) =
+        api.updateVisibility(
+            token.toBearerAuthHeader(),
+            isHidden
         )
 
     /* Friends */

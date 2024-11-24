@@ -5,6 +5,7 @@ import com.vl.messenger.LOGIN_PATTERN
 import com.vl.messenger.dto.StatusResponse
 import com.vl.messenger.statusOf
 import com.vl.messenger.dto.UsersResponse
+import com.vl.messenger.profile.dto.ProfileResponse
 import com.vl.messenger.userId
 import com.vl.messenger.toDto
 import org.springframework.beans.factory.annotation.Autowired
@@ -38,13 +39,12 @@ class ProfileController(
         } ?: statusOf(HttpStatus.GONE, "No such user")
 
     @GetMapping("/me")
-    fun whoAmI(): ResponseEntity<StatusResponse<UsersResponse.UserDto>> {
-        return statusOf(payload = service.getUser(userId)!!.toDto(baseUrl))
-    }
+    fun whoAmI(): ResponseEntity<StatusResponse<ProfileResponse>> =
+        statusOf(payload = service.getUser(userId)!!.toDto(baseUrl))
 
-    @PutMapping("/me/visibility")
-    fun setHidden(@RequestParam hidden: Boolean): ResponseEntity<StatusResponse<Nothing>> {
-        service.setHidden(userId, hidden)
+    @PutMapping("/me/visibility") // TODO use single PATCH endpoint for such settings
+    fun setHidden(@RequestParam("is_hidden") isHidden: Boolean): ResponseEntity<StatusResponse<Nothing>> {
+        service.setHidden(userId, isHidden)
         return statusOf(HttpStatus.OK)
     }
 

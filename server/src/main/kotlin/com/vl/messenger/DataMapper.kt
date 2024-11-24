@@ -74,17 +74,23 @@ class DataMapper {
 
     fun getVerboseUser(id: Int) =
         connection.prepareStatement(
-            "select login, password, image from user where id = ?;"
+            "select login, password, image, hidden from user where id = ?;"
         ).use { statement ->
             statement.setInt(1, id)
             statement.executeQuery().takeIf { it.next() }?.run {
-                VerboseUser(id, getString("login"), getString("image"), getBytes("password"))
+                VerboseUser(
+                    id,
+                    getString("login"),
+                    getString("image"),
+                    getBytes("password"),
+                    getBoolean("hidden")
+                )
             }
         }
 
     fun getVerboseUser(login: String) =
         connection.prepareStatement(
-            "select id, login, password, image from user where login = ?;"
+            "select id, login, password, image, hidden from user where login = ?;"
         ).use { statement ->
             statement.setString(1, login)
             statement.executeQuery().takeIf { it.next() }?.run {
@@ -92,7 +98,8 @@ class DataMapper {
                     getInt("id"),
                     getString("login"),
                     getString("image"),
-                    getBytes("password")
+                    getBytes("password"),
+                    getBoolean("hidden")
                 )
             }
         }
@@ -790,7 +797,13 @@ class DataMapper {
 
     open class User(val id: Int, val login: String, val image: String?)
 
-    class VerboseUser(id: Int, login: String, image: String?, val password: ByteArray): User(id, login, image)
+    class VerboseUser(
+        id: Int,
+        login: String,
+        image: String?,
+        val password: ByteArray,
+        val isHidden: Boolean
+    ): User(id, login, image)
 
     class Message(val id: Long, val senderId: Int, val unixSec: Long, val content: String)
 

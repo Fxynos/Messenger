@@ -2,6 +2,7 @@ package com.vl.messenger
 
 import com.vl.messenger.dto.StatusResponse
 import com.vl.messenger.dto.UsersResponse
+import com.vl.messenger.profile.dto.ProfileResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
@@ -21,5 +22,14 @@ val userId: Int
 fun DataMapper.User.toDto(baseUrl: String) = UsersResponse.UserDto(
     id,
     login,
-    if (image == null) null else "$baseUrl/${image}"
+    image at baseUrl
 )
+
+fun DataMapper.VerboseUser.toDto(baseUrl: String) = ProfileResponse(
+    id,
+    login,
+    image at baseUrl,
+    isHidden
+)
+
+private infix fun String?.at(baseUrl: String) = this?.let { "$baseUrl/$it" }

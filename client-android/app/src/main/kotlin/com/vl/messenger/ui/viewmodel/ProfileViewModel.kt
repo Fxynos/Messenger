@@ -3,10 +3,11 @@ package com.vl.messenger.ui.viewmodel
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vl.messenger.domain.entity.User
+import com.vl.messenger.domain.entity.Profile
 import com.vl.messenger.domain.usecase.GetLoggedUserProfileUseCase
 import com.vl.messenger.domain.usecase.LogOutUseCase
 import com.vl.messenger.domain.usecase.UpdatePhotoUseCase
+import com.vl.messenger.domain.usecase.UpdateProfileHiddenUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -20,7 +21,8 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val getLoggedUserProfileUseCase: GetLoggedUserProfileUseCase,
     private val logOutUseCase: LogOutUseCase,
-    private val updatePhotoUseCase: UpdatePhotoUseCase
+    private val updatePhotoUseCase: UpdatePhotoUseCase,
+    private val updateProfileHiddenUseCase: UpdateProfileHiddenUseCase
 ): ViewModel() {
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState = _uiState.asStateFlow()
@@ -28,16 +30,12 @@ class ProfileViewModel @Inject constructor(
     private val _events = MutableSharedFlow<DataDrivenEvent>()
     val events = _events.asSharedFlow()
 
-    init {
-        viewModelScope.launch(Dispatchers.IO) {
-            _uiState.value = getLoggedUserProfileUseCase(Unit).toUi()
-        }
-    }
+    init { fetchProfile() }
 
     fun logOut() {
         viewModelScope.launch {
             logOutUseCase(Unit)
-
+            _events.emit(DataDrivenEvent.NavigateToAuthScreen)
         }
     }
 
@@ -46,9 +44,23 @@ class ProfileViewModel @Inject constructor(
             return
 
         viewModelScope.launch(Dispatchers.IO) {
-            _uiState.value = UiState.Loading
             updatePhotoUseCase(imageUri.toString())
-            _uiState.value = getLoggedUserProfileUseCase(Unit).toUi()
+        }.invokeOnCompletion {
+            fetchProfile()
+        }
+    }
+
+    fun setProfileHidden(isHidden: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            updateProfileHiddenUseCase(isHidden)
+        }.invokeOnCompletion {
+            fetchProfile()
+        }
+    }
+
+    private fun fetchProfile() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _uiState.value = getLoggedUserProfileUseCase(Unit).asUiState()
         }
     }
 
@@ -56,7 +68,8 @@ class ProfileViewModel @Inject constructor(
 
         data class Loaded(
             val name: String,
-            val imageUrl: String?
+            val imageUrl: String?,
+            val isUserHidden: Boolean
         ): UiState
 
         data object Loading: UiState
@@ -67,7 +80,8 @@ class ProfileViewModel @Inject constructor(
     }
 }
 
-private fun User.toUi() = ProfileViewModel.UiState.Loaded(
+private fun Profile.asUiState() = ProfileViewModel.UiState.Loaded(
     name = login,
-    imageUrl = imageUrl
+    imageUrl = imageUrl,
+    isUserHidden = isHidden
 )

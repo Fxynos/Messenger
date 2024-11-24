@@ -33,6 +33,7 @@ import com.vl.messenger.domain.usecase.SendMessageUseCase
 import com.vl.messenger.domain.usecase.SignInUseCase
 import com.vl.messenger.domain.usecase.SignUpUseCase
 import com.vl.messenger.domain.usecase.UpdatePhotoUseCase
+import com.vl.messenger.domain.usecase.UpdateProfileHiddenUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -78,6 +79,11 @@ object DependencyHolder {
     @Singleton
     fun provideGetFriendsUseCase(sessionStore: SessionStore, api: MessengerRestApi) =
         GetFriendsUseCase(sessionStore, api)
+
+    @Provides
+    @Singleton
+    fun provideUpdateProfileHiddenUseCase(sessionStore: SessionStore, api: MessengerRestApi) =
+        UpdateProfileHiddenUseCase(sessionStore, api)
 
     @Provides
     @Singleton

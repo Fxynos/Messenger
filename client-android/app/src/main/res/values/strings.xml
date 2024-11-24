@@ -35,9 +35,23 @@
     <string name="friend_status_gotten">Отправил вам заявку в друзья</string>
     <string name="add_friend">Добавить в друзья</string>
     <string name="remove_friend">Удалить из друзей</string>
-    <string name="upload_photo">Загрузить фото</string>
     <string name="unsupported">Не поддерживается вашим устройством</string>
     <string name="cancelled">Отменено пользователем</string>
     <string name="no_messages">Нет сообщений</string>
     <string name="loading">Загрузка...</string>
+
+    <!-- Profile menu -->
+    <string name="upload_photo">Загрузить фото</string>
+    <string name="make_profile_hidden">Скрыть профиль</string>
+    <string name="make_profile_visible">Открыть профиль</string>
+
+    <string name="dialog_open_profile_title">Открыть профиль?</string>
+    <string name="dialog_open_profile_message">Профиль станет доступным другим пользователям для поиска</string>
+    <string name="dialog_open_profile_button_ok">Открыть</string>
+    <string name="dialog_open_profile_button_cancel">Отмена</string>
+
+    <string name="dialog_hide_profile_title">Скрыть профиль?</string>
+    <string name="dialog_hide_profile_message">Профиль станет недоступным другим пользователям для поиска</string>
+    <string name="dialog_hide_profile_button_ok">Скрыть</string>
+    <string name="dialog_hide_profile_button_cancel">Отмена</string>
 </resources>

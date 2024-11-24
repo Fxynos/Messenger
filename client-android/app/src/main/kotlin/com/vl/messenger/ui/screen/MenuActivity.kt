@@ -9,6 +9,8 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.IdRes
+import androidx.annotation.StringRes
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.fragment.app.Fragment
@@ -59,25 +61,12 @@ class MenuActivity: AppCompatActivity() {
                 R.id.conversation ->
                     // TODO create conversation
                     Toast.makeText(this, "Не реализовано", Toast.LENGTH_SHORT).show()
-                R.id.logout -> {
+                R.id.logout ->
                     viewModel.logOut()
-                    startActivity(Intent(this, AuthActivity::class.java))
-                    finish()
-                }
             }
             true
         }
-        drawerHeaderBinding.image.setOnClickListener {
-            PopupMenu(this, drawerHeaderBinding.image).apply {
-                menu.add(getString(R.string.upload_photo)).setOnMenuItemClickListener {
-                    pickMediaRequestLauncher.launch(PickVisualMediaRequest(
-                        ActivityResultContracts.PickVisualMedia.ImageOnly
-                    ))
-                    true
-                }
-                show()
-            }
-        }
+        drawerHeaderBinding.image.setOnClickListener { showPopupProfileMenu() }
 
         // setup nav
         binding.navigation.setCheckedItem(R.id.dialogs)
@@ -119,5 +108,46 @@ class MenuActivity: AppCompatActivity() {
         supportFragmentManager.beginTransaction()
             .replace(R.id.placeholder, routes[route]!!, null)
             .commit()
+    }
+
+    private fun showPopupProfileMenu() {
+        fun PopupMenu.add(@StringRes title: Int, onClick: () -> Unit) = menu.add(title)
+            .setOnMenuItemClickListener {
+                onClick()
+                true
+            }
+
+        PopupMenu(this, drawerHeaderBinding.image).apply {
+            add(R.string.upload_photo) {
+                pickMediaRequestLauncher.launch(PickVisualMediaRequest(
+                    ActivityResultContracts.PickVisualMedia.ImageOnly
+                ))
+            }
+
+            if ((viewModel.uiState.value as? ProfileViewModel.UiState.Loaded)?.isUserHidden == true)
+                add(R.string.make_profile_visible) {
+                    AlertDialog.Builder(this@MenuActivity)
+                        .setTitle(R.string.dialog_open_profile_title)
+                        .setMessage(R.string.dialog_open_profile_message)
+                        .setPositiveButton(R.string.dialog_open_profile_button_ok) { _, _ ->
+                            viewModel.setProfileHidden(false)
+                        }
+                        .setNegativeButton(R.string.dialog_open_profile_button_cancel, null)
+                        .show()
+                }
+            else
+                add(R.string.make_profile_hidden) {
+                    AlertDialog.Builder(this@MenuActivity)
+                        .setTitle(R.string.dialog_hide_profile_title)
+                        .setMessage(R.string.dialog_hide_profile_message)
+                        .setPositiveButton(R.string.dialog_hide_profile_button_ok) { _, _ ->
+                            viewModel.setProfileHidden(true)
+                        }
+                        .setNegativeButton(R.string.dialog_hide_profile_button_cancel, null)
+                        .show()
+                }
+
+            show()
+        }
     }
 }

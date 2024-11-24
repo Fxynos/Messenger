@@ -73,7 +73,7 @@ class DialogViewModel @Inject constructor(
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            loggedUser = getLoggedUserProfileUseCase(Unit)
+            loggedUser = getLoggedUserProfileUseCase(Unit).asUser()
             dialog.value = getDialogByIdUseCase(dialogId)
 
             val pagedMessages = getPagedMessagesUseCase(dialogId)

@@ -5,6 +5,7 @@ import com.vl.messenger.data.network.dto.DialogResponse
 import com.vl.messenger.data.network.dto.MessageDto
 import com.vl.messenger.data.network.dto.MessageForm
 import com.vl.messenger.data.network.dto.MessagesDto
+import com.vl.messenger.data.network.dto.ProfileDto
 import com.vl.messenger.data.network.dto.StatusResponse
 import com.vl.messenger.data.network.dto.TokenDto
 import com.vl.messenger.data.network.dto.UserDto
@@ -40,29 +41,39 @@ internal interface ApiScheme {
     /* Profile */
 
     @GET("/users/me")
-    suspend fun getProfile(@Header("Authorization") token: String): StatusResponse<UserDto>
+    suspend fun getProfile(
+        @Header("Authorization") auth: String
+    ): StatusResponse<ProfileDto>
 
     @POST("/users/me/set-image")
     @Multipart
     suspend fun uploadPhoto(
-        @Header("Authorization") token: String,
+        @Header("Authorization") auth: String,
         @Part image: MultipartBody.Part
+    )
+
+    @PUT("/users/me/visibility")
+    suspend fun updateVisibility(
+        @Header("Authorization") auth: String,
+        @Query("is_hidden") isHidden: Boolean
     )
 
     /* Friends */
 
     @GET("/users/friends")
-    suspend fun getFriends(@Header("Authorization") token: String): StatusResponse<UsersDto>
+    suspend fun getFriends(
+        @Header("Authorization") auth: String
+    ): StatusResponse<UsersDto>
 
     @PUT("/users/add-friend")
     suspend fun addFriend(
-        @Header("Authorization") token: String,
+        @Header("Authorization") auth: String,
         @Query("user_id") userId: Int
     )
 
     @DELETE("/users/friend")
     suspend fun removeFriend(
-        @Header("Authorization") token: String,
+        @Header("Authorization") auth: String,
         @Query("user_id") userId: Int
     )
 
@@ -70,7 +81,7 @@ internal interface ApiScheme {
 
     @GET("/users/search/{pattern}")
     suspend fun search(
-        @Header("Authorization") token: String,
+        @Header("Authorization") auth: String,
         @Path("pattern") pattern: String,
         @Query("limit") limit: Int,
         @Query("from_id") key: Int?
@@ -78,7 +89,7 @@ internal interface ApiScheme {
 
     @GET("/users/{id}")
     suspend fun getUser(
-        @Header("Authorization") token: String,
+        @Header("Authorization") auth: String,
         @Path("id") userId: Int
     ): StatusResponse<UserDto>
 
@@ -86,20 +97,20 @@ internal interface ApiScheme {
 
     @GET("/dialogs")
     suspend fun getDialogs(
-        @Header("Authorization") token: String,
+        @Header("Authorization") auth: String,
         @Query("limit") limit: Int,
         @Query("offset") offset: Int?
     ): StatusResponse<List<DialogResponse>>
 
     @GET("/dialogs/{id}")
     suspend fun getDialog(
-        @Header("Authorization") token: String,
+        @Header("Authorization") auth: String,
         @Path("id") id: String
     ): StatusResponse<DialogResponse>
 
     @GET("/dialogs/{id}/messages")
     suspend fun getMessages(
-        @Header("Authorization") token: String,
+        @Header("Authorization") auth: String,
         @Path("id") dialogId: String,
         @Query("limit") limit: Int,
         @Query("from_id") key: Long?
@@ -107,7 +118,7 @@ internal interface ApiScheme {
 
     @POST("/dialogs/{id}/messages")
     suspend fun sendMessage(
-        @Header("Authorization") token: String,
+        @Header("Authorization") auth: String,
         @Path("id") dialogId: String,
         @Body message: MessageForm
     ): StatusResponse<MessageDto>

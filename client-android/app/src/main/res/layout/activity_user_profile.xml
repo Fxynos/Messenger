@@ -88,7 +88,8 @@
         android:layout_marginHorizontal="8dp"
         android:layout_marginBottom="8dp"
         app:layout_constraintBottom_toTopOf="@id/open_dialog"
-        tools:text="Добавить в друзья" />
+        tools:text="Добавить в друзья"
+        style="@style/FilledButtonStyle"/>
 
     <Button
         android:id="@+id/open_dialog"
@@ -97,6 +98,7 @@
         android:layout_marginHorizontal="8dp"
         android:layout_marginBottom="8dp"
         android:text="@string/open_dialog"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        style="@style/FilledButtonStyle"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

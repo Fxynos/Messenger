@@ -4,6 +4,7 @@ import com.vl.messenger.domain.entity.AccessToken
 import com.vl.messenger.domain.entity.Dialog
 import com.vl.messenger.domain.entity.ExtendedDialog
 import com.vl.messenger.domain.entity.Message
+import com.vl.messenger.domain.entity.Profile
 import com.vl.messenger.domain.entity.User
 import com.vl.messenger.domain.entity.VerboseUser
 import java.io.InputStream
@@ -31,8 +32,9 @@ interface MessengerRestApi {
 
     /* Profile */
 
-    suspend fun getProfile(token: String): User
+    suspend fun getProfile(token: String): Profile
     suspend fun uploadPhoto(token: String, image: ByteArray)
+    suspend fun setProfileHidden(token: String, isHidden: Boolean)
 
     /* Friends */
 

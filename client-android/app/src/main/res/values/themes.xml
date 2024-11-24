@@ -12,8 +12,7 @@
         <item name="android:textAppearance">@style/BaseTextAppearance</item>
         <item name="android:textViewStyle">@style/TextViewStyle</item>
         <item name="editTextStyle">@style/EditTextStyle</item>
-        <item name="android:buttonStyle">@style/ButtonStyle</item>
-        <item name="buttonStyle">@style/ButtonStyle</item>
-        <item name="materialButtonStyle">@style/ButtonStyle</item>
+        <item name="android:buttonStyle">@style/FilledButtonStyle</item>
+        <item name="buttonStyle">@style/FilledButtonStyle</item>
     </style>
 </resources>

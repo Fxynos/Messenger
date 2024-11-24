@@ -5,6 +5,7 @@ import com.vl.messenger.data.network.dto.DialogResponse
 import com.vl.messenger.data.network.dto.FriendStatusDto
 import com.vl.messenger.data.network.dto.MessageDto
 import com.vl.messenger.data.network.dto.MessagesDto
+import com.vl.messenger.data.network.dto.ProfileDto
 import com.vl.messenger.data.network.dto.StompMessage
 import com.vl.messenger.data.network.dto.TokenDto
 import com.vl.messenger.data.network.dto.UserDto
@@ -14,11 +15,13 @@ import com.vl.messenger.domain.entity.Dialog
 import com.vl.messenger.domain.entity.ExtendedDialog
 import com.vl.messenger.domain.entity.FriendStatus
 import com.vl.messenger.domain.entity.Message
+import com.vl.messenger.domain.entity.Profile
 import com.vl.messenger.domain.entity.User
 import com.vl.messenger.domain.entity.VerboseUser
 
 internal object NetworkMapper {
     fun TokenDto.toDomain() = AccessToken(token, expirationSec, userId)
+    fun ProfileDto.toDomain() = Profile(id, login, image, isHidden)
     fun UserDto.toDomain() = User(id, login, image)
     fun UsersDto.toDomain() = users.map { it.toDomain() }
     fun FriendStatusDto.toDomain() = when (this) {
