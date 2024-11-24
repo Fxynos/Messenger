@@ -6,7 +6,9 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import androidx.core.view.isVisible
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -44,7 +46,16 @@ class SearchFragment: Fragment() {
         with(binding) {
             result.adapter = adapter
             menu.setOnClickListener { (requireActivity() as MenuActivity).openDrawer() }
-            search.setOnClickListener { viewModel.search(input.text.toString().trim()) }
+
+            // search on button click, IME action or input
+            search.setOnClickListener { search() }
+            input.setOnEditorActionListener { _, code, _ ->
+                if (code == EditorInfo.IME_ACTION_SEARCH)
+                    search()
+
+                false
+            }
+            input.addTextChangedListener(afterTextChanged = { search() })
         }
         return binding.root
     }
@@ -71,5 +82,9 @@ class SearchFragment: Fragment() {
                 }
             }
         }
+    }
+
+    private fun search() {
+        viewModel.search(binding.input.text.toString().trim())
     }
 }
