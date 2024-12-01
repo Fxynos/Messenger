@@ -15,7 +15,6 @@ import com.vl.messenger.domain.entity.User
 import com.vl.messenger.domain.entity.VerboseUser
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.MultipartBody
-import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import retrofit2.Retrofit
 import java.io.InputStream
@@ -143,4 +142,9 @@ class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
         api.sendMessage(token.toBearerAuthHeader(), dialogId, MessageForm(message))
             .requireResponse()
             .toDomain(dialogId)
+
+    override suspend fun createConversation(token: String, conversationName: String): String =
+        api.createConversation(token.toBearerAuthHeader(), conversationName)
+            .requireResponse()
+            .dialogId
 }

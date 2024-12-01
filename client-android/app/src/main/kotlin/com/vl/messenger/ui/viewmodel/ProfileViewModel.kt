@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vl.messenger.domain.entity.Profile
+import com.vl.messenger.domain.usecase.CreateConversationUseCase
 import com.vl.messenger.domain.usecase.GetLoggedUserProfileUseCase
 import com.vl.messenger.domain.usecase.LogOutUseCase
 import com.vl.messenger.domain.usecase.UpdatePhotoUseCase
@@ -22,7 +23,8 @@ class ProfileViewModel @Inject constructor(
     private val getLoggedUserProfileUseCase: GetLoggedUserProfileUseCase,
     private val logOutUseCase: LogOutUseCase,
     private val updatePhotoUseCase: UpdatePhotoUseCase,
-    private val updateProfileHiddenUseCase: UpdateProfileHiddenUseCase
+    private val updateProfileHiddenUseCase: UpdateProfileHiddenUseCase,
+    private val createConversationUseCase: CreateConversationUseCase
 ): ViewModel() {
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState = _uiState.asStateFlow()
@@ -58,6 +60,17 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun createConversation(name: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val id = createConversationUseCase(name)
+                _events.emit(DataDrivenEvent.NavigateToDialog(id))
+            } catch (e: Throwable) {
+                _events.emit(DataDrivenEvent.NotifyCreatingConversationFailed)
+            }
+        }
+    }
+
     private fun fetchProfile() {
         viewModelScope.launch(Dispatchers.IO) {
             _uiState.value = getLoggedUserProfileUseCase(Unit).asUiState()
@@ -77,6 +90,8 @@ class ProfileViewModel @Inject constructor(
 
     sealed interface DataDrivenEvent {
         data object NavigateToAuthScreen: DataDrivenEvent
+        data class NavigateToDialog(val dialogId: String): DataDrivenEvent
+        data object NotifyCreatingConversationFailed: DataDrivenEvent
     }
 }
 

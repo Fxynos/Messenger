@@ -58,4 +58,9 @@ interface MessengerRestApi {
     suspend fun getDialog(token: String, id: String): Dialog
     suspend fun getMessages(token: String, dialogId: String, limit: Int, key: Long?): List<Message>
     suspend fun sendMessage(token: String, message: String, dialogId: String): Message
+
+    /**
+     * @return dialog id
+     */
+    suspend fun createConversation(token: String, conversationName: String): String
 }

@@ -17,6 +17,7 @@ import com.vl.messenger.domain.boundary.MessengerStompApi
 import com.vl.messenger.domain.boundary.SessionStore
 import com.vl.messenger.domain.boundary.UserDataSource
 import com.vl.messenger.domain.usecase.AddFriendUseCase
+import com.vl.messenger.domain.usecase.CreateConversationUseCase
 import com.vl.messenger.domain.usecase.DownloadFileUseCase
 import com.vl.messenger.domain.usecase.GetDialogByIdUseCase
 import com.vl.messenger.domain.usecase.GetFriendsUseCase
@@ -150,6 +151,11 @@ object DependencyHolder {
     @Singleton
     fun provideSignUpUseCase(api: MessengerRestApi, signInUseCase: SignInUseCase) =
         SignUpUseCase(api, signInUseCase)
+
+    @Provides
+    @Singleton
+    fun provideCreateConversationUseCase(sessionStore: SessionStore, api: MessengerRestApi) =
+        CreateConversationUseCase(sessionStore, api)
 
     /* Boundary */
 

@@ -1,5 +1,6 @@
 package com.vl.messenger.data.network
 
+import com.vl.messenger.data.network.dto.CreateConversationResponse
 import com.vl.messenger.data.network.dto.Credentials
 import com.vl.messenger.data.network.dto.DialogResponse
 import com.vl.messenger.data.network.dto.MessageDto
@@ -122,4 +123,10 @@ internal interface ApiScheme {
         @Path("id") dialogId: String,
         @Body message: MessageForm
     ): StatusResponse<MessageDto>
+
+    @POST("/conversations")
+    suspend fun createConversation(
+        @Header("Authorization") auth: String,
+        @Query("name") conversationName: String
+    ): StatusResponse<CreateConversationResponse>
 }

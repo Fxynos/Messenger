@@ -3,6 +3,7 @@ package com.vl.messenger.chat
 import com.vl.messenger.DataMapper
 import com.vl.messenger.PdfService
 import com.vl.messenger.StorageService
+import com.vl.messenger.asConversationDialogId
 import com.vl.messenger.profile.NotificationService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -16,8 +17,10 @@ class ConversationService(
     @Autowired private val pdfService: PdfService,
     @Autowired private val notificationService: NotificationService
 ) {
-
-    fun createConversation(userId: Int, name: String) = dataMapper.createConversation(userId, name)
+    fun createConversation(userId: Int, name: String) =
+        dataMapper
+            .createConversation(userId, name)
+            .asConversationDialogId()
 
     fun getConversation(conversationId: Long) = dataMapper.getConversation(conversationId)
 

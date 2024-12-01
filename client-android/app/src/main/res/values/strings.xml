@@ -54,4 +54,12 @@
     <string name="dialog_hide_profile_message">Профиль станет недоступным другим пользователям для поиска</string>
     <string name="dialog_hide_profile_button_ok">Скрыть</string>
     <string name="dialog_hide_profile_button_cancel">Отмена</string>
+
+    <!-- Conversation -->
+    <string name="dialog_create_conversation_title">Создать беседу</string>
+    <string name="dialog_create_conversation_input_hint">Название беседы</string>
+    <string name="dialog_create_conversation_cancel">Отмена</string>
+    <string name="dialog_create_conversation_ok">Создать</string>
+
+    <string name="dialog_create_conversation_unknown_error">Не удалось создать беседу</string>
 </resources>

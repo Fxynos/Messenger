@@ -32,4 +32,7 @@ fun DataMapper.VerboseUser.toDto(baseUrl: String) = ProfileResponse(
     isHidden
 )
 
+fun Long.asConversationDialogId() = "c$this"
+fun Int.asPrivateDialogId() = "u$this"
+
 private infix fun String?.at(baseUrl: String) = this?.let { "$baseUrl/$it" }
