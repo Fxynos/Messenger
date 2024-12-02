@@ -147,4 +147,12 @@ class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
         api.createConversation(token.toBearerAuthHeader(), conversationName)
             .requireResponse()
             .dialogId
+
+    override suspend fun leaveConversation(token: String, dialogId: String): Unit =
+        if (dialogId.startsWith('c')) // is conversation dialog, i.e. not private
+            api.leaveConversation(
+                token.toBearerAuthHeader(),
+                dialogId.substring(1).toLong()
+            )
+        else throw IllegalArgumentException("Can't leave private dialog: $dialogId")
 }

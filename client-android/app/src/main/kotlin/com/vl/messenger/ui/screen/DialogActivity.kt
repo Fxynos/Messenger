@@ -13,12 +13,15 @@ import coil.load
 import com.vl.messenger.R
 import com.vl.messenger.databinding.ActivityDialogBinding
 import com.vl.messenger.ui.adapter.MessagePagingAdapter
+import com.vl.messenger.ui.util.confirm
+import com.vl.messenger.ui.util.dropPopupOptions
 import com.vl.messenger.ui.viewmodel.DialogViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.LinkedList
 
 private const val TAG = "DialogActivity"
 
@@ -40,7 +43,7 @@ private val viewModel: DialogViewModel by viewModels()
         with(binding) {
             messages.adapter = adapter
             back.setOnClickListener { onBackPressedDispatcher.onBackPressed() }
-            options.setOnClickListener { /* TODO */ }
+            options.setOnClickListener { showPopupOptions() }
             send.setOnClickListener {
                 viewModel.sendMessage(input.text.toString())
                 input.text.clear()
@@ -87,6 +90,26 @@ private val viewModel: DialogViewModel by viewModels()
                     binding.messages.smoothScrollToPosition(0)
                 }
             }
+
+            DialogViewModel.DataDrivenEvent.NavigateBack -> finish()
         }
+    }
+
+    private fun showPopupOptions() {
+        val dialog = (viewModel.uiState.value as? DialogViewModel.UiState.Loaded)
+        val options = LinkedList<Pair<Int, Runnable>>()
+
+        if (dialog != null && !dialog.isPrivate)
+            options += R.string.dialog_option_leave to Runnable {
+                confirm(
+                    title = R.string.dialog_option_leave_title,
+                    message = R.string.dialog_option_leave_message,
+                    cancel = R.string.dialog_option_leave_cancel,
+                    confirm = R.string.dialog_option_leave_ok,
+                    onConfirm = viewModel::leaveConversation
+                )
+            }
+
+        binding.options.dropPopupOptions(*options.toTypedArray())
     }
 }

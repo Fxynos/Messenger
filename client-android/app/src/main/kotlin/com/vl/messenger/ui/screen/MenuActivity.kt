@@ -2,14 +2,12 @@ package com.vl.messenger.ui.screen
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.IdRes
-import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
@@ -22,6 +20,7 @@ import com.vl.messenger.R
 import com.vl.messenger.databinding.ActivityMenuBinding
 import com.vl.messenger.databinding.DialogCreateConversationBinding
 import com.vl.messenger.databinding.ItemUserBinding
+import com.vl.messenger.ui.util.dropPopupOptions
 import com.vl.messenger.ui.viewmodel.DialogViewModel
 import com.vl.messenger.ui.viewmodel.ProfileViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -84,14 +83,18 @@ class MenuActivity: AppCompatActivity() {
 
     private fun updateState(state: ProfileViewModel.UiState) {
         when (state) {
-            is ProfileViewModel.UiState.Loaded -> with(drawerHeaderBinding) {
-                image.load(state.imageUrl)
-                title.text = state.name
+            is ProfileViewModel.UiState.Loaded -> {
+                with(drawerHeaderBinding) {
+                    image.load(state.imageUrl)
+                    title.text = state.name
+                }
             }
 
-            ProfileViewModel.UiState.Loading -> with(drawerHeaderBinding) {
-                image.setImageBitmap(null)
-                title.text = getString(R.string.loading)
+            ProfileViewModel.UiState.Loading -> {
+                with(drawerHeaderBinding) {
+                    image.setImageBitmap(null)
+                    title.text = getString(R.string.loading)
+                }
             }
         }
     }
@@ -124,21 +127,16 @@ class MenuActivity: AppCompatActivity() {
     }
 
     private fun showPopupProfileMenu() {
-        fun PopupMenu.add(@StringRes title: Int, onClick: () -> Unit) = menu.add(title)
-            .setOnMenuItemClickListener {
-                onClick()
-                true
-            }
+        drawerHeaderBinding.image.dropPopupOptions(
 
-        PopupMenu(this, drawerHeaderBinding.image).apply {
-            add(R.string.upload_photo) {
+            R.string.upload_photo to Runnable {
                 pickMediaRequestLauncher.launch(PickVisualMediaRequest(
                     ActivityResultContracts.PickVisualMedia.ImageOnly
                 ))
-            }
+            },
 
             if ((viewModel.uiState.value as? ProfileViewModel.UiState.Loaded)?.isUserHidden == true)
-                add(R.string.make_profile_visible) {
+                R.string.make_profile_visible to Runnable {
                     AlertDialog.Builder(this@MenuActivity)
                         .setTitle(R.string.dialog_open_profile_title)
                         .setMessage(R.string.dialog_open_profile_message)
@@ -149,7 +147,7 @@ class MenuActivity: AppCompatActivity() {
                         .show()
                 }
             else
-                add(R.string.make_profile_hidden) {
+                R.string.make_profile_hidden to Runnable {
                     AlertDialog.Builder(this@MenuActivity)
                         .setTitle(R.string.dialog_hide_profile_title)
                         .setMessage(R.string.dialog_hide_profile_message)
@@ -159,9 +157,7 @@ class MenuActivity: AppCompatActivity() {
                         .setNegativeButton(R.string.dialog_hide_profile_button_cancel, null)
                         .show()
                 }
-
-            show()
-        }
+        )
     }
 
     private fun showCreateConversationDialog() {

@@ -129,4 +129,10 @@ internal interface ApiScheme {
         @Header("Authorization") auth: String,
         @Query("name") conversationName: String
     ): StatusResponse<CreateConversationResponse>
+
+    @PUT("/conversations/{id}/leave")
+    suspend fun leaveConversation(
+        @Header("Authorization") auth: String,
+        @Path("id") conversationId: Long
+    )
 }

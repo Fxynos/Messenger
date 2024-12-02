@@ -62,4 +62,12 @@
     <string name="dialog_create_conversation_ok">Создать</string>
 
     <string name="dialog_create_conversation_unknown_error">Не удалось создать беседу</string>
+
+    <!-- Dialog menu -->
+    <string name="dialog_option_leave">Покинуть диалог</string>
+
+    <string name="dialog_option_leave_title">Покинуть диалог?</string>
+    <string name="dialog_option_leave_message">Вы потеряете всю историю сообщений</string>
+    <string name="dialog_option_leave_cancel">Отмена</string>
+    <string name="dialog_option_leave_ok">Покинуть</string>
 </resources>

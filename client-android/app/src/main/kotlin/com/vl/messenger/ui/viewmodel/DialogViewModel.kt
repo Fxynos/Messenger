@@ -14,6 +14,7 @@ import com.vl.messenger.domain.usecase.GetDialogByIdUseCase
 import com.vl.messenger.domain.usecase.GetLoggedUserProfileUseCase
 import com.vl.messenger.domain.usecase.GetPagedMessagesUseCase
 import com.vl.messenger.domain.usecase.GetUserByIdUseCase
+import com.vl.messenger.domain.usecase.LeaveConversationUseCase
 import com.vl.messenger.domain.usecase.ObserveAllIncomingMessagesUseCase
 import com.vl.messenger.domain.usecase.SendMessageUseCase
 import com.vl.messenger.ui.UiMapper.toUi
@@ -45,7 +46,8 @@ class DialogViewModel @Inject constructor(
     getDialogByIdUseCase: GetDialogByIdUseCase,
     getPagedMessagesUseCase: GetPagedMessagesUseCase,
     observeAllIncomingMessagesUseCase: ObserveAllIncomingMessagesUseCase,
-    private val sendMessageUseCase: SendMessageUseCase
+    private val sendMessageUseCase: SendMessageUseCase,
+    private val leaveConversationUseCase: LeaveConversationUseCase
 ): ViewModel() {
     companion object {
         const val ARG_DIALOG_ID = "dialog"
@@ -64,7 +66,8 @@ class DialogViewModel @Inject constructor(
             UiState.Loaded(
                 dialogName = dialog.title,
                 dialogImageUrl = dialog.image,
-                messages = messages
+                messages = messages,
+                isPrivate = dialog.isPrivate
             )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, UiState.Loading)
 
@@ -104,6 +107,13 @@ class DialogViewModel @Inject constructor(
         }
     }
 
+    fun leaveConversation() {
+        viewModelScope.launch(Dispatchers.IO) {
+            leaveConversationUseCase(dialogId)
+            _events.emit(DataDrivenEvent.NavigateBack)
+        }
+    }
+
     private suspend fun insertMessage(message: Message) {
         cachedMessages.addFirst(listOf(message))
         delay(100L) // FIXME dirty hack to scroll after refreshing recycler view
@@ -130,11 +140,13 @@ class DialogViewModel @Inject constructor(
         data class Loaded(
             val dialogName: String,
             val dialogImageUrl: String?,
-            val messages: PagingData<MessagePagingAdapter.MessageItem>
+            val messages: PagingData<MessagePagingAdapter.MessageItem>,
+            val isPrivate: Boolean
         ): UiState
     }
 
     sealed interface DataDrivenEvent {
         data object ScrollToLast: DataDrivenEvent
+        data object NavigateBack: DataDrivenEvent
     }
 }
