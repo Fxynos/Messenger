@@ -8,6 +8,7 @@ import com.vl.messenger.profile.NotificationService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
+import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 
 @Service
@@ -24,20 +25,29 @@ class ConversationService(
 
     fun getConversation(conversationId: Long) = dataMapper.getConversation(conversationId)
 
-    fun setConversationName(conversationId: Long, name: String) = dataMapper.setConversationName(conversationId, name)
+    fun setConversationName(userId: Int, conversationId: Long, name: String): CommonResult {
+        if (!hasPrivilege(userId, conversationId, Privilege.EDIT_DATA))
+            return CommonResult.NO_PRIVILEGE
 
-    fun setConversationImage(conversationId: Long, image: MultipartFile) {
+        dataMapper.setConversationName(conversationId, name)
+        return CommonResult.SUCCESS
+    }
+
+    fun setConversationImage(userId: Int, conversationId: Long, image: MultipartFile): CommonResult {
+        if (!hasPrivilege(userId, conversationId, Privilege.EDIT_DATA))
+            return CommonResult.NO_PRIVILEGE
+
         val path = storageService.saveConversationImage(image, conversationId)
         dataMapper.setConversationImage(conversationId, path)
+        return CommonResult.SUCCESS
     }
 
     fun getMembers(conversationId: Long, offset: Int, limit: Int) = dataMapper.getMembers(conversationId, offset, limit)
 
-    /**
-     * @param userId id of competent user having privilege to manage members
-     * @param memberId id of user being added
-     */
-    fun addMember(userId: Int, conversationId: Long, memberId: Int) { // TODO add members via invite rather than directly
+    fun addMember(userId: Int, conversationId: Long, memberId: Int): CommonResult {
+        if (!hasPrivilege(userId, conversationId, Privilege.EDIT_MEMBERS))
+            return CommonResult.NO_PRIVILEGE
+
         dataMapper.addMember(memberId, conversationId)
         notificationService.addNotification(
             memberId,
@@ -48,9 +58,13 @@ class ConversationService(
                 dataMapper.getConversation(conversationId)!!.name
             }"
         )
+        return CommonResult.SUCCESS
     }
 
-    fun removeMember(userId: Int, conversationId: Long, memberId: Int) {
+    fun removeMember(userId: Int, conversationId: Long, memberId: Int): CommonResult {
+        if (!hasPrivilege(userId, conversationId, Privilege.EDIT_MEMBERS))
+            return CommonResult.NO_PRIVILEGE
+
         dataMapper.removeMember(memberId, conversationId)
         notificationService.addNotification(
             memberId,
@@ -61,18 +75,24 @@ class ConversationService(
                 dataMapper.getConversation(conversationId)!!.name
             }"
         )
+        return CommonResult.SUCCESS
     }
 
     fun leaveConversation(userId: Int, conversationId: Long) =
         dataMapper.removeMember(userId, conversationId)
 
-    fun setMemberRole(conversationId: Long, memberId: Int, role: String) =
+    fun setMemberRole(userId: Int, conversationId: Long, memberId: Int, role: String): CommonResult {
+        if (!hasPrivilege(userId, conversationId, Privilege.EDIT_RIGHTS))
+            return CommonResult.NO_PRIVILEGE
+
         dataMapper.setRole(memberId, conversationId, role)
+        return CommonResult.SUCCESS
+    }
 
     fun isMember(userId: Int, conversationId: Long) =
         dataMapper.getRole(userId, conversationId) != null
 
-    fun hasPrivilege(userId: Int, conversationId: Long, privilege: Privilege): Boolean {
+    private fun hasPrivilege(userId: Int, conversationId: Long, privilege: Privilege): Boolean {
         val role = dataMapper.getRole(userId, conversationId)
             ?: return false
         return when (privilege) {
@@ -95,6 +115,23 @@ class ConversationService(
     /**
      * Writes pdf file to output stream
      */
-    fun generateReport(conversationId: Long, outputStream: OutputStream): Unit =
-        pdfService.generateConversationActivityReport(dataMapper.getUsersActivity(conversationId), outputStream)
+    fun generateReport(userId: Int, conversationId: Long): GenerateReportResult {
+        if (!hasPrivilege(userId, conversationId, Privilege.GET_REPORTS))
+            return GenerateReportResult.NoPrivilege
+
+        return ByteArrayOutputStream().let {
+            pdfService.generateConversationActivityReport(dataMapper.getUsersActivity(conversationId), it)
+            GenerateReportResult.Success(it.toByteArray())
+        }
+    }
+
+    enum class CommonResult {
+        SUCCESS,
+        NO_PRIVILEGE
+    }
+
+    sealed interface GenerateReportResult {
+        data class Success(val reportFile: ByteArray): GenerateReportResult
+        data object NoPrivilege: GenerateReportResult
+    }
 }

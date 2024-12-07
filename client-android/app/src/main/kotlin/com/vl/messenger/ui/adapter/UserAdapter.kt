@@ -5,7 +5,6 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
-import androidx.recyclerview.widget.RecyclerView
 import com.vl.messenger.databinding.ItemUserBinding
 import com.vl.messenger.domain.entity.User
 import com.vl.messenger.ui.adapter.viewholder.UserViewHolder
@@ -23,7 +22,6 @@ class UserAdapter(
     }
 
     private val inflater = LayoutInflater.from(context)
-    val items: MutableList<User> = ArrayList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
         UserViewHolder(
@@ -32,7 +30,5 @@ class UserAdapter(
         )
 
     override fun onBindViewHolder(holder: UserViewHolder, position: Int) =
-        holder.bind(items[position])
-
-    override fun getItemCount() = items.size
+        holder.bind(getItem(position))
 }

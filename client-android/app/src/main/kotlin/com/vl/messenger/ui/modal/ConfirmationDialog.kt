@@ -1,11 +1,11 @@
-package com.vl.messenger.ui.util
+package com.vl.messenger.ui.modal
 
 import android.content.Context
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
-fun Context.confirm(
+fun Context.dropConfirmationDialog(
     @StringRes title: Int,
     @StringRes message: Int,
     @StringRes cancel: Int,

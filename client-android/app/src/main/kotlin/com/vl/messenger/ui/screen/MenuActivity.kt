@@ -20,7 +20,7 @@ import com.vl.messenger.R
 import com.vl.messenger.databinding.ActivityMenuBinding
 import com.vl.messenger.databinding.DialogCreateConversationBinding
 import com.vl.messenger.databinding.ItemUserBinding
-import com.vl.messenger.ui.util.dropPopupOptions
+import com.vl.messenger.ui.modal.dropPopupOptions
 import com.vl.messenger.ui.viewmodel.DialogViewModel
 import com.vl.messenger.ui.viewmodel.ProfileViewModel
 import dagger.hilt.android.AndroidEntryPoint

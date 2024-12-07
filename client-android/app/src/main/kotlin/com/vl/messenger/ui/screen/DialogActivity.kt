@@ -13,15 +13,15 @@ import coil.load
 import com.vl.messenger.R
 import com.vl.messenger.databinding.ActivityDialogBinding
 import com.vl.messenger.ui.adapter.MessagePagingAdapter
-import com.vl.messenger.ui.util.confirm
-import com.vl.messenger.ui.util.dropPopupOptions
+import com.vl.messenger.ui.modal.dropConfirmationDialog
+import com.vl.messenger.ui.modal.dropPopupOptions
+import com.vl.messenger.ui.modal.dropSelectUserDialog
 import com.vl.messenger.ui.viewmodel.DialogViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.util.LinkedList
 
 private const val TAG = "DialogActivity"
 
@@ -92,24 +92,31 @@ private val viewModel: DialogViewModel by viewModels()
             }
 
             DialogViewModel.DataDrivenEvent.NavigateBack -> finish()
+
+            is DialogViewModel.DataDrivenEvent.ShowFriendsToInviteDialog -> dropSelectUserDialog(
+                title = R.string.dialog_invite_title,
+                items = event.users,
+                onSelect = viewModel::inviteMember
+            )
         }
     }
 
     private fun showPopupOptions() {
         val dialog = (viewModel.uiState.value as? DialogViewModel.UiState.Loaded)
-        val options = LinkedList<Pair<Int, Runnable>>()
 
-        if (dialog != null && !dialog.isPrivate)
-            options += R.string.dialog_option_leave to Runnable {
-                confirm(
-                    title = R.string.dialog_option_leave_title,
-                    message = R.string.dialog_option_leave_message,
-                    cancel = R.string.dialog_option_leave_cancel,
-                    confirm = R.string.dialog_option_leave_ok,
-                    onConfirm = viewModel::leaveConversation
-                )
-            }
+        binding.options.dropPopupOptions(*buildList {
+            add(R.string.dialog_option_invite to Runnable { viewModel.selectMemberToInvite() })
 
-        binding.options.dropPopupOptions(*options.toTypedArray())
+            if (dialog != null && !dialog.isPrivate)
+                add(R.string.dialog_option_leave to Runnable {
+                    dropConfirmationDialog(
+                        title = R.string.dialog_option_leave_title,
+                        message = R.string.dialog_option_leave_message,
+                        cancel = R.string.dialog_option_leave_cancel,
+                        confirm = R.string.dialog_option_leave_ok,
+                        onConfirm = viewModel::leaveConversation
+                    )
+                })
+        }.toTypedArray())
     }
 }

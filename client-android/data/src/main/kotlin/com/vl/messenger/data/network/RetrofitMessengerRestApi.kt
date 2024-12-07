@@ -20,6 +20,13 @@ import retrofit2.Retrofit
 import java.io.InputStream
 
 class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
+    companion object {
+        // TODO move out such logic from client, cause it should not care about dialog type
+        private fun String.toConversationId(): Long =
+            if (startsWith('c'))
+                substring(1).toLong()
+            else throw IllegalArgumentException("Conversation id expected: $this")
+    }
 
     private val api = retrofit.create(ApiScheme::class.java)
 
@@ -149,10 +156,40 @@ class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
             .dialogId
 
     override suspend fun leaveConversation(token: String, dialogId: String): Unit =
-        if (dialogId.startsWith('c')) // is conversation dialog, i.e. not private
-            api.leaveConversation(
-                token.toBearerAuthHeader(),
-                dialogId.substring(1).toLong()
-            )
-        else throw IllegalArgumentException("Can't leave private dialog: $dialogId")
+        api.leaveConversation(
+            token.toBearerAuthHeader(),
+            dialogId.toConversationId()
+        )
+
+    override suspend fun addMemberToConversation(
+        token: String,
+        dialogId: String,
+        userId: Int
+    ): Unit = api.addConversationMember(
+        token.toBearerAuthHeader(),
+        dialogId.toConversationId(),
+        userId
+    )
+
+    override suspend fun removeMemberFromConversation(
+        token: String,
+        dialogId: String,
+        userId: Int
+    ): Unit = api.removeConversationMember(
+        token.toBearerAuthHeader(),
+        dialogId.toConversationId(),
+        userId
+    )
+
+    override suspend fun setConversationMemberRole(
+        token: String,
+        dialogId: String,
+        userId: Int,
+        role: String
+    ): Unit = api.setConversationMemberRole(
+        token.toBearerAuthHeader(),
+        dialogId.toConversationId(),
+        userId,
+        role
+    )
 }

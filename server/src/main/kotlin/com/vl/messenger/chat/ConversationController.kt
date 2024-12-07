@@ -13,7 +13,6 @@ import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
-import java.io.ByteArrayOutputStream
 
 /**
  * Provides interface to create and manage conversations.
@@ -60,26 +59,32 @@ class ConversationController(
 
     @PutMapping("/{id}/set-name")
     fun setConversationName(
-        @PathVariable id: Long,
+        @PathVariable("id") conversationId: Long,
         @RequestParam name: String
-    ): ResponseEntity<StatusResponse<Nothing>> {
-        if (!service.hasPrivilege(userId, id, ConversationService.Privilege.EDIT_DATA))
-            return statusOf(HttpStatus.FORBIDDEN, "No edit conversation data privilege")
-        service.setConversationName(id, name)
-        return statusOf(HttpStatus.OK, "Conversation name is set")
-    }
+    ): ResponseEntity<StatusResponse<Nothing>> =
+        when (service.setConversationName(userId, conversationId, name)) {
+            ConversationService.CommonResult.SUCCESS ->
+                statusOf(HttpStatus.OK, "Conversation name is set")
+
+            ConversationService.CommonResult.NO_PRIVILEGE ->
+                statusOf(HttpStatus.FORBIDDEN, "No edit conversation data privilege")
+        }
 
     @PostMapping("/{id}/set-image", consumes = ["multipart/form-data"])
     fun setConversationImage(
         @RequestParam image: MultipartFile,
-        @PathVariable id: Long
+        @PathVariable("id") conversationId: Long
     ): ResponseEntity<StatusResponse<Nothing>> {
-        if (!service.hasPrivilege(userId, id, ConversationService.Privilege.EDIT_DATA))
-            return statusOf(HttpStatus.FORBIDDEN, "No edit conversation data privilege")
         if (image.contentType != "image/png" && image.contentType != "image/jpeg")
             return statusOf(HttpStatus.UNPROCESSABLE_ENTITY, "Only png and jpeg images are supported")
-        service.setConversationImage(id, image)
-        return statusOf(HttpStatus.OK, "Conversation image is set")
+
+        return when (service.setConversationImage(userId, conversationId, image)) {
+            ConversationService.CommonResult.SUCCESS ->
+                statusOf(HttpStatus.OK, "Conversation image is set")
+
+            ConversationService.CommonResult.NO_PRIVILEGE ->
+                statusOf(HttpStatus.FORBIDDEN, "No edit conversation data privilege")
+        }
     }
 
     @PutMapping("/{id}/leave")
@@ -88,47 +93,53 @@ class ConversationController(
         return statusOf(HttpStatus.OK)
     }
 
-    @PostMapping("/{id}/member")
+    @PutMapping("/{id}/members/{user_id}")
     fun addMember(
-        @PathVariable id: Long,
-        @RequestParam("user_id") memberId: Int
-    ): ResponseEntity<StatusResponse<Nothing>> {
-        if (!service.hasPrivilege(userId, id, ConversationService.Privilege.EDIT_MEMBERS))
-            return statusOf(HttpStatus.FORBIDDEN, "No edit members privilege")
-        service.addMember(userId, id, memberId)
-        return statusOf(HttpStatus.OK, "Conversation member is added")
-    }
+        @PathVariable("id") conversationId: Long,
+        @PathVariable("user_id") memberId: Int
+    ): ResponseEntity<StatusResponse<Nothing>> =
+        when (service.addMember(userId, conversationId, memberId)) {
+            ConversationService.CommonResult.SUCCESS ->
+                statusOf(HttpStatus.OK, "Conversation member is added")
 
-    @DeleteMapping("/{id}/member")
+            ConversationService.CommonResult.NO_PRIVILEGE ->
+                statusOf(HttpStatus.FORBIDDEN, "No edit members privilege")
+        }
+
+    @DeleteMapping("/{id}/members/{user_id}")
     fun removeMember(
-        @PathVariable id: Long,
-        @RequestParam("user_id") memberId: Int
-    ): ResponseEntity<StatusResponse<Nothing>> {
-        if (!service.hasPrivilege(userId, id, ConversationService.Privilege.EDIT_MEMBERS))
-            return statusOf(HttpStatus.FORBIDDEN, "No edit conversation members privilege")
-        service.removeMember(userId, id, memberId)
-        return statusOf(HttpStatus.OK, "Conversation member is removed")
-    }
+        @PathVariable("id") conversationId: Long,
+        @PathVariable("user_id") memberId: Int
+    ): ResponseEntity<StatusResponse<Nothing>> =
+        when (service.removeMember(userId, conversationId, memberId)) {
+            ConversationService.CommonResult.SUCCESS ->
+                statusOf(HttpStatus.OK, "Conversation member is removed")
 
-    @PutMapping("/{id}/member/role")
+            ConversationService.CommonResult.NO_PRIVILEGE ->
+                statusOf(HttpStatus.FORBIDDEN, "No edit conversation members privilege")
+        }
+
+    @PutMapping("/{id}/members/{user_id}/role")
     fun setMemberRole(
-        @PathVariable id: Long,
-        @RequestParam("user_id") memberId: Int,
+        @PathVariable("id") conversationId: Long,
+        @PathVariable("user_id") memberId: Int,
         @RequestParam role: String
-    ): ResponseEntity<StatusResponse<Nothing>> {
-        if (!service.hasPrivilege(userId, id, ConversationService.Privilege.EDIT_RIGHTS))
-            return statusOf(HttpStatus.FORBIDDEN, "No edit conversation members rights privilege")
-        service.setMemberRole(id, memberId, role)
-        return statusOf(HttpStatus.OK, "Conversation member role is set")
-    }
+    ): ResponseEntity<StatusResponse<Nothing>> =
+        when (service.setMemberRole(userId, conversationId, memberId, role)) {
+            ConversationService.CommonResult.SUCCESS ->
+                statusOf(HttpStatus.OK, "Conversation member role is set")
+
+            ConversationService.CommonResult.NO_PRIVILEGE ->
+                statusOf(HttpStatus.FORBIDDEN, "No edit conversation members rights privilege")
+        }
 
     @GetMapping("/{id}/report", produces = [MediaType.APPLICATION_PDF_VALUE])
-    fun generateReport(@PathVariable id: Long): ResponseEntity<ByteArray> {
-        if (!service.hasPrivilege(userId, id, ConversationService.Privilege.GET_REPORTS))
-            return ResponseEntity(HttpStatus.FORBIDDEN)
-        ByteArrayOutputStream().use { outputStream ->
-            service.generateReport(id, outputStream)
-            return ResponseEntity(outputStream.toByteArray(), HttpStatus.OK) // TODO large report can lead to out of memory error
+    fun generateReport(@PathVariable("id") conversationId: Long): ResponseEntity<ByteArray> =
+        when (val result = service.generateReport(userId, conversationId)) {
+            ConversationService.GenerateReportResult.NoPrivilege ->
+                ResponseEntity(HttpStatus.FORBIDDEN)
+
+            is ConversationService.GenerateReportResult.Success ->
+                ResponseEntity(result.reportFile, HttpStatus.OK)
         }
-    }
 }

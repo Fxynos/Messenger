@@ -54,15 +54,8 @@ class FriendsFragment: Fragment() {
         lifecycleScope.launch(Dispatchers.Main) {
             viewModel.uiState.collect { uiState ->
                 when (uiState) {
-                    is FriendsViewModel.UiState.Loaded -> {
-                        adapter.items.clear()
-                        adapter.items.addAll(uiState.friends)
-                        adapter.notifyDataSetChanged()
-                    }
-                    FriendsViewModel.UiState.Loading -> {
-                        adapter.items.clear()
-                        adapter.notifyDataSetChanged()
-                    }
+                    is FriendsViewModel.UiState.Loaded -> adapter.submitList(uiState.friends)
+                    FriendsViewModel.UiState.Loading -> adapter.submitList(emptyList())
                 }
             }
         }

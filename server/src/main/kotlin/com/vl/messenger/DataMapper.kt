@@ -619,7 +619,7 @@ class DataMapper {
             inner join user on user_id = user.id 
             where conversation_id = ?;
         """.trimIndent()).use { statement ->
-            statement.setLong(0, conversationId)
+            statement.setLong(1, conversationId)
 
             statement.executeQuery().run {
                 val list = LinkedList<ConversationMember>()

@@ -16,6 +16,7 @@ import com.vl.messenger.domain.boundary.MessengerRestApi
 import com.vl.messenger.domain.boundary.MessengerStompApi
 import com.vl.messenger.domain.boundary.SessionStore
 import com.vl.messenger.domain.boundary.UserDataSource
+import com.vl.messenger.domain.usecase.AddConversationMemberUseCase
 import com.vl.messenger.domain.usecase.AddFriendUseCase
 import com.vl.messenger.domain.usecase.CreateConversationUseCase
 import com.vl.messenger.domain.usecase.DownloadFileUseCase
@@ -45,6 +46,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.Locale
 import javax.inject.Singleton
 
 @Module
@@ -163,6 +165,11 @@ object DependencyHolder {
     fun provideLeaveConversationUseCase(sessionStore: SessionStore, api: MessengerRestApi) =
         LeaveConversationUseCase(sessionStore, api)
 
+    @Provides
+    @Singleton
+    fun provideAddConversationMemberUseCase(sessionStore: SessionStore, api: MessengerRestApi) =
+        AddConversationMemberUseCase(sessionStore, api)
+
     /* Boundary */
 
     @Provides
@@ -208,6 +215,13 @@ object DependencyHolder {
                     HttpLoggingInterceptor()
                         .setLevel(HttpLoggingInterceptor.Level.BODY)
                 )
+                .addInterceptor { chain ->
+                    chain.proceed(
+                        chain.request().newBuilder()
+                            .header("Accept-Language", Locale.getDefault().language)
+                            .build()
+                    )
+                }
                 .build()
         ).build()
 }

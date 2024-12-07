@@ -135,4 +135,26 @@ internal interface ApiScheme {
         @Header("Authorization") auth: String,
         @Path("id") conversationId: Long
     )
+
+    @PUT("/conversations/{id}/members/{user_id}")
+    suspend fun addConversationMember(
+        @Header("Authorization") auth: String,
+        @Path("id") conversationId: Long,
+        @Path("user_id") userId: Int
+    )
+
+    @DELETE("/conversations/{id}/members/{user_id}")
+    suspend fun removeConversationMember(
+        @Header("Authorization") auth: String,
+        @Path("id") conversationId: Long,
+        @Path("user_id") userId: Int
+    )
+
+    @PUT("/conversations/{id}/members/{user_id}")
+    suspend fun setConversationMemberRole(
+        @Header("Authorization") auth: String,
+        @Path("id") conversationId: Long,
+        @Path("user_id") userId: Int,
+        @Query("role") role: String
+    )
 }

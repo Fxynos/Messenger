@@ -61,9 +61,14 @@
     <string name="dialog_create_conversation_cancel">Отмена</string>
     <string name="dialog_create_conversation_ok">Создать</string>
 
+    <string name="dialog_invite_title">Пригласить в беседу</string>
+    <string name="dialog_invite_cancel">Отмена</string>
+    <string name="dialog_invite_ok">Выбрать</string>
+
     <string name="dialog_create_conversation_unknown_error">Не удалось создать беседу</string>
 
     <!-- Dialog menu -->
+    <string name="dialog_option_invite">Пригласить друга</string>
     <string name="dialog_option_leave">Покинуть диалог</string>
 
     <string name="dialog_option_leave_title">Покинуть диалог?</string>

@@ -1,4 +1,4 @@
-package com.vl.messenger.ui.util
+package com.vl.messenger.ui.modal
 
 import android.view.View
 import androidx.annotation.StringRes

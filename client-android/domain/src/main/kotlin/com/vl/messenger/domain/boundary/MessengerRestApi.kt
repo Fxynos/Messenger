@@ -58,10 +58,17 @@ interface MessengerRestApi {
     suspend fun getDialog(token: String, id: String): Dialog
     suspend fun getMessages(token: String, dialogId: String, limit: Int, key: Long?): List<Message>
     suspend fun sendMessage(token: String, message: String, dialogId: String): Message
-    suspend fun leaveConversation(token: String, dialogId: String)
+
+    /* Conversations */
 
     /**
      * @return dialog id
      */
     suspend fun createConversation(token: String, conversationName: String): String
+    suspend fun leaveConversation(token: String, dialogId: String)
+    suspend fun addMemberToConversation(token: String, dialogId: String, userId: Int)
+    suspend fun removeMemberFromConversation(token: String, dialogId: String, userId: Int)
+
+    // TODO use value-class for role param
+    suspend fun setConversationMemberRole(token: String, dialogId: String, userId: Int, role: String)
 }
