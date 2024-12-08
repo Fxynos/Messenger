@@ -7,14 +7,8 @@ import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Pattern
 
-class ConversationResponse(
-    val id: Long,
-    @field:NotBlank
-    val name: String,
-    @field:JsonInclude(JsonInclude.Include.NON_NULL)
-    val image: String?,
-    @field:JsonInclude(JsonInclude.Include.NON_NULL)
-    val members: List<@Valid Member>? = null
+class MembersResponse(
+    val members: List<@Valid Member>
 ) {
     class Member(
         @field:JsonProperty("user_id")

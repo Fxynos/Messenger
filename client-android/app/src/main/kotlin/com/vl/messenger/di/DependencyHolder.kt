@@ -24,6 +24,7 @@ import com.vl.messenger.domain.usecase.GetDialogByIdUseCase
 import com.vl.messenger.domain.usecase.GetFriendsUseCase
 import com.vl.messenger.domain.usecase.GetIsLoggedInUseCase
 import com.vl.messenger.domain.usecase.GetLoggedUserProfileUseCase
+import com.vl.messenger.domain.usecase.GetPagedConversationMembersUseCase
 import com.vl.messenger.domain.usecase.GetPagedDialogsUseCase
 import com.vl.messenger.domain.usecase.GetPagedMessagesUseCase
 import com.vl.messenger.domain.usecase.GetPagedUsersByNameUseCase
@@ -169,6 +170,13 @@ object DependencyHolder {
     @Singleton
     fun provideAddConversationMemberUseCase(sessionStore: SessionStore, api: MessengerRestApi) =
         AddConversationMemberUseCase(sessionStore, api)
+
+    @Provides
+    @Singleton
+    fun provideGetPagedConversationMembersUseCase(
+        sessionStore: SessionStore,
+        dialogDataSource: DialogDataSource
+    ) = GetPagedConversationMembersUseCase(sessionStore, dialogDataSource)
 
     /* Boundary */
 

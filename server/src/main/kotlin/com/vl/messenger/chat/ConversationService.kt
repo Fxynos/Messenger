@@ -42,7 +42,17 @@ class ConversationService(
         return CommonResult.SUCCESS
     }
 
-    fun getMembers(conversationId: Long, offset: Int, limit: Int) = dataMapper.getMembers(conversationId, offset, limit)
+    fun getMembers(userId: Int, conversationId: Long, offset: Int, limit: Int): GetMembersResult {
+        if (getConversation(conversationId) == null)
+            return GetMembersResult.NotFound
+
+        if (!hasPrivilege(userId, conversationId, Privilege.PARTICIPATE))
+            return GetMembersResult.NoPrivilege
+
+        return GetMembersResult.Success(
+            dataMapper.getMembers(conversationId, offset, limit)
+        )
+    }
 
     fun addMember(userId: Int, conversationId: Long, memberId: Int): CommonResult {
         if (!hasPrivilege(userId, conversationId, Privilege.EDIT_MEMBERS))
@@ -128,6 +138,12 @@ class ConversationService(
     enum class CommonResult {
         SUCCESS,
         NO_PRIVILEGE
+    }
+
+    sealed interface GetMembersResult {
+        data object NoPrivilege: GetMembersResult
+        data object NotFound: GetMembersResult
+        data class Success(val members: List<DataMapper.ConversationMember>): GetMembersResult
     }
 
     sealed interface GenerateReportResult {

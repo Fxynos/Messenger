@@ -1,6 +1,7 @@
 package com.vl.messenger.domain.boundary
 
 import com.vl.messenger.domain.entity.AccessToken
+import com.vl.messenger.domain.entity.ConversationMember
 import com.vl.messenger.domain.entity.Dialog
 import com.vl.messenger.domain.entity.ExtendedDialog
 import com.vl.messenger.domain.entity.Message
@@ -68,6 +69,12 @@ interface MessengerRestApi {
     suspend fun leaveConversation(token: String, dialogId: String)
     suspend fun addMemberToConversation(token: String, dialogId: String, userId: Int)
     suspend fun removeMemberFromConversation(token: String, dialogId: String, userId: Int)
+    suspend fun getConversationMembers(
+        token: String,
+        dialogId: String,
+        limit: Int?,
+        offset: Int?
+    ): List<ConversationMember>
 
     // TODO use value-class for role param
     suspend fun setConversationMemberRole(token: String, dialogId: String, userId: Int, role: String)

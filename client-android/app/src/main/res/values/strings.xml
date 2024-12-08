@@ -39,6 +39,7 @@
     <string name="cancelled">Отменено пользователем</string>
     <string name="no_messages">Нет сообщений</string>
     <string name="loading">Загрузка...</string>
+    <string name="conversation">Беседа</string>
 
     <!-- Profile menu -->
     <string name="upload_photo">Загрузить фото</string>
@@ -71,6 +72,7 @@
     <string name="dialog_member_invited">Новый участник \"%1$s\" добавлен в беседу</string>
 
     <!-- Dialog menu -->
+    <string name="dialog_option_edit">Редактировать</string>
     <string name="dialog_option_invite">Пригласить друга</string>
     <string name="dialog_option_leave">Покинуть диалог</string>
 

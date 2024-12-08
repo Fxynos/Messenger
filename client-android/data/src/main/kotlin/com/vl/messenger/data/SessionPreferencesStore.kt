@@ -13,7 +13,7 @@ import com.vl.messenger.domain.entity.AccessToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class SessionPreferencesStore(private val context: Context): SessionStore {
+class SessionPreferencesStore(private val context: Context): SessionStore() {
     companion object {
         private val KEY_TOKEN = stringPreferencesKey("token")
         private val KEY_EXPIRATION = longPreferencesKey("expiration")

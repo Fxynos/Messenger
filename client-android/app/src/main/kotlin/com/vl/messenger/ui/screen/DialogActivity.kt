@@ -1,5 +1,6 @@
 package com.vl.messenger.ui.screen
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
@@ -18,6 +19,7 @@ import com.vl.messenger.ui.modal.dropConfirmationDialog
 import com.vl.messenger.ui.modal.dropPopupOptions
 import com.vl.messenger.ui.modal.dropSelectUserDialog
 import com.vl.messenger.ui.viewmodel.DialogViewModel
+import com.vl.messenger.ui.viewmodel.EditConversationViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -49,6 +51,8 @@ private val viewModel: DialogViewModel by viewModels()
                 viewModel.sendMessage(input.text.toString())
                 input.text.clear()
             }
+            name.setOnClickListener { viewModel.editConversation() }
+            image.setOnClickListener { viewModel.editConversation() }
         }
 
         // subscriptions
@@ -67,11 +71,11 @@ private val viewModel: DialogViewModel by viewModels()
         when (state) {
             is DialogViewModel.UiState.Loading -> with(binding) {
                 name.text = getString(R.string.loading)
-                icon.setImageBitmap(null)
+                image.setImageBitmap(null)
             }
             is DialogViewModel.UiState.Loaded -> with(binding) {
                 name.text = state.dialogName
-                icon.load(state.dialogImageUrl)
+                image.load(state.dialogImageUrl)
                 adapter.submitData(state.messages)
             }
         }
@@ -105,6 +109,13 @@ private val viewModel: DialogViewModel by viewModels()
                 getString(R.string.dialog_member_invited, event.member.login),
                 Toast.LENGTH_LONG
             ).show()
+
+            is DialogViewModel.DataDrivenEvent.NavigateToEditConversation -> {
+                startActivity(Intent(this, EditConversationActivity::class.java).apply {
+                    putExtra(EditConversationViewModel.ARG_DIALOG_ID, event.dialogId)
+                })
+                finish()
+            }
         }
     }
 
@@ -112,9 +123,9 @@ private val viewModel: DialogViewModel by viewModels()
         val dialog = (viewModel.uiState.value as? DialogViewModel.UiState.Loaded)
 
         binding.options.dropPopupOptions(*buildList {
-            add(R.string.dialog_option_invite to Runnable { viewModel.selectMemberToInvite() })
-
-            if (dialog != null && !dialog.isPrivate)
+            if (dialog != null && !dialog.isPrivate) { // conversation-only
+                add(R.string.dialog_option_edit to Runnable { viewModel.editConversation() })
+                add(R.string.dialog_option_invite to Runnable { viewModel.selectMemberToInvite() })
                 add(R.string.dialog_option_leave to Runnable {
                     dropConfirmationDialog(
                         title = R.string.dialog_option_leave_title,
@@ -124,6 +135,7 @@ private val viewModel: DialogViewModel by viewModels()
                         onConfirm = viewModel::leaveConversation
                     )
                 })
+            }
         }.toTypedArray())
     }
 }

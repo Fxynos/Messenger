@@ -1,5 +1,6 @@
 package com.vl.messenger.data.network
 
+import com.vl.messenger.data.network.dto.ConversationMembersResponse
 import com.vl.messenger.data.network.dto.CreateConversationResponse
 import com.vl.messenger.data.network.dto.Credentials
 import com.vl.messenger.data.network.dto.DialogResponse
@@ -124,6 +125,8 @@ internal interface ApiScheme {
         @Body message: MessageForm
     ): StatusResponse<MessageDto>
 
+    /* Conversations */
+
     @POST("/conversations")
     suspend fun createConversation(
         @Header("Authorization") auth: String,
@@ -149,6 +152,14 @@ internal interface ApiScheme {
         @Path("id") conversationId: Long,
         @Path("user_id") userId: Int
     )
+
+    @GET("/conversations/{id}/members")
+    suspend fun getConversationMembers(
+        @Header("Authorization") auth: String,
+        @Path("id") conversationId: Long,
+        @Query("limit") limit: Int?,
+        @Query("offset") offset: Int?
+    ): StatusResponse<ConversationMembersResponse>
 
     @PUT("/conversations/{id}/members/{user_id}")
     suspend fun setConversationMemberRole(

@@ -3,10 +3,12 @@ package com.vl.messenger.domain.boundary
 import com.vl.messenger.domain.entity.AccessToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 
-interface SessionStore {
+abstract class SessionStore {
+    fun getTokenBlocking(): AccessToken? = runBlocking { getToken() }
     suspend fun getToken(): AccessToken? = observeToken().first()
-    suspend fun setToken(token: AccessToken)
-    suspend fun removeToken()
-    fun observeToken(): Flow<AccessToken?>
+    abstract suspend fun setToken(token: AccessToken)
+    abstract suspend fun removeToken()
+    abstract fun observeToken(): Flow<AccessToken?>
 }

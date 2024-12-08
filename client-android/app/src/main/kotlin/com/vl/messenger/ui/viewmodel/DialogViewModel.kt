@@ -137,6 +137,15 @@ class DialogViewModel @Inject constructor(
         }
     }
 
+    fun editConversation() {
+        if (dialog.value.let { it == null || it.isPrivate }) // unavailable for private dialog
+            return
+
+        viewModelScope.launch {
+            _events.emit(DataDrivenEvent.NavigateToEditConversation(dialogId))
+        }
+    }
+
     private suspend fun insertMessage(message: Message) {
         cachedMessages.addFirst(listOf(message))
         delay(100L) // FIXME dirty hack to scroll after refreshing recycler view
@@ -173,5 +182,6 @@ class DialogViewModel @Inject constructor(
         data object NavigateBack: DataDrivenEvent
         data class ShowFriendsToInviteDialog(val users: List<User>): DataDrivenEvent
         data class NotifyMemberAdded(val member: User): DataDrivenEvent
+        data class NavigateToEditConversation(val dialogId: String): DataDrivenEvent
     }
 }

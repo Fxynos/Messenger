@@ -1,6 +1,6 @@
 package com.vl.messenger.chat
 
-import com.vl.messenger.chat.dto.ConversationResponse
+import com.vl.messenger.chat.dto.MembersResponse
 import com.vl.messenger.chat.dto.CreateConversationResponse
 import com.vl.messenger.dto.StatusResponse
 import com.vl.messenger.statusOf
@@ -38,25 +38,6 @@ class ConversationController(
         return statusOf(payload = CreateConversationResponse(service.createConversation(userId, name)))
     }
 
-    @GetMapping("/{id}")
-    fun describeConversation(
-        @PathVariable id: Long,
-        @RequestParam(defaultValue = "0") offset: Int,
-        @RequestParam(defaultValue = "50") limit: Int
-    ): ResponseEntity<StatusResponse<ConversationResponse>> {
-        if (!service.isMember(userId, id))
-            return statusOf(HttpStatus.GONE, "No conversation or you are not its member")
-        val conversation = service.getConversation(id)!!
-        return statusOf(payload = ConversationResponse(
-            conversation.id,
-            conversation.name,
-            if (conversation.image == null) null else "$baseUrl/${conversation.image}",
-            service.getMembers(id, offset, limit).map {
-                ConversationResponse.Member(it.id, it.login, "$baseUrl/${it.image}", it.role.name)
-            }
-        ))
-    }
-
     @PutMapping("/{id}/set-name")
     fun setConversationName(
         @PathVariable("id") conversationId: Long,
@@ -91,6 +72,28 @@ class ConversationController(
     fun leaveConversation(@PathVariable id: Long): ResponseEntity<StatusResponse<Nothing>> {
         service.leaveConversation(userId, id)
         return statusOf(HttpStatus.OK)
+    }
+
+    @GetMapping("/{id}/members")
+    fun getMembers(
+        @PathVariable("id") conversationId: Long,
+        @RequestParam(defaultValue = "0") offset: Int,
+        @RequestParam(defaultValue = "50") limit: Int
+    ): ResponseEntity<StatusResponse<MembersResponse>> {
+        return when (val result = service.getMembers(userId, conversationId, offset, limit)) {
+            ConversationService.GetMembersResult.NoPrivilege ->
+                statusOf(HttpStatus.FORBIDDEN, "No retrieve members privilege")
+
+            ConversationService.GetMembersResult.NotFound ->
+                statusOf(HttpStatus.NOT_FOUND, "No conversation")
+
+            is ConversationService.GetMembersResult.Success ->
+                statusOf(
+                    payload = result.members.map {
+                        MembersResponse.Member(it.id, it.login, "$baseUrl/${it.image}", it.role.name)
+                    }.let(::MembersResponse)
+                )
+        }
     }
 
     @PutMapping("/{id}/members/{user_id}")

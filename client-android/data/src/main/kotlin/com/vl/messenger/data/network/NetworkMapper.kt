@@ -3,6 +3,8 @@ package com.vl.messenger.data.network
 import com.vl.messenger.data.network.dto.DialogDto
 import com.vl.messenger.data.network.dto.DialogResponse
 import com.vl.messenger.data.network.dto.FriendStatusDto
+import com.vl.messenger.data.network.dto.ConversationMemberDto
+import com.vl.messenger.data.network.dto.ConversationMembersResponse
 import com.vl.messenger.data.network.dto.MessageDto
 import com.vl.messenger.data.network.dto.MessagesDto
 import com.vl.messenger.data.network.dto.ProfileDto
@@ -11,6 +13,7 @@ import com.vl.messenger.data.network.dto.TokenDto
 import com.vl.messenger.data.network.dto.UserDto
 import com.vl.messenger.data.network.dto.UsersDto
 import com.vl.messenger.domain.entity.AccessToken
+import com.vl.messenger.domain.entity.ConversationMember
 import com.vl.messenger.domain.entity.Dialog
 import com.vl.messenger.domain.entity.ExtendedDialog
 import com.vl.messenger.domain.entity.FriendStatus
@@ -57,4 +60,6 @@ internal object NetworkMapper {
     fun MessageDto.toDomain(dialogId: String) = Message(id, senderId, dialogId, timestamp, content)
     fun MessagesDto.toDomain(dialogId: String) = messages.map { it.toDomain(dialogId) }
     fun StompMessage.toDomain() = Message(id!!, senderId!!, dialogId!!, System.currentTimeMillis(), content)
+    fun ConversationMemberDto.toDomain() = ConversationMember(User(userId, login, image), role)
+    fun ConversationMembersResponse.toDomain() = members.map { it.toDomain() }
 }

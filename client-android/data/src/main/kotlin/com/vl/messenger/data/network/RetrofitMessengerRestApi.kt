@@ -7,6 +7,7 @@ import com.vl.messenger.data.network.dto.MessageForm
 import com.vl.messenger.domain.boundary.MessengerRestApi
 import com.vl.messenger.domain.boundary.MessengerRestApi.SignInResult
 import com.vl.messenger.domain.boundary.MessengerRestApi.SignUpResult
+import com.vl.messenger.domain.entity.ConversationMember
 import com.vl.messenger.domain.entity.Dialog
 import com.vl.messenger.domain.entity.ExtendedDialog
 import com.vl.messenger.domain.entity.Message
@@ -192,4 +193,16 @@ class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
         userId,
         role
     )
+
+    override suspend fun getConversationMembers(
+        token: String,
+        dialogId: String,
+        limit: Int?,
+        offset: Int?
+    ): List<ConversationMember> = api.getConversationMembers(
+        token.toBearerAuthHeader(),
+        dialogId.toConversationId(),
+        limit,
+        offset
+    ).requireResponse().toDomain()
 }
