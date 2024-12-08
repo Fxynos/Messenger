@@ -67,6 +67,9 @@
 
     <string name="dialog_create_conversation_unknown_error">Не удалось создать беседу</string>
 
+    <!-- Dialog -->
+    <string name="dialog_member_invited">Новый участник \"%1$s\" добавлен в беседу</string>
+
     <!-- Dialog menu -->
     <string name="dialog_option_invite">Пригласить друга</string>
     <string name="dialog_option_leave">Покинуть диалог</string>

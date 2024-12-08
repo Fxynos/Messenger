@@ -2,6 +2,7 @@ package com.vl.messenger.ui.screen
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
@@ -98,6 +99,12 @@ private val viewModel: DialogViewModel by viewModels()
                 items = event.users,
                 onSelect = viewModel::inviteMember
             )
+
+            is DialogViewModel.DataDrivenEvent.NotifyMemberAdded -> Toast.makeText(
+                this,
+                getString(R.string.dialog_member_invited, event.member.login),
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 

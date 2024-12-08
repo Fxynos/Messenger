@@ -62,8 +62,11 @@ class ChatService(
 
     fun sendConversationMessage(userId: Int, conversationId: Long, content: String): MessagesResponse.Message {
         val messageId = dataMapper.addConversationMessage(userId, conversationId, content)
+        val username = dataMapper.getVerboseUser(userId)!!.login
+        val excludeList = arrayOf(null, username) // these users won't be notified
+
         dataMapper.getAllMembers(conversationId)
-            .filter { registry.getUser(it.login) != null }
+            .filter { registry.getUser(it.login)?.name !in excludeList }
             .forEach { receiver ->
                 template.convertAndSend(getUserDestination(receiver.id), StompMessage().apply {
                     id = messageId

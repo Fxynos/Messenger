@@ -121,10 +121,12 @@ class DialogViewModel @Inject constructor(
 
     fun inviteMember(user: User) {
         viewModelScope.launch(Dispatchers.IO) {
-            addConversationMemberUseCase(AddConversationMemberUseCase.Param(
+            addConversationMemberUseCase(
+                AddConversationMemberUseCase.Param(
                 dialog = dialog.value!!,
                 user = user
             ))
+            _events.emit(DataDrivenEvent.NotifyMemberAdded(user))
         }
     }
 
@@ -170,5 +172,6 @@ class DialogViewModel @Inject constructor(
         data object ScrollToLast: DataDrivenEvent
         data object NavigateBack: DataDrivenEvent
         data class ShowFriendsToInviteDialog(val users: List<User>): DataDrivenEvent
+        data class NotifyMemberAdded(val member: User): DataDrivenEvent
     }
 }
