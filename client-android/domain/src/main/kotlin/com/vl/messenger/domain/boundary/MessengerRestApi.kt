@@ -6,6 +6,7 @@ import com.vl.messenger.domain.entity.Dialog
 import com.vl.messenger.domain.entity.ExtendedDialog
 import com.vl.messenger.domain.entity.Message
 import com.vl.messenger.domain.entity.Profile
+import com.vl.messenger.domain.entity.Role
 import com.vl.messenger.domain.entity.User
 import com.vl.messenger.domain.entity.VerboseUser
 import java.io.InputStream
@@ -76,6 +77,7 @@ interface MessengerRestApi {
         offset: Int?
     ): List<ConversationMember>
 
-    // TODO use value-class for role param
-    suspend fun setConversationMemberRole(token: String, dialogId: String, userId: Int, role: String)
+    suspend fun setConversationMemberRole(token: String, dialogId: String, userId: Int, role: Int)
+    suspend fun getConversationRoles(token: String, dialogId: String): List<Role>
+    suspend fun getOwnConversationRole(token: String, dialogId: String): Role
 }

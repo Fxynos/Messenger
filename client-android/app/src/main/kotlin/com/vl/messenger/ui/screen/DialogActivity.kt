@@ -98,18 +98,6 @@ private val viewModel: DialogViewModel by viewModels()
 
             DialogViewModel.DataDrivenEvent.NavigateBack -> finish()
 
-            is DialogViewModel.DataDrivenEvent.ShowFriendsToInviteDialog -> dropSelectUserDialog(
-                title = R.string.dialog_invite_title,
-                items = event.users,
-                onSelect = viewModel::inviteMember
-            )
-
-            is DialogViewModel.DataDrivenEvent.NotifyMemberAdded -> Toast.makeText(
-                this,
-                getString(R.string.dialog_member_invited, event.member.login),
-                Toast.LENGTH_LONG
-            ).show()
-
             is DialogViewModel.DataDrivenEvent.NavigateToEditConversation -> {
                 startActivity(Intent(this, EditConversationActivity::class.java).apply {
                     putExtra(EditConversationViewModel.ARG_DIALOG_ID, event.dialogId)
@@ -125,7 +113,6 @@ private val viewModel: DialogViewModel by viewModels()
         binding.options.dropPopupOptions(*buildList {
             if (dialog != null && !dialog.isPrivate) { // conversation-only
                 add(R.string.dialog_option_edit to Runnable { viewModel.editConversation() })
-                add(R.string.dialog_option_invite to Runnable { viewModel.selectMemberToInvite() })
                 add(R.string.dialog_option_leave to Runnable {
                     dropConfirmationDialog(
                         title = R.string.dialog_option_leave_title,

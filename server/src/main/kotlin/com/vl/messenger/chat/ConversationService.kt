@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
-import java.io.OutputStream
 
 @Service
 class ConversationService(
@@ -22,8 +21,6 @@ class ConversationService(
         dataMapper
             .createConversation(userId, name)
             .asConversationDialogId()
-
-    fun getConversation(conversationId: Long) = dataMapper.getConversation(conversationId)
 
     fun setConversationName(userId: Int, conversationId: Long, name: String): CommonResult {
         if (!hasPrivilege(userId, conversationId, Privilege.EDIT_DATA))
@@ -41,6 +38,23 @@ class ConversationService(
         dataMapper.setConversationImage(conversationId, path)
         return CommonResult.SUCCESS
     }
+
+    /**
+     * Get role of currently authenticated user
+     */
+    fun getRole(userId: Int, conversationId: Long): CommonResultValue<DataMapper.ConversationMember.Role> =
+        dataMapper.getRole(userId, conversationId)
+            ?.let { CommonResultValue.Success(it) }
+            ?: CommonResultValue.NoPrivilege
+
+    /**
+     * Get roles specific for certain conversation
+     */
+    fun getRoles(userId: Int, conversationId: Long): CommonResultValue<List<DataMapper.ConversationMember.Role>> =
+        if (!hasPrivilege(userId, conversationId, Privilege.PARTICIPATE))
+            CommonResultValue.NoPrivilege
+        else
+            CommonResultValue.Success(dataMapper.roles) // roles are shared for all conversations yet
 
     fun getMembers(userId: Int, conversationId: Long, offset: Int, limit: Int): GetMembersResult {
         if (getConversation(conversationId) == null)
@@ -91,16 +105,21 @@ class ConversationService(
     fun leaveConversation(userId: Int, conversationId: Long) =
         dataMapper.removeMember(userId, conversationId)
 
-    fun setMemberRole(userId: Int, conversationId: Long, memberId: Int, role: String): CommonResult {
+    fun setMemberRole(userId: Int, conversationId: Long, memberId: Int, roleId: Int): SetRoleResult {
         if (!hasPrivilege(userId, conversationId, Privilege.EDIT_RIGHTS))
-            return CommonResult.NO_PRIVILEGE
+            return SetRoleResult.NO_PRIVILEGE
 
-        dataMapper.setRole(memberId, conversationId, role)
-        return CommonResult.SUCCESS
+        if (dataMapper.roles.firstOrNull { it.id == roleId } == null)
+            return SetRoleResult.ROLE_NOT_FOUND
+
+        dataMapper.setRole(memberId, conversationId, roleId)
+        return SetRoleResult.SUCCESS
     }
 
     fun isMember(userId: Int, conversationId: Long) =
         dataMapper.getRole(userId, conversationId) != null
+
+    private fun getConversation(conversationId: Long) = dataMapper.getConversation(conversationId)
 
     private fun hasPrivilege(userId: Int, conversationId: Long, privilege: Privilege): Boolean {
         val role = dataMapper.getRole(userId, conversationId)
@@ -138,6 +157,17 @@ class ConversationService(
     enum class CommonResult {
         SUCCESS,
         NO_PRIVILEGE
+    }
+
+    enum class SetRoleResult {
+        SUCCESS,
+        NO_PRIVILEGE,
+        ROLE_NOT_FOUND
+    }
+
+    sealed interface CommonResultValue<out T> {
+        data object NoPrivilege: CommonResultValue<Nothing>
+        data class Success<T>(val value: T): CommonResultValue<T>
     }
 
     sealed interface GetMembersResult {

@@ -8,6 +8,8 @@ import com.vl.messenger.data.network.dto.MessageDto
 import com.vl.messenger.data.network.dto.MessageForm
 import com.vl.messenger.data.network.dto.MessagesDto
 import com.vl.messenger.data.network.dto.ProfileDto
+import com.vl.messenger.data.network.dto.RoleResponse
+import com.vl.messenger.data.network.dto.RolesResponse
 import com.vl.messenger.data.network.dto.StatusResponse
 import com.vl.messenger.data.network.dto.TokenDto
 import com.vl.messenger.data.network.dto.UserDto
@@ -166,6 +168,18 @@ internal interface ApiScheme {
         @Header("Authorization") auth: String,
         @Path("id") conversationId: Long,
         @Path("user_id") userId: Int,
-        @Query("role") role: String
+        @Query("role") role: Int
     )
+
+    @GET("/conversations/{id}/roles")
+    suspend fun getConversationRoles(
+        @Header("Authorization") auth: String,
+        @Path("id") conversationId: Long
+    ): StatusResponse<RolesResponse>
+
+    @GET("/conversations/{id}/roles/mine")
+    suspend fun getOwnConversationRole(
+        @Header("Authorization") auth: String,
+        @Path("id") conversationId: Long
+    ): StatusResponse<RoleResponse>
 }

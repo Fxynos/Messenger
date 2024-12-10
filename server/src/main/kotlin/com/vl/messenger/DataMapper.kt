@@ -676,14 +676,14 @@ class DataMapper {
     /**
      * Fail-Safe operation: changes member if it actually exists
      */
-    fun setRole(userId: Int, conversationId: Long, role: String) {
+    fun setRole(userId: Int, conversationId: Long, roleId: Int) {
         connection.prepareStatement("""
             update participate inner join user on user_id = id 
             inner join conversation on conversation_id = conversation.id 
-            set rights_id = (select id from conversation_rights where role = ?) 
+            set rights_id = ? 
             where user_id = ? and conversation_id = ?;
         """.trimIndent()).use { statement ->
-            statement.setString(1, role)
+            statement.setInt(1, roleId)
             statement.setInt(2, userId)
             statement.setLong(3, conversationId)
             statement.execute()

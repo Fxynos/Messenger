@@ -12,6 +12,7 @@ import com.vl.messenger.domain.entity.Dialog
 import com.vl.messenger.domain.entity.ExtendedDialog
 import com.vl.messenger.domain.entity.Message
 import com.vl.messenger.domain.entity.Profile
+import com.vl.messenger.domain.entity.Role
 import com.vl.messenger.domain.entity.User
 import com.vl.messenger.domain.entity.VerboseUser
 import okhttp3.MediaType.Companion.toMediaType
@@ -186,7 +187,7 @@ class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
         token: String,
         dialogId: String,
         userId: Int,
-        role: String
+        role: Int
     ): Unit = api.setConversationMemberRole(
         token.toBearerAuthHeader(),
         dialogId.toConversationId(),
@@ -205,4 +206,14 @@ class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
         limit,
         offset
     ).requireResponse().toDomain()
+
+    override suspend fun getConversationRoles(token: String, dialogId: String): List<Role> =
+        api.getConversationRoles(token.toBearerAuthHeader(), dialogId.toConversationId())
+            .requireResponse()
+            .toDomain()
+
+    override suspend fun getOwnConversationRole(token: String, dialogId: String): Role =
+        api.getOwnConversationRole(token.toBearerAuthHeader(), dialogId.toConversationId())
+            .requireResponse()
+            .role.toDomain()
 }

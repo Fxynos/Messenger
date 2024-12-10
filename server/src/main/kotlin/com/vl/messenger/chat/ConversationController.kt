@@ -1,7 +1,10 @@
 package com.vl.messenger.chat
 
+import com.vl.messenger.chat.DtoMapper.toDto
 import com.vl.messenger.chat.dto.MembersResponse
 import com.vl.messenger.chat.dto.CreateConversationResponse
+import com.vl.messenger.chat.dto.RoleResponse
+import com.vl.messenger.chat.dto.RolesResponse
 import com.vl.messenger.dto.StatusResponse
 import com.vl.messenger.statusOf
 import com.vl.messenger.userId
@@ -90,7 +93,7 @@ class ConversationController(
             is ConversationService.GetMembersResult.Success ->
                 statusOf(
                     payload = result.members.map {
-                        MembersResponse.Member(it.id, it.login, "$baseUrl/${it.image}", it.role.name)
+                        MembersResponse.Member(it.id, it.login, "$baseUrl/${it.image}", it.role.toDto())
                     }.let(::MembersResponse)
                 )
         }
@@ -126,14 +129,37 @@ class ConversationController(
     fun setMemberRole(
         @PathVariable("id") conversationId: Long,
         @PathVariable("user_id") memberId: Int,
-        @RequestParam role: String
+        @RequestParam role: Int
     ): ResponseEntity<StatusResponse<Nothing>> =
         when (service.setMemberRole(userId, conversationId, memberId, role)) {
-            ConversationService.CommonResult.SUCCESS ->
+            ConversationService.SetRoleResult.SUCCESS ->
                 statusOf(HttpStatus.OK, "Conversation member role is set")
 
-            ConversationService.CommonResult.NO_PRIVILEGE ->
+            ConversationService.SetRoleResult.NO_PRIVILEGE ->
                 statusOf(HttpStatus.FORBIDDEN, "No edit conversation members rights privilege")
+
+            ConversationService.SetRoleResult.ROLE_NOT_FOUND ->
+                statusOf(HttpStatus.NOT_FOUND, "No such role")
+        }
+
+    @GetMapping("/{id}/roles") // in the future, roles can become specific for conversations
+    fun getRoles(@PathVariable("id") conversationId: Long): ResponseEntity<StatusResponse<RolesResponse>> =
+        when (val result = service.getRoles(userId, conversationId)) {
+            ConversationService.CommonResultValue.NoPrivilege ->
+                statusOf(HttpStatus.FORBIDDEN, "You're not participant")
+
+            is ConversationService.CommonResultValue.Success ->
+                statusOf(payload = result.value.toDto())
+        }
+
+    @GetMapping("/{id}/roles/mine")
+    fun getOwnRole(@PathVariable("id") conversationId: Long): ResponseEntity<StatusResponse<RoleResponse>> =
+        when (val result = service.getRole(userId, conversationId)) {
+            ConversationService.CommonResultValue.NoPrivilege ->
+                statusOf(HttpStatus.FORBIDDEN, "You're not participant")
+
+            is ConversationService.CommonResultValue.Success ->
+                statusOf(payload = RoleResponse(result.value.toDto()))
         }
 
     @GetMapping("/{id}/report", produces = [MediaType.APPLICATION_PDF_VALUE])

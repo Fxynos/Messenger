@@ -49,9 +49,7 @@ class DialogViewModel @Inject constructor(
     getPagedMessagesUseCase: GetPagedMessagesUseCase,
     observeAllIncomingMessagesUseCase: ObserveAllIncomingMessagesUseCase,
     private val sendMessageUseCase: SendMessageUseCase,
-    private val leaveConversationUseCase: LeaveConversationUseCase,
-    private val getFriendsUseCase: GetFriendsUseCase,
-    private val addConversationMemberUseCase: AddConversationMemberUseCase
+    private val leaveConversationUseCase: LeaveConversationUseCase
 ): ViewModel() {
     companion object {
         const val ARG_DIALOG_ID = "dialog"
@@ -111,25 +109,6 @@ class DialogViewModel @Inject constructor(
         }
     }
 
-    fun selectMemberToInvite() {
-        viewModelScope.launch(Dispatchers.IO) {
-            _events.emit(DataDrivenEvent.ShowFriendsToInviteDialog(
-                getFriendsUseCase(Unit)
-            ))
-        }
-    }
-
-    fun inviteMember(user: User) {
-        viewModelScope.launch(Dispatchers.IO) {
-            addConversationMemberUseCase(
-                AddConversationMemberUseCase.Param(
-                dialog = dialog.value!!,
-                user = user
-            ))
-            _events.emit(DataDrivenEvent.NotifyMemberAdded(user))
-        }
-    }
-
     fun leaveConversation() {
         viewModelScope.launch(Dispatchers.IO) {
             leaveConversationUseCase(dialogId)
@@ -180,8 +159,6 @@ class DialogViewModel @Inject constructor(
     sealed interface DataDrivenEvent {
         data object ScrollToLast: DataDrivenEvent
         data object NavigateBack: DataDrivenEvent
-        data class ShowFriendsToInviteDialog(val users: List<User>): DataDrivenEvent
-        data class NotifyMemberAdded(val member: User): DataDrivenEvent
         data class NavigateToEditConversation(val dialogId: String): DataDrivenEvent
     }
 }

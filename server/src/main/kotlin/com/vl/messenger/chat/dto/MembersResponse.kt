@@ -17,6 +17,6 @@ class MembersResponse(
         val login: String,
         @field:JsonInclude(JsonInclude.Include.NON_NULL)
         val image: String?,
-        val role: String
+        val role: RoleDto
     )
 }

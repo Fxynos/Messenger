@@ -7,5 +7,5 @@ class ConversationMemberDto {
     val userId: Int = 0
     val login: String = ""
     val image: String? = null
-    val role: String = ""
+    lateinit var role: RoleDto
 }

@@ -14,9 +14,11 @@
             android:layout_height="wrap_content"
             android:contentInsetStart="16dp"
             android:contentInsetEnd="16dp">
-            <FrameLayout
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
                 <ImageButton
                     android:id="@+id/back"
@@ -25,13 +27,20 @@
                     android:src="@drawable/ic_back"/>
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    android:gravity="center_horizontal"
                     android:textColor="?attr/colorOnPrimary"
-                    android:text="@string/conversation"/>
+                    android:text="@string/edit_conversation"/>
 
-            </FrameLayout>
+                <ImageButton
+                    android:id="@+id/options"
+                    android:layout_width="@dimen/icon"
+                    android:layout_height="@dimen/icon"
+                    android:src="@drawable/ic_options"/>
+
+            </LinearLayout>
         </Toolbar>
     </com.google.android.material.appbar.AppBarLayout>
 
