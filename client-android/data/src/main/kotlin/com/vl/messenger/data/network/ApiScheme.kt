@@ -141,7 +141,7 @@ internal interface ApiScheme {
         @Path("id") conversationId: Long
     )
 
-    @PUT("/conversations/{id}/members/{user_id}")
+    @POST("/conversations/{id}/members/{user_id}")
     suspend fun addConversationMember(
         @Header("Authorization") auth: String,
         @Path("id") conversationId: Long,
@@ -163,7 +163,7 @@ internal interface ApiScheme {
         @Query("offset") offset: Int?
     ): StatusResponse<ConversationMembersResponse>
 
-    @PUT("/conversations/{id}/members/{user_id}")
+    @PUT("/conversations/{id}/members/{user_id}/role")
     suspend fun setConversationMemberRole(
         @Header("Authorization") auth: String,
         @Path("id") conversationId: Long,

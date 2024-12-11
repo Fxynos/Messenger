@@ -8,6 +8,8 @@ import com.vl.messenger.domain.usecase.GetIsLoggedInUseCase
 import com.vl.messenger.domain.usecase.SignInUseCase
 import com.vl.messenger.domain.usecase.SignUpUseCase
 import com.vl.messenger.domain.usecase.param.CredentialsParam
+import com.vl.messenger.ui.utils.launch
+import com.vl.messenger.ui.utils.launchHeavy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -34,7 +36,7 @@ class AuthViewModel @Inject constructor(
     val events = _events.asSharedFlow()
 
     init {
-        viewModelScope.launch {
+        launch {
             if (getIsLoggedInUseCase(Unit))
                 _events.emit(DataDrivenEvent.NavigateLoggedIn)
         }
@@ -53,7 +55,7 @@ class AuthViewModel @Inject constructor(
     fun signIn(login: String, password: String) {
         updateState(UiState.LOADING)
         if (validate(login, password))
-            viewModelScope.launch(Dispatchers.IO) {
+            launchHeavy {
                 when (val result = signInUseCase(CredentialsParam(login, password))) {
                     SignInUseCase.Result.Success -> emitEvent(DataDrivenEvent.NavigateLoggedIn)
                     SignInUseCase.Result.WrongCredentials -> emitEvent(DataDrivenEvent.NotifyWrongCredentials)
@@ -69,7 +71,7 @@ class AuthViewModel @Inject constructor(
     fun signUp(login: String, password: String, repeatPassword: String) {
         updateState(UiState.LOADING)
         if (validate(login, password, repeatPassword))
-            viewModelScope.launch(Dispatchers.IO) {
+            launchHeavy {
                 when (val result = signUpUseCase(CredentialsParam(login, password))) {
                     SignUpUseCase.Result.Success -> emitEvent(DataDrivenEvent.NavigateLoggedIn)
                     SignUpUseCase.Result.LoginTaken -> emitEvent(DataDrivenEvent.NotifyLoginTaken)
@@ -98,7 +100,7 @@ class AuthViewModel @Inject constructor(
     }
 
     private fun emitEvent(event: DataDrivenEvent) {
-        viewModelScope.launch {
+        launch {
             _events.emit(event)
         }
     }

@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 
 abstract class SessionStore {
-    fun getTokenBlocking(): AccessToken? = runBlocking { getToken() }
+    fun requireToken(): AccessToken = runBlocking { getToken()!! }
     suspend fun getToken(): AccessToken? = observeToken().first()
     abstract suspend fun setToken(token: AccessToken)
     abstract suspend fun removeToken()

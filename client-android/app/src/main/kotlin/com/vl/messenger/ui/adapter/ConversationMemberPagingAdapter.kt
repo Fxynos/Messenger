@@ -55,7 +55,7 @@ class ConversationMemberPagingAdapter(
 
             with(binding) {
                 text.visibility = View.GONE
-                hint.text = member.role
+                hint.text = member.role.name
                 title.text = member.user.login
                 image.load(member.user.imageUrl)
             }

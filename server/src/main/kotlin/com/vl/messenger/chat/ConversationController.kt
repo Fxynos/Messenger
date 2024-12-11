@@ -1,8 +1,8 @@
 package com.vl.messenger.chat
 
 import com.vl.messenger.chat.DtoMapper.toDto
-import com.vl.messenger.chat.dto.MembersResponse
 import com.vl.messenger.chat.dto.CreateConversationResponse
+import com.vl.messenger.chat.dto.MembersResponse
 import com.vl.messenger.chat.dto.RoleResponse
 import com.vl.messenger.chat.dto.RolesResponse
 import com.vl.messenger.dto.StatusResponse
@@ -99,7 +99,7 @@ class ConversationController(
         }
     }
 
-    @PutMapping("/{id}/members/{user_id}")
+    @PostMapping("/{id}/members/{user_id}")
     fun addMember(
         @PathVariable("id") conversationId: Long,
         @PathVariable("user_id") memberId: Int

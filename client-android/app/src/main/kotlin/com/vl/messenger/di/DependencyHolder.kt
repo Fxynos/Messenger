@@ -20,10 +20,12 @@ import com.vl.messenger.domain.usecase.AddConversationMemberUseCase
 import com.vl.messenger.domain.usecase.AddFriendUseCase
 import com.vl.messenger.domain.usecase.CreateConversationUseCase
 import com.vl.messenger.domain.usecase.DownloadFileUseCase
+import com.vl.messenger.domain.usecase.GetAvailableRolesUseCase
 import com.vl.messenger.domain.usecase.GetDialogByIdUseCase
 import com.vl.messenger.domain.usecase.GetFriendsUseCase
 import com.vl.messenger.domain.usecase.GetIsLoggedInUseCase
 import com.vl.messenger.domain.usecase.GetLoggedUserProfileUseCase
+import com.vl.messenger.domain.usecase.GetOwnConversationRoleUseCase
 import com.vl.messenger.domain.usecase.GetPagedConversationMembersUseCase
 import com.vl.messenger.domain.usecase.GetPagedDialogsUseCase
 import com.vl.messenger.domain.usecase.GetPagedMessagesUseCase
@@ -32,8 +34,10 @@ import com.vl.messenger.domain.usecase.GetUserByIdUseCase
 import com.vl.messenger.domain.usecase.LeaveConversationUseCase
 import com.vl.messenger.domain.usecase.LogOutUseCase
 import com.vl.messenger.domain.usecase.ObserveAllIncomingMessagesUseCase
+import com.vl.messenger.domain.usecase.RemoveConversationMemberUseCase
 import com.vl.messenger.domain.usecase.RemoveFriendUseCase
 import com.vl.messenger.domain.usecase.SendMessageUseCase
+import com.vl.messenger.domain.usecase.SetConversationMemberRole
 import com.vl.messenger.domain.usecase.SignInUseCase
 import com.vl.messenger.domain.usecase.SignUpUseCase
 import com.vl.messenger.domain.usecase.UpdatePhotoUseCase
@@ -173,10 +177,34 @@ object DependencyHolder {
 
     @Provides
     @Singleton
+    fun provideRemoveConversationMemberUseCase(sessionStore: SessionStore, api: MessengerRestApi) =
+        RemoveConversationMemberUseCase(sessionStore, api)
+
+    @Provides
+    @Singleton
+    fun provideSetConversationMemberRole(sessionStore: SessionStore, api: MessengerRestApi) =
+        SetConversationMemberRole(sessionStore, api)
+
+    @Provides
+    @Singleton
     fun provideGetPagedConversationMembersUseCase(
         sessionStore: SessionStore,
         dialogDataSource: DialogDataSource
     ) = GetPagedConversationMembersUseCase(sessionStore, dialogDataSource)
+
+    @Provides
+    @Singleton
+    fun provideGetOwnConversationRoleUseCase(
+        sessionStore: SessionStore,
+        api: MessengerRestApi
+    ) = GetOwnConversationRoleUseCase(sessionStore, api)
+
+    @Provides
+    @Singleton
+    fun provideGetAvailableRolesUseCase(
+        sessionStore: SessionStore,
+        api: MessengerRestApi
+    ) = GetAvailableRolesUseCase(sessionStore, api)
 
     /* Boundary */
 

@@ -2,15 +2,13 @@ package com.vl.messenger.domain.usecase
 
 import com.vl.messenger.domain.boundary.MessengerRestApi
 import com.vl.messenger.domain.boundary.SessionStore
-import com.vl.messenger.domain.entity.Dialog
-import com.vl.messenger.domain.entity.User
 
-class AddConversationMemberUseCase(
+class RemoveConversationMemberUseCase(
     private val sessionStore: SessionStore,
     private val api: MessengerRestApi
-): SuspendedUseCase<AddConversationMemberUseCase.Param, Unit> {
-    override suspend fun invoke(param: Param): Unit =
-        api.addMemberToConversation(
+): SuspendedUseCase<RemoveConversationMemberUseCase.Param, Unit> {
+    override suspend fun invoke(param: Param) =
+        api.removeMemberFromConversation(
             sessionStore.getToken()!!.token,
             param.dialogId,
             param.userId

@@ -77,6 +77,8 @@
 
     <!-- Dialog -->
     <string name="dialog_member_invited">Новый участник \"%1$s\" добавлен в беседу</string>
+    <string name="dialog_member_removed">Участник \"%1$s\" исключен из беседы</string>
+    <string name="dialog_member_role_set">Участнику \"%1$s\" назначена роль \"%2$s\"</string>
 
     <!-- Dialog menu -->
     <string name="dialog_option_edit">Редактировать</string>

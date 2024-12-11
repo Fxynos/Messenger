@@ -8,6 +8,8 @@ import com.vl.messenger.domain.entity.VerboseUser
 import com.vl.messenger.domain.usecase.AddFriendUseCase
 import com.vl.messenger.domain.usecase.GetUserByIdUseCase
 import com.vl.messenger.domain.usecase.RemoveFriendUseCase
+import com.vl.messenger.ui.utils.launch
+import com.vl.messenger.ui.utils.launchHeavy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -37,27 +39,27 @@ class UserProfileViewModel @Inject constructor(
     private val userId = savedStateHandle.get<Int>(ARG_KEY_USER_ID)!!
 
     init {
-        viewModelScope.launch(Dispatchers.IO) {
+        launchHeavy {
             _uiState.value = getUserByIdUseCase(userId).toUi()
         }
     }
 
     fun addFriend() {
-        viewModelScope.launch(Dispatchers.IO) {
+        launchHeavy {
             addFriendUseCase(userId)
             _uiState.value = getUserByIdUseCase(userId).toUi()
         }
     }
 
     fun removeFriend() {
-        viewModelScope.launch(Dispatchers.IO) {
+        launchHeavy {
             removeFriendUseCase(userId)
             _uiState.value = getUserByIdUseCase(userId).toUi()
         }
     }
 
     fun openDialog() {
-        viewModelScope.launch {
+        launch {
             _events.emit(DataDrivenEvent.NavigateToDialog("u$userId"))
         }
     }

@@ -10,9 +10,7 @@ import com.vl.messenger.domain.boundary.PagingCache
 import com.vl.messenger.domain.entity.Dialog
 import com.vl.messenger.domain.entity.Message
 import com.vl.messenger.domain.entity.User
-import com.vl.messenger.domain.usecase.AddConversationMemberUseCase
 import com.vl.messenger.domain.usecase.GetDialogByIdUseCase
-import com.vl.messenger.domain.usecase.GetFriendsUseCase
 import com.vl.messenger.domain.usecase.GetLoggedUserProfileUseCase
 import com.vl.messenger.domain.usecase.GetPagedMessagesUseCase
 import com.vl.messenger.domain.usecase.GetUserByIdUseCase
@@ -21,8 +19,9 @@ import com.vl.messenger.domain.usecase.ObserveAllIncomingMessagesUseCase
 import com.vl.messenger.domain.usecase.SendMessageUseCase
 import com.vl.messenger.ui.UiMapper.toUi
 import com.vl.messenger.ui.adapter.MessagePagingAdapter
+import com.vl.messenger.ui.utils.launch
+import com.vl.messenger.ui.utils.launchHeavy
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -35,7 +34,6 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 private const val TAG = "DialogViewModel"
@@ -77,7 +75,7 @@ class DialogViewModel @Inject constructor(
     val events = _events.asSharedFlow()
 
     init {
-        viewModelScope.launch(Dispatchers.IO) {
+        launchHeavy {
             loggedUser = getLoggedUserProfileUseCase(Unit).asUser()
             dialog.value = getDialogByIdUseCase(dialogId)
 
@@ -98,7 +96,7 @@ class DialogViewModel @Inject constructor(
         if (messageText.isBlank())
             return
 
-        viewModelScope.launch(Dispatchers.IO) {
+        launchHeavy {
             val sentMessage = sendMessageUseCase(
                 SendMessageUseCase.Param(
                     message = messageText.trim(),
@@ -110,7 +108,7 @@ class DialogViewModel @Inject constructor(
     }
 
     fun leaveConversation() {
-        viewModelScope.launch(Dispatchers.IO) {
+        launchHeavy {
             leaveConversationUseCase(dialogId)
             _events.emit(DataDrivenEvent.NavigateBack)
         }
@@ -120,7 +118,7 @@ class DialogViewModel @Inject constructor(
         if (dialog.value.let { it == null || it.isPrivate }) // unavailable for private dialog
             return
 
-        viewModelScope.launch {
+        launch {
             _events.emit(DataDrivenEvent.NavigateToEditConversation(dialogId))
         }
     }

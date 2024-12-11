@@ -12,7 +12,9 @@ import com.vl.messenger.R
 import com.vl.messenger.databinding.ActivityEditConversationBinding
 import com.vl.messenger.ui.adapter.ConversationMemberPagingAdapter
 import com.vl.messenger.ui.modal.dropPopupOptions
+import com.vl.messenger.ui.modal.dropSelectRoleDialog
 import com.vl.messenger.ui.modal.dropSelectUserDialog
+import com.vl.messenger.ui.utils.setOnClick
 import com.vl.messenger.ui.viewmodel.DialogViewModel
 import com.vl.messenger.ui.viewmodel.EditConversationViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -34,8 +36,8 @@ class EditConversationActivity: AppCompatActivity() {
 
         with(binding) {
             members.adapter = adapter
-            options.setOnClickListener { showPopupOptions() }
-            back.setOnClickListener { viewModel.closeScreen() }
+            options.setOnClick(viewModel::showPopupOptions)
+            back.setOnClick(viewModel::closeScreen)
         }
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -78,6 +80,12 @@ class EditConversationActivity: AppCompatActivity() {
                 Toast.LENGTH_LONG
             ).show()
 
+            is EditConversationViewModel.DataDrivenEvent.NotifyMemberRemoved -> Toast.makeText(
+                this,
+                getString(R.string.dialog_member_removed, event.member.user.login),
+                Toast.LENGTH_LONG
+            ).show()
+
             is EditConversationViewModel.DataDrivenEvent.ShowMemberOptions ->
                 binding.members.dropPopupOptions(
                     *buildList {
@@ -92,12 +100,29 @@ class EditConversationActivity: AppCompatActivity() {
                             })
                     }.toTypedArray()
                 )
-        }
-    }
 
-    private fun showPopupOptions() {
-        binding.options.dropPopupOptions(
-            R.string.dialog_option_invite to Runnable { viewModel.selectMemberToInvite() }
-        )
+            is EditConversationViewModel.DataDrivenEvent.ShowRolesToSet -> dropSelectRoleDialog(
+                event.member.user,
+                event.roles
+            ) { role ->
+                viewModel.setMemberRole(event.member, role)
+            }
+
+            is EditConversationViewModel.DataDrivenEvent.NotifyMemberRoleSet -> Toast.makeText(
+                this,
+                getString(
+                    R.string.dialog_member_role_set,
+                    event.member.user.login,
+                    event.member.role.name
+                ),
+                Toast.LENGTH_LONG
+            ).show()
+
+            is EditConversationViewModel.DataDrivenEvent.ShowPopupOptions ->
+                binding.options.dropPopupOptions(*buildList {
+                    if (event.canInviteMembers)
+                        add(R.string.dialog_option_invite to Runnable { viewModel.selectMemberToInvite() })
+                }.toTypedArray())
+        }
     }
 }

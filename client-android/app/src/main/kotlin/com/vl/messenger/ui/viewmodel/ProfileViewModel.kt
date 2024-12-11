@@ -9,6 +9,8 @@ import com.vl.messenger.domain.usecase.GetLoggedUserProfileUseCase
 import com.vl.messenger.domain.usecase.LogOutUseCase
 import com.vl.messenger.domain.usecase.UpdatePhotoUseCase
 import com.vl.messenger.domain.usecase.UpdateProfileHiddenUseCase
+import com.vl.messenger.ui.utils.launch
+import com.vl.messenger.ui.utils.launchHeavy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -35,7 +37,7 @@ class ProfileViewModel @Inject constructor(
     init { fetchProfile() }
 
     fun logOut() {
-        viewModelScope.launch {
+        launch {
             logOutUseCase(Unit)
             _events.emit(DataDrivenEvent.NavigateToAuthScreen)
         }
@@ -45,7 +47,7 @@ class ProfileViewModel @Inject constructor(
         if (uiState.value is UiState.Loading)
             return
 
-        viewModelScope.launch(Dispatchers.IO) {
+        launchHeavy {
             updatePhotoUseCase(imageUri.toString())
         }.invokeOnCompletion {
             fetchProfile()
@@ -53,7 +55,7 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun setProfileHidden(isHidden: Boolean) {
-        viewModelScope.launch(Dispatchers.IO) {
+        launchHeavy {
             updateProfileHiddenUseCase(isHidden)
         }.invokeOnCompletion {
             fetchProfile()
@@ -61,7 +63,7 @@ class ProfileViewModel @Inject constructor(
     }
 
     fun createConversation(name: String) {
-        viewModelScope.launch(Dispatchers.IO) {
+        launchHeavy {
             try {
                 val id = createConversationUseCase(name)
                 _events.emit(DataDrivenEvent.NavigateToDialog(id))
@@ -72,7 +74,7 @@ class ProfileViewModel @Inject constructor(
     }
 
     private fun fetchProfile() {
-        viewModelScope.launch(Dispatchers.IO) {
+        launchHeavy {
             _uiState.value = getLoggedUserProfileUseCase(Unit).asUiState()
         }
     }
