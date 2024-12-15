@@ -10,6 +10,7 @@ import com.vl.messenger.domain.entity.Dialog
 import com.vl.messenger.domain.entity.Role
 import com.vl.messenger.domain.entity.User
 import com.vl.messenger.domain.usecase.AddConversationMemberUseCase
+import com.vl.messenger.domain.usecase.DownloadConversationReportUseCase
 import com.vl.messenger.domain.usecase.GetAvailableRolesUseCase
 import com.vl.messenger.domain.usecase.GetDialogByIdUseCase
 import com.vl.messenger.domain.usecase.GetFriendsUseCase
@@ -43,13 +44,15 @@ class EditConversationViewModel @Inject constructor(
     private val getFriendsUseCase: GetFriendsUseCase,
     private val getOwnConversationRoleUseCase: GetOwnConversationRoleUseCase,
     private val getAvailableRolesUseCase: GetAvailableRolesUseCase,
-    private val getLoggedUserProfileUseCase: GetLoggedUserProfileUseCase
+    private val getLoggedUserProfileUseCase: GetLoggedUserProfileUseCase,
+    private val downloadConversationReportUseCase: DownloadConversationReportUseCase
 ): ViewModel() {
     companion object {
         const val ARG_DIALOG_ID = "dialogId"
     }
 
     @Volatile private var collectMembersJob: Job? = null
+    @Volatile private var isDownloadingReport = false
 
     /* Internal State */
     private val dialogId: String = savedStateHandle[ARG_DIALOG_ID]!!
@@ -97,7 +100,10 @@ class EditConversationViewModel @Inject constructor(
 
     fun showPopupOptions() {
         launch {
-            DataDrivenEvent.ShowPopupOptions(ownRole.canEditMembers) sendTo _events
+            DataDrivenEvent.ShowPopupOptions(
+                ownRole.canEditMembers,
+                ownRole.canGetReports
+            ) sendTo _events
         }
     }
 
@@ -117,6 +123,21 @@ class EditConversationViewModel @Inject constructor(
             DataDrivenEvent.ShowFriendsToInviteDialog(
                 getFriendsUseCase(Unit)
             ) sendTo _events
+        }
+    }
+
+    fun downloadReport() {
+        if (isDownloadingReport)
+            return
+
+        isDownloadingReport = true
+        launchHeavy {
+            DataDrivenEvent.NotifyDownloadingReport sendTo _events
+            downloadConversationReportUseCase(dialogId)
+            DataDrivenEvent.NotifyReportDownloaded(
+                "/Downloads/Messenger/report.pdf" // TODO return path from use case
+            ) sendTo _events
+            isDownloadingReport = false
         }
     }
 
@@ -180,7 +201,10 @@ class EditConversationViewModel @Inject constructor(
 
     sealed interface DataDrivenEvent {
         data class NavigateBack(val dialogId: String): DataDrivenEvent
-        data class ShowPopupOptions(val canInviteMembers: Boolean): DataDrivenEvent
+        data class ShowPopupOptions(
+            val canInviteMembers: Boolean,
+            val canDownloadReports: Boolean
+        ): DataDrivenEvent
         data class ShowFriendsToInviteDialog(val users: List<User>): DataDrivenEvent
         data class NotifyMemberAdded(val member: User): DataDrivenEvent
         data class NotifyMemberRemoved(val member: ConversationMember): DataDrivenEvent
@@ -191,5 +215,7 @@ class EditConversationViewModel @Inject constructor(
             val canRoleBeAssigned: Boolean
         ): DataDrivenEvent
         data class ShowRolesToSet(val member: ConversationMember, val roles: List<Role>): DataDrivenEvent
+        data object NotifyDownloadingReport: DataDrivenEvent
+        data class NotifyReportDownloaded(val pathToFile: String): DataDrivenEvent
     }
 }

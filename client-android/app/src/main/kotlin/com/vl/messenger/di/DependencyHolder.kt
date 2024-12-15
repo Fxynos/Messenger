@@ -19,7 +19,7 @@ import com.vl.messenger.domain.boundary.UserDataSource
 import com.vl.messenger.domain.usecase.AddConversationMemberUseCase
 import com.vl.messenger.domain.usecase.AddFriendUseCase
 import com.vl.messenger.domain.usecase.CreateConversationUseCase
-import com.vl.messenger.domain.usecase.DownloadFileUseCase
+import com.vl.messenger.domain.usecase.DownloadConversationReportUseCase
 import com.vl.messenger.domain.usecase.GetAvailableRolesUseCase
 import com.vl.messenger.domain.usecase.GetDialogByIdUseCase
 import com.vl.messenger.domain.usecase.GetFriendsUseCase
@@ -74,10 +74,6 @@ object DependencyHolder {
     @Singleton
     fun provideAddFriendUseCase(sessionStore: SessionStore, api: MessengerRestApi) =
         AddFriendUseCase(sessionStore, api)
-
-    @Provides
-    @Singleton
-    fun provideDownloadFileUseCase(api: MessengerRestApi) = DownloadFileUseCase(api)
 
     @Provides
     @Singleton
@@ -205,6 +201,14 @@ object DependencyHolder {
         sessionStore: SessionStore,
         api: MessengerRestApi
     ) = GetAvailableRolesUseCase(sessionStore, api)
+
+    @Provides
+    @Singleton
+    fun provideDownloadConversationReportUseCase(
+        sessionStore: SessionStore,
+        api: MessengerRestApi,
+        fileStorageAccessor: FileStorageAccessor
+    ) = DownloadConversationReportUseCase(sessionStore, api, fileStorageAccessor)
 
     /* Boundary */
 

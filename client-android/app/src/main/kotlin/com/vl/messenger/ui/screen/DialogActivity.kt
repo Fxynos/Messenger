@@ -3,7 +3,6 @@ package com.vl.messenger.ui.screen
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
@@ -17,7 +16,6 @@ import com.vl.messenger.databinding.ActivityDialogBinding
 import com.vl.messenger.ui.adapter.MessagePagingAdapter
 import com.vl.messenger.ui.modal.dropConfirmationDialog
 import com.vl.messenger.ui.modal.dropPopupOptions
-import com.vl.messenger.ui.modal.dropSelectUserDialog
 import com.vl.messenger.ui.viewmodel.DialogViewModel
 import com.vl.messenger.ui.viewmodel.EditConversationViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -112,7 +110,7 @@ private val viewModel: DialogViewModel by viewModels()
 
         binding.options.dropPopupOptions(*buildList {
             if (dialog != null && !dialog.isPrivate) { // conversation-only
-                add(R.string.dialog_option_edit to Runnable { viewModel.editConversation() })
+                add(R.string.dialog_option_details to Runnable { viewModel.editConversation() })
                 add(R.string.dialog_option_leave to Runnable {
                     dropConfirmationDialog(
                         title = R.string.dialog_option_leave_title,

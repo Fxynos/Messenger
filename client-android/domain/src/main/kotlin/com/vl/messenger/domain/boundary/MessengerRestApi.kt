@@ -13,8 +13,6 @@ import java.io.InputStream
 
 interface MessengerRestApi {
 
-    suspend fun downloadFile(url: String): InputStream
-
     /* Auth */
 
     suspend fun signIn(login: String, password: String): SignInResult
@@ -80,4 +78,5 @@ interface MessengerRestApi {
     suspend fun setConversationMemberRole(token: String, dialogId: String, userId: Int, role: Int)
     suspend fun getConversationRoles(token: String, dialogId: String): List<Role>
     suspend fun getOwnConversationRole(token: String, dialogId: String): Role
+    suspend fun getConversationReport(token: String, dialogId: String): InputStream
 }

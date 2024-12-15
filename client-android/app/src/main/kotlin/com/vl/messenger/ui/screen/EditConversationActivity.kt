@@ -122,7 +122,22 @@ class EditConversationActivity: AppCompatActivity() {
                 binding.options.dropPopupOptions(*buildList {
                     if (event.canInviteMembers)
                         add(R.string.dialog_option_invite to Runnable { viewModel.selectMemberToInvite() })
+
+                    if (event.canDownloadReports)
+                        add(R.string.dialog_option_download_report to Runnable { viewModel.downloadReport() })
                 }.toTypedArray())
+
+            EditConversationViewModel.DataDrivenEvent.NotifyDownloadingReport -> Toast.makeText(
+                this,
+                R.string.conversation_report_downloading,
+                Toast.LENGTH_LONG
+            ).show()
+
+            is EditConversationViewModel.DataDrivenEvent.NotifyReportDownloaded -> Toast.makeText(
+                this,
+                getString(R.string.conversation_report_downloaded, event.pathToFile),
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 }

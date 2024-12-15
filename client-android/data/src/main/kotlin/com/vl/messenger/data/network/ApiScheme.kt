@@ -31,9 +31,6 @@ import retrofit2.http.Streaming
 import retrofit2.http.Url
 
 internal interface ApiScheme {
-    @Streaming
-    @GET
-    suspend fun download(@Url url: String): ResponseBody
 
     /* Auth */
 
@@ -182,4 +179,11 @@ internal interface ApiScheme {
         @Header("Authorization") auth: String,
         @Path("id") conversationId: Long
     ): StatusResponse<RoleResponse>
+
+    @Streaming
+    @GET("/conversations/{id}/report")
+    suspend fun getConversationReport(
+        @Header("Authorization") auth: String,
+        @Path("id") conversationId: Long
+    ): ResponseBody
 }

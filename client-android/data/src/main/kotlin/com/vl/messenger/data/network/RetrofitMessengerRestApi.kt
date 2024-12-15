@@ -32,8 +32,6 @@ class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
 
     private val api = retrofit.create(ApiScheme::class.java)
 
-    override suspend fun downloadFile(url: String): InputStream = api.download(url).byteStream()
-
     /* Auth */
 
     override suspend fun signIn(login: String, password: String): SignInResult =
@@ -216,4 +214,8 @@ class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
         api.getOwnConversationRole(token.toBearerAuthHeader(), dialogId.toConversationId())
             .requireResponse()
             .role.toDomain()
+
+    override suspend fun getConversationReport(token: String, dialogId: String): InputStream =
+        api.getConversationReport(token.toBearerAuthHeader(), dialogId.toConversationId())
+            .byteStream()
 }

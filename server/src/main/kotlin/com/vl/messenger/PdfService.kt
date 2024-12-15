@@ -6,6 +6,7 @@ import com.itextpdf.text.pdf.PdfPCell
 import com.itextpdf.text.pdf.PdfPTable
 import com.itextpdf.text.pdf.PdfWriter
 import org.springframework.stereotype.Service
+import java.io.File
 import java.io.OutputStream
 import java.util.stream.Stream
 
@@ -39,9 +40,10 @@ class PdfService {
             }
             /* Regular rows */
             activity.forEach { row ->
-                row.user.image?.let {
-                    addCell(Image.getInstance("static/$it"))
-                } ?: addCell(Phrase("Нет", FONT))
+                row.user.image
+                    ?.takeIf { File(it).exists() }
+                    ?.let { addCell(Image.getInstance("static/$it")) }
+                    ?: addCell(Phrase("Нет", FONT))
                 Stream.of(
                     row.user.login,
                     row.messages.toString(),
