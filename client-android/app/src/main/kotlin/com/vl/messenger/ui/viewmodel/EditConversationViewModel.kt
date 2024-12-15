@@ -1,5 +1,6 @@
 package com.vl.messenger.ui.viewmodel
 
+import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -19,6 +20,8 @@ import com.vl.messenger.domain.usecase.GetOwnConversationRoleUseCase
 import com.vl.messenger.domain.usecase.GetPagedConversationMembersUseCase
 import com.vl.messenger.domain.usecase.RemoveConversationMemberUseCase
 import com.vl.messenger.domain.usecase.SetConversationMemberRole
+import com.vl.messenger.domain.usecase.UpdateConversationImageUseCase
+import com.vl.messenger.domain.usecase.UpdateConversationNameUseCase
 import com.vl.messenger.ui.utils.fetch
 import com.vl.messenger.ui.utils.launch
 import com.vl.messenger.ui.utils.launchHeavy
@@ -45,7 +48,9 @@ class EditConversationViewModel @Inject constructor(
     private val getOwnConversationRoleUseCase: GetOwnConversationRoleUseCase,
     private val getAvailableRolesUseCase: GetAvailableRolesUseCase,
     private val getLoggedUserProfileUseCase: GetLoggedUserProfileUseCase,
-    private val downloadConversationReportUseCase: DownloadConversationReportUseCase
+    private val downloadConversationReportUseCase: DownloadConversationReportUseCase,
+    private val updateConversationNameUseCase: UpdateConversationNameUseCase,
+    private val updateConversationImageUseCase: UpdateConversationImageUseCase
 ): ViewModel() {
     companion object {
         const val ARG_DIALOG_ID = "dialogId"
@@ -101,8 +106,10 @@ class EditConversationViewModel @Inject constructor(
     fun showPopupOptions() {
         launch {
             DataDrivenEvent.ShowPopupOptions(
-                ownRole.canEditMembers,
-                ownRole.canGetReports
+                canInviteMembers = ownRole.canEditMembers,
+                canDownloadReports = ownRole.canGetReports,
+                canEditName = ownRole.canEditData,
+                canEditImage = ownRole.canEditData
             ) sendTo _events
         }
     }
@@ -184,13 +191,37 @@ class EditConversationViewModel @Inject constructor(
         }
     }
 
+    fun setConversationName(name: String) {
+        launchHeavy {
+            updateConversationNameUseCase(UpdateConversationNameUseCase.Param(
+                dialogId,
+                name
+            ))
+            invalidateConversation()
+        }
+    }
+
+    fun setConversationImage(uri: Uri) {
+        launchHeavy {
+            updateConversationImageUseCase(UpdateConversationImageUseCase.Param(
+                dialogId,
+                uri.toString())
+            )
+            invalidateConversation()
+        }
+    }
+
     private suspend fun invalidateMembers() {
         collectMembersJob?.cancelAndJoin()
-        collectMembersJob = launch {
+        collectMembersJob = launchHeavy {
             getPagedConversationMembersUseCase(dialogId)
                 .cachedIn(viewModelScope)
                 .collectLatest(members::emit)
         }
+    }
+
+    private suspend fun invalidateConversation() {
+        launchHeavy { dialog.value = getDialogByIdUseCase(dialogId) }
     }
 
     data class UiState(
@@ -203,7 +234,9 @@ class EditConversationViewModel @Inject constructor(
         data class NavigateBack(val dialogId: String): DataDrivenEvent
         data class ShowPopupOptions(
             val canInviteMembers: Boolean,
-            val canDownloadReports: Boolean
+            val canDownloadReports: Boolean,
+            val canEditName: Boolean,
+            val canEditImage: Boolean
         ): DataDrivenEvent
         data class ShowFriendsToInviteDialog(val users: List<User>): DataDrivenEvent
         data class NotifyMemberAdded(val member: User): DataDrivenEvent

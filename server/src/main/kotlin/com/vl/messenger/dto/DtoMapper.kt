@@ -24,7 +24,7 @@ object DtoMapper {
         dialog = DialogResponse.DialogDto(
             id = "${if (isPrivate) "u" else "c"}$id",
             title = title,
-            image = image
+            image = image at baseUrl
         ),
         lastMessage = lastMessage?.run {
             DialogResponse.MessageDto(

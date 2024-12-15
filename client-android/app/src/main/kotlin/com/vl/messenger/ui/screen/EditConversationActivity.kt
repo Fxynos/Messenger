@@ -4,6 +4,9 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -14,6 +17,7 @@ import com.vl.messenger.ui.adapter.ConversationMemberPagingAdapter
 import com.vl.messenger.ui.modal.dropPopupOptions
 import com.vl.messenger.ui.modal.dropSelectRoleDialog
 import com.vl.messenger.ui.modal.dropSelectUserDialog
+import com.vl.messenger.ui.modal.dropTextInputDialog
 import com.vl.messenger.ui.utils.setOnClick
 import com.vl.messenger.ui.viewmodel.DialogViewModel
 import com.vl.messenger.ui.viewmodel.EditConversationViewModel
@@ -28,11 +32,22 @@ class EditConversationActivity: AppCompatActivity() {
     private lateinit var binding: ActivityEditConversationBinding
     private lateinit var adapter: ConversationMemberPagingAdapter
 
+    private lateinit var pickMediaRequestLauncher: ActivityResultLauncher<PickVisualMediaRequest>
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         adapter = ConversationMemberPagingAdapter(this, viewModel::showMemberOptions)
         binding = ActivityEditConversationBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        pickMediaRequestLauncher = registerForActivityResult(
+            ActivityResultContracts.PickVisualMedia()
+        ) {
+            if (it == null)
+                Toast.makeText(this, getString(R.string.cancelled), Toast.LENGTH_SHORT).show()
+            else
+                viewModel.setConversationImage(it)
+        }
 
         with(binding) {
             members.adapter = adapter
@@ -125,6 +140,16 @@ class EditConversationActivity: AppCompatActivity() {
 
                     if (event.canDownloadReports)
                         add(R.string.dialog_option_download_report to Runnable { viewModel.downloadReport() })
+
+                    if (event.canEditName)
+                        add(R.string.dialog_change_name to Runnable { showChangeNamePopup() })
+
+                    if (event.canEditImage)
+                        add(R.string.dialog_change_image to Runnable {
+                            pickMediaRequestLauncher.launch(PickVisualMediaRequest(
+                                ActivityResultContracts.PickVisualMedia.ImageOnly
+                            ))
+                        })
                 }.toTypedArray())
 
             EditConversationViewModel.DataDrivenEvent.NotifyDownloadingReport -> Toast.makeText(
@@ -138,6 +163,17 @@ class EditConversationActivity: AppCompatActivity() {
                 getString(R.string.conversation_report_downloaded, event.pathToFile),
                 Toast.LENGTH_LONG
             ).show()
+        }
+    }
+
+    private fun showChangeNamePopup() {
+        dropTextInputDialog(
+            R.string.set_conversation_name_title,
+            R.string.set_conversation_name_input_hint,
+            R.string.set_conversation_name_ok,
+            R.string.set_conversation_name_cancel
+        ) {
+            viewModel.setConversationName(it)
         }
     }
 }

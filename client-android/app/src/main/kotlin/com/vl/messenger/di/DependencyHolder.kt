@@ -40,6 +40,8 @@ import com.vl.messenger.domain.usecase.SendMessageUseCase
 import com.vl.messenger.domain.usecase.SetConversationMemberRole
 import com.vl.messenger.domain.usecase.SignInUseCase
 import com.vl.messenger.domain.usecase.SignUpUseCase
+import com.vl.messenger.domain.usecase.UpdateConversationImageUseCase
+import com.vl.messenger.domain.usecase.UpdateConversationNameUseCase
 import com.vl.messenger.domain.usecase.UpdatePhotoUseCase
 import com.vl.messenger.domain.usecase.UpdateProfileHiddenUseCase
 import dagger.Module
@@ -210,6 +212,21 @@ object DependencyHolder {
         fileStorageAccessor: FileStorageAccessor
     ) = DownloadConversationReportUseCase(sessionStore, api, fileStorageAccessor)
 
+    @Provides
+    @Singleton
+    fun provideUpdateConversationNameUseCase(
+        sessionStore: SessionStore,
+        api: MessengerRestApi
+    ) = UpdateConversationNameUseCase(sessionStore, api)
+
+    @Provides
+    @Singleton
+    fun provideUpdateConversationImageUseCase(
+        sessionStore: SessionStore,
+        api: MessengerRestApi,
+        fileStorageAccessor: FileStorageAccessor
+    ) = UpdateConversationImageUseCase(sessionStore, api, fileStorageAccessor)
+
     /* Boundary */
 
     @Provides
@@ -254,7 +271,10 @@ object DependencyHolder {
                 .addInterceptor { chain ->
                     chain.proceed(
                         chain.request().newBuilder()
+                            // server-side localization
                             .header("Accept-Language", Locale.getDefault().language)
+                            // fix `java.io.IOException: unexpected end of stream`
+                            .header("Connection", "close")
                             .build()
                     )
                 }

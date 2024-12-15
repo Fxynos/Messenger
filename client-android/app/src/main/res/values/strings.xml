@@ -64,6 +64,11 @@
     <string name="dialog_create_conversation_cancel">Отмена</string>
     <string name="dialog_create_conversation_ok">Создать</string>
 
+    <string name="set_conversation_name_title">Переименовать беседу</string>
+    <string name="set_conversation_name_input_hint">Название беседы</string>
+    <string name="set_conversation_name_cancel">Отмена</string>
+    <string name="set_conversation_name_ok">Сменить</string>
+
     <string name="dialog_invite_title">Пригласить в беседу</string>
     <string name="dialog_invite_cancel">Отмена</string>
     <string name="dialog_invite_ok">Выбрать</string>
@@ -82,6 +87,8 @@
     <string name="dialog_option_details">Подробности</string>
     <string name="dialog_option_invite">Пригласить друга</string>
     <string name="dialog_option_leave">Покинуть диалог</string>
+    <string name="dialog_change_name">Сменить название</string>
+    <string name="dialog_change_image">Сменить изборажение</string>
     <string name="dialog_option_download_report">Отчет об активности</string>
 
     <string name="dialog_option_leave_title">Покинуть диалог?</string>

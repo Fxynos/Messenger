@@ -79,4 +79,6 @@ interface MessengerRestApi {
     suspend fun getConversationRoles(token: String, dialogId: String): List<Role>
     suspend fun getOwnConversationRole(token: String, dialogId: String): Role
     suspend fun getConversationReport(token: String, dialogId: String): InputStream
+    suspend fun setConversationName(token: String, dialogId: String, name: String)
+    suspend fun uploadConversationImage(token: String, dialogId: String, image: ByteArray)
 }

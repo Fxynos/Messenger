@@ -74,7 +74,7 @@ class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
             .toDomain()
 
     override suspend fun uploadPhoto(token: String, image: ByteArray) =
-        api.uploadPhoto(
+        api.uploadProfileImage(
             token.toBearerAuthHeader(),
             MultipartBody.Part.createFormData(
                 "image",
@@ -218,4 +218,21 @@ class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
     override suspend fun getConversationReport(token: String, dialogId: String): InputStream =
         api.getConversationReport(token.toBearerAuthHeader(), dialogId.toConversationId())
             .byteStream()
+
+    override suspend fun setConversationName(token: String, dialogId: String, name: String): Unit =
+        api.setConversationName(token.toBearerAuthHeader(), dialogId.toConversationId(), name)
+
+    override suspend fun uploadConversationImage(
+        token: String,
+        dialogId: String,
+        image: ByteArray
+    ): Unit = api.uploadConversationImage(
+        token.toBearerAuthHeader(),
+        dialogId.toConversationId(),
+        MultipartBody.Part.createFormData(
+            "image",
+            "conversation_profile",
+            image.toRequestBody("image/png".toMediaType())
+        )
+    )
 }

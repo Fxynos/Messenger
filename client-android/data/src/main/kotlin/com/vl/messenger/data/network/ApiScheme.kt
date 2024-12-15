@@ -28,7 +28,6 @@ import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 import retrofit2.http.Streaming
-import retrofit2.http.Url
 
 internal interface ApiScheme {
 
@@ -48,7 +47,7 @@ internal interface ApiScheme {
 
     @POST("/users/me/set-image")
     @Multipart
-    suspend fun uploadPhoto(
+    suspend fun uploadProfileImage(
         @Header("Authorization") auth: String,
         @Part image: MultipartBody.Part
     )
@@ -186,4 +185,19 @@ internal interface ApiScheme {
         @Header("Authorization") auth: String,
         @Path("id") conversationId: Long
     ): ResponseBody
+
+    @PUT("/conversations/{id}/set-name")
+    suspend fun setConversationName(
+        @Header("Authorization") auth: String,
+        @Path("id") conversationId: Long,
+        @Query("name") name: String
+    )
+
+    @POST("/conversations/{id}/set-image")
+    @Multipart
+    suspend fun uploadConversationImage(
+        @Header("Authorization") auth: String,
+        @Path("id") conversationId: Long,
+        @Part image: MultipartBody.Part
+    )
 }

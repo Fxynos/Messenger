@@ -5,20 +5,20 @@ import com.vl.messenger.domain.boundary.FileStorageAccessor
 import com.vl.messenger.domain.boundary.MessengerRestApi
 import com.vl.messenger.domain.boundary.SessionStore
 
-class UpdatePhotoUseCase(
+class UpdateConversationImageUseCase(
     private val sessionStore: SessionStore,
     private val api: MessengerRestApi,
     private val fileStorageAccessor: FileStorageAccessor
-): SuspendedUseCase<String, Unit> {
-    /**
-     * @param param uri to local file
-     */
-    override suspend fun invoke(param: String) {
-        api.uploadPhoto(
+): SuspendedUseCase<UpdateConversationImageUseCase.Param, Unit> {
+
+    override suspend fun invoke(param: Param): Unit =
+        api.uploadConversationImage(
             sessionStore.getToken()!!.token,
+            param.dialogId,
             fileStorageAccessor
-                .readFile(param)
+                .readFile(param.imageUri)
                 .asByteArray()
         )
-    }
+
+    data class Param(val dialogId: String, val imageUri: String)
 }

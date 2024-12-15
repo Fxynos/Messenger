@@ -11,16 +11,14 @@ import androidx.annotation.IdRes
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
-import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import coil.load
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.vl.messenger.R
 import com.vl.messenger.databinding.ActivityMenuBinding
-import com.vl.messenger.databinding.DialogCreateConversationBinding
 import com.vl.messenger.databinding.ItemUserBinding
 import com.vl.messenger.ui.modal.dropPopupOptions
+import com.vl.messenger.ui.modal.dropTextInputDialog
 import com.vl.messenger.ui.viewmodel.DialogViewModel
 import com.vl.messenger.ui.viewmodel.ProfileViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -161,21 +159,13 @@ class MenuActivity: AppCompatActivity() {
     }
 
     private fun showCreateConversationDialog() {
-        val binding = DialogCreateConversationBinding.inflate(layoutInflater)
-        val dialog = MaterialAlertDialogBuilder(this)
-            .setView(binding.root)
-            .show()
-
-        binding.create.isEnabled = false
-        binding.input.addTextChangedListener(onTextChanged = { text, _, _, _ ->
-            binding.create.isEnabled = !text.isNullOrBlank()
-        })
-
-        binding.cancel.setOnClickListener { dialog.dismiss() }
-        binding.create.setOnClickListener {
-            val conversationName = binding.input.text.toString().trim()
-            viewModel.createConversation(conversationName)
-            dialog.dismiss()
+        dropTextInputDialog(
+            R.string.dialog_create_conversation_title,
+            R.string.dialog_create_conversation_input_hint,
+            R.string.dialog_create_conversation_ok,
+            R.string.dialog_create_conversation_cancel
+        ) {
+            viewModel.createConversation(it)
         }
     }
 }
