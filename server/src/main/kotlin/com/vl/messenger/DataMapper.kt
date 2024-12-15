@@ -824,7 +824,7 @@ class DataMapper {
     class ConversationMember(id: Int, login: String, image: String?, val role: Role): User(id, login, image) {
         class Role(
             val id: Int,
-            val name: String,
+            @StringRes val name: String,
             val canGetReports: Boolean,
             val canEditData: Boolean,
             val canEditMembers: Boolean,

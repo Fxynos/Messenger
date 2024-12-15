@@ -1,6 +1,6 @@
 package com.vl.messenger.chat
 
-import com.vl.messenger.chat.DtoMapper.toDto
+import com.vl.messenger.dto.DtoMapper.toDto
 import com.vl.messenger.chat.dto.CreateConversationResponse
 import com.vl.messenger.chat.dto.MembersResponse
 import com.vl.messenger.chat.dto.RoleResponse
@@ -11,11 +11,13 @@ import com.vl.messenger.userId
 import jakarta.validation.constraints.NotBlank
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.MessageSource
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
+import java.util.Locale
 
 /**
  * Provides interface to create and manage conversations.
@@ -27,7 +29,8 @@ import org.springframework.web.multipart.MultipartFile
 @RequestMapping("/conversations")
 class ConversationController(
     @Value("\${base.url}") private val baseUrl: String,
-    @Autowired private val service: ConversationService
+    @Autowired private val service: ConversationService,
+    @Autowired private val messageSource: MessageSource
 ) {
 
     @PostMapping
@@ -79,6 +82,7 @@ class ConversationController(
 
     @GetMapping("/{id}/members")
     fun getMembers(
+        locale: Locale,
         @PathVariable("id") conversationId: Long,
         @RequestParam(defaultValue = "0") offset: Int,
         @RequestParam(defaultValue = "50") limit: Int
@@ -91,11 +95,7 @@ class ConversationController(
                 statusOf(HttpStatus.NOT_FOUND, "No conversation")
 
             is ConversationService.GetMembersResult.Success ->
-                statusOf(
-                    payload = result.members.map {
-                        MembersResponse.Member(it.id, it.login, "$baseUrl/${it.image}", it.role.toDto())
-                    }.let(::MembersResponse)
-                )
+                statusOf(payload = result.members.toDto(messageSource, locale, baseUrl))
         }
     }
 
@@ -143,23 +143,29 @@ class ConversationController(
         }
 
     @GetMapping("/{id}/roles") // in the future, roles can become specific for conversations
-    fun getRoles(@PathVariable("id") conversationId: Long): ResponseEntity<StatusResponse<RolesResponse>> =
+    fun getRoles(
+        locale: Locale,
+        @PathVariable("id") conversationId: Long
+    ): ResponseEntity<StatusResponse<RolesResponse>> =
         when (val result = service.getRoles(userId, conversationId)) {
             ConversationService.CommonResultValue.NoPrivilege ->
                 statusOf(HttpStatus.FORBIDDEN, "You're not participant")
 
             is ConversationService.CommonResultValue.Success ->
-                statusOf(payload = result.value.toDto())
+                statusOf(payload = result.value.toDto(messageSource, locale))
         }
 
     @GetMapping("/{id}/roles/mine")
-    fun getOwnRole(@PathVariable("id") conversationId: Long): ResponseEntity<StatusResponse<RoleResponse>> =
+    fun getOwnRole(
+        locale: Locale,
+        @PathVariable("id") conversationId: Long
+    ): ResponseEntity<StatusResponse<RoleResponse>> =
         when (val result = service.getRole(userId, conversationId)) {
             ConversationService.CommonResultValue.NoPrivilege ->
                 statusOf(HttpStatus.FORBIDDEN, "You're not participant")
 
             is ConversationService.CommonResultValue.Success ->
-                statusOf(payload = RoleResponse(result.value.toDto()))
+                statusOf(payload = RoleResponse(result.value.toDto(messageSource, locale)))
         }
 
     @GetMapping("/{id}/report", produces = [MediaType.APPLICATION_PDF_VALUE])

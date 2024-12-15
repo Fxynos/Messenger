@@ -19,20 +19,12 @@ fun <T> statusOf(
 val userId: Int
     get() = SecurityContextHolder.getContext().authentication.principal as Int
 
-fun DataMapper.User.toDto(baseUrl: String) = UsersResponse.UserDto(
-    id,
-    login,
-    image at baseUrl
-)
-
-fun DataMapper.VerboseUser.toDto(baseUrl: String) = ProfileResponse(
-    id,
-    login,
-    image at baseUrl,
-    isHidden
-)
-
 fun Long.asConversationDialogId() = "c$this"
 fun Int.asPrivateDialogId() = "u$this"
 
-private infix fun String?.at(baseUrl: String) = this?.let { "$baseUrl/$it" }
+/**
+ * Used to mark localization codes of message source
+ */
+@Target(AnnotationTarget.VALUE_PARAMETER)
+@Retention(AnnotationRetention.SOURCE)
+annotation class StringRes

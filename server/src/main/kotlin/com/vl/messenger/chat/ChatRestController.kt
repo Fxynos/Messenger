@@ -1,7 +1,7 @@
 package com.vl.messenger.chat
 
 import com.vl.messenger.DataMapper
-import com.vl.messenger.chat.DtoMapper.toDto
+import com.vl.messenger.dto.DtoMapper.toDto
 import com.vl.messenger.chat.dto.DialogResponse
 import com.vl.messenger.chat.dto.MessageForm
 import com.vl.messenger.chat.dto.MessagesResponse

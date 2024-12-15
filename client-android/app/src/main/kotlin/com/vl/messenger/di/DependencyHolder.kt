@@ -247,10 +247,6 @@ object DependencyHolder {
         .addConverterFactory(GsonConverterFactory.create())
         .client(
             OkHttpClient.Builder()
-                .addInterceptor(
-                    HttpLoggingInterceptor()
-                        .setLevel(HttpLoggingInterceptor.Level.BODY)
-                )
                 .addInterceptor { chain ->
                     chain.proceed(
                         chain.request().newBuilder()
@@ -258,6 +254,10 @@ object DependencyHolder {
                             .build()
                     )
                 }
+                .addInterceptor(
+                    HttpLoggingInterceptor()
+                        .setLevel(HttpLoggingInterceptor.Level.BODY)
+                )
                 .build()
         ).build()
 }
