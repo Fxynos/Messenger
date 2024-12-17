@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Мессенджер</string>
+    <string name="app_name">Kinda Messenger</string>
     <string name="sign_in">Войти</string>
     <string name="sign_in_hint">Войдите, чтобы получить доступ к функционалу</string>
     <string name="username">Логин</string>
