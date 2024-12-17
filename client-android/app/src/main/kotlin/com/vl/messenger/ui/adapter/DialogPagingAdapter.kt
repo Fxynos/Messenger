@@ -8,6 +8,7 @@ import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
+import coil.request.CachePolicy
 import com.vl.messenger.R
 import com.vl.messenger.databinding.ItemUserBinding
 import com.vl.messenger.ui.entity.DialogUi
@@ -19,7 +20,7 @@ class DialogPagingAdapter(
 
     companion object: DiffUtil.ItemCallback<DialogUi>() {
         override fun areItemsTheSame(oldItem: DialogUi, newItem: DialogUi): Boolean =
-            oldItem.id == newItem.id
+            oldItem === newItem
 
         override fun areContentsTheSame(oldItem: DialogUi, newItem: DialogUi): Boolean =
             oldItem == newItem
@@ -56,7 +57,7 @@ class DialogPagingAdapter(
                         item.lastMessageSenderName
                     )
 
-                image.load(item.imageUrl)
+                image.load(item.imageUrl) { memoryCachePolicy(CachePolicy.DISABLED) }
             }
         }
     }

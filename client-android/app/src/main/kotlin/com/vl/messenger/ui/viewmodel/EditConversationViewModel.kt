@@ -31,9 +31,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 @HiltViewModel
@@ -63,6 +65,8 @@ class EditConversationViewModel @Inject constructor(
     private val dialogId: String = savedStateHandle[ARG_DIALOG_ID]!!
     private val dialog = MutableStateFlow<Dialog?>(null)
     private val members = MutableStateFlow<PagingData<ConversationMember>>(PagingData.empty())
+    private val forceUpdate = MutableStateFlow(System.currentTimeMillis())
+
     private val ownRole: Role by fetch(Role(
         id = 0,
         name = "",
@@ -82,13 +86,14 @@ class EditConversationViewModel @Inject constructor(
 
     private val _events = MutableSharedFlow<DataDrivenEvent>()
     val events = _events.asSharedFlow()
-    val uiState = combine(dialog, members) { dialog, members ->
+    val uiState = combine(dialog, members, forceUpdate) { dialog, members, forceUpdate ->
         UiState(
             name = dialog?.title,
             imageUrl = dialog?.image,
-            members = members
+            members = members,
+            rev = forceUpdate
         )
-    }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, UiState())
 
     init {
         launchHeavy {
@@ -221,13 +226,17 @@ class EditConversationViewModel @Inject constructor(
     }
 
     private suspend fun invalidateConversation() {
-        launchHeavy { dialog.value = getDialogByIdUseCase(dialogId) }
+        launchHeavy {
+            dialog.value = getDialogByIdUseCase(dialogId)
+            System.currentTimeMillis() sendTo forceUpdate
+        }
     }
 
     data class UiState(
-        val name: String?,
-        val imageUrl: String?,
-        val members: PagingData<ConversationMember>
+        val name: String? = null,
+        val imageUrl: String? = null,
+        val members: PagingData<ConversationMember> = PagingData.empty(),
+        private val rev: Long = System.currentTimeMillis()
     )
 
     sealed interface DataDrivenEvent {

@@ -11,6 +11,7 @@ import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
+import coil.request.CachePolicy
 import com.vl.messenger.R
 import com.vl.messenger.databinding.ActivityDialogBinding
 import com.vl.messenger.ui.adapter.MessagePagingAdapter
@@ -73,7 +74,7 @@ private val viewModel: DialogViewModel by viewModels()
             }
             is DialogViewModel.UiState.Loaded -> with(binding) {
                 name.text = state.dialogName
-                image.load(state.dialogImageUrl)
+                image.load(state.dialogImageUrl) { memoryCachePolicy(CachePolicy.DISABLED) }
                 adapter.submitData(state.messages)
             }
         }

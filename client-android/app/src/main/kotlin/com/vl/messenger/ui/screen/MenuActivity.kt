@@ -14,6 +14,7 @@ import androidx.core.view.GravityCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import coil.load
+import coil.request.CachePolicy
 import com.vl.messenger.R
 import com.vl.messenger.databinding.ActivityMenuBinding
 import com.vl.messenger.databinding.ItemUserBinding
@@ -83,7 +84,7 @@ class MenuActivity: AppCompatActivity() {
         when (state) {
             is ProfileViewModel.UiState.Loaded -> {
                 with(drawerHeaderBinding) {
-                    image.load(state.imageUrl)
+                    image.load(state.imageUrl) { memoryCachePolicy(CachePolicy.DISABLED) }
                     title.text = state.name
                 }
             }

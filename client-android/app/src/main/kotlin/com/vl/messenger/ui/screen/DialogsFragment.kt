@@ -49,4 +49,9 @@ class DialogsFragment: Fragment() {
             }
         }
     }
+
+    override fun onStart() {
+        super.onStart()
+        adapter.refresh()
+    }
 }

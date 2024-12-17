@@ -11,6 +11,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import coil.load
+import coil.request.CachePolicy
 import com.vl.messenger.R
 import com.vl.messenger.databinding.ActivityEditConversationBinding
 import com.vl.messenger.ui.adapter.ConversationMemberPagingAdapter
@@ -69,7 +70,7 @@ class EditConversationActivity: AppCompatActivity() {
     private suspend fun updateState(state: EditConversationViewModel.UiState) {
         with(binding) {
             name.text = state.name
-            image.load(state.imageUrl)
+            image.load(state.imageUrl) { memoryCachePolicy(CachePolicy.DISABLED) }
             adapter.submitData(state.members)
         }
     }
