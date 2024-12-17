@@ -3,7 +3,6 @@ package com.vl.messenger.dto
 import com.vl.messenger.DataMapper
 import com.vl.messenger.chat.dto.*
 import com.vl.messenger.profile.dto.ProfileResponse
-import com.vl.messenger.userId
 import org.springframework.context.MessageSource
 import java.util.*
 
@@ -56,7 +55,7 @@ object DtoMapper {
         RolesResponse(map { it.toDto(messageSource, locale) })
     fun DataMapper.ConversationMember.toDto(messageSource: MessageSource, locale: Locale, baseUrl: String) =
         MembersResponse.Member(
-            userId = userId,
+            userId = id,
             login = login,
             image = image at baseUrl,
             role = role.toDto(messageSource, locale)

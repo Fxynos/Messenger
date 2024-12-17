@@ -41,8 +41,9 @@ class PdfService {
             /* Regular rows */
             activity.forEach { row ->
                 row.user.image
+                    ?.let { "static/$it" }
                     ?.takeIf { File(it).exists() }
-                    ?.let { addCell(Image.getInstance("static/$it")) }
+                    ?.let { addCell(Image.getInstance(it)) }
                     ?: addCell(Phrase("Нет", FONT))
                 Stream.of(
                     row.user.login,
