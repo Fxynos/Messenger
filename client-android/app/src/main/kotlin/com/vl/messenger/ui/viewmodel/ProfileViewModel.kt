@@ -2,7 +2,6 @@ package com.vl.messenger.ui.viewmodel
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.vl.messenger.domain.entity.Profile
 import com.vl.messenger.domain.usecase.CreateConversationUseCase
 import com.vl.messenger.domain.usecase.GetLoggedUserProfileUseCase
@@ -12,12 +11,10 @@ import com.vl.messenger.domain.usecase.UpdateProfileHiddenUseCase
 import com.vl.messenger.ui.utils.launch
 import com.vl.messenger.ui.utils.launchHeavy
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -84,7 +81,8 @@ class ProfileViewModel @Inject constructor(
         data class Loaded(
             val name: String,
             val imageUrl: String?,
-            val isUserHidden: Boolean
+            val isUserHidden: Boolean,
+            private val rev: Long = System.currentTimeMillis()
         ): UiState
 
         data object Loading: UiState
