@@ -4,10 +4,12 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.view.ContextThemeWrapper
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.vl.messenger.R
 import com.vl.messenger.databinding.DialogSelectRoleBinding
 import com.vl.messenger.databinding.ItemRoleBinding
 import com.vl.messenger.domain.entity.Role
@@ -20,8 +22,9 @@ fun Context.dropSelectRoleDialog(
     onCancel: () -> Unit = {},
     onSelect: (Role) -> Unit
 ): AlertDialog {
-    val binding = DialogSelectRoleBinding.inflate(LayoutInflater.from(this))
-    val dialog = MaterialAlertDialogBuilder(this)
+    val contextThemed = ContextThemeWrapper(this, R.style.AlertDialogStyle)
+    val binding = DialogSelectRoleBinding.inflate(LayoutInflater.from(contextThemed))
+    val dialog = MaterialAlertDialogBuilder(contextThemed)
         .setView(binding.root)
         .setOnCancelListener { onCancel() }
         .show()

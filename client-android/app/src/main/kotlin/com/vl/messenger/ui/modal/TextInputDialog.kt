@@ -4,8 +4,10 @@ import android.content.Context
 import android.view.LayoutInflater
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.view.ContextThemeWrapper
 import androidx.core.widget.addTextChangedListener
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.vl.messenger.R
 import com.vl.messenger.databinding.DialogInputTextBinding
 
 fun Context.dropTextInputDialog(
@@ -16,8 +18,9 @@ fun Context.dropTextInputDialog(
     onCancel: () -> Unit = {},
     onConfirm: (String) -> Unit
 ): AlertDialog {
-    val binding = DialogInputTextBinding.inflate(LayoutInflater.from(this))
-    val dialog = MaterialAlertDialogBuilder(this)
+    val contextThemed = ContextThemeWrapper(this, R.style.AlertDialogStyle)
+    val binding = DialogInputTextBinding.inflate(LayoutInflater.from(contextThemed))
+    val dialog = MaterialAlertDialogBuilder(contextThemed)
         .setView(binding.root)
         .show()
 

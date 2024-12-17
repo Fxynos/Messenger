@@ -28,7 +28,7 @@
         <item name="android:textAppearance">@style/BaseTextAppearance</item>
         <item name="android:background">@drawable/shape_rounded_small</item>
         <item name="android:backgroundTint">@color/gray_red</item>
-        <item name="android:textColorHint">@color/red_blind</item>
+        <item name="android:textColorHint">@color/gray_darker</item>
         <item name="android:textColor">@color/gray_darker</item>
         <item name="android:padding">16dp</item>
         <item name="android:colorAccent">@color/red_blind</item>
@@ -69,6 +69,10 @@
         <item name="android:scaleType">fitCenter</item>
         <item name="android:background">@null</item>
         <item name="tint">@color/red_light</item>
+    </style>
+
+    <style name="AlertDialogStyle" parent="Theme.Messenger">
+        <item name="android:background">@color/gray_dark</item>
     </style>
 
 </resources>
