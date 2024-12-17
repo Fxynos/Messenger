@@ -11,9 +11,8 @@ class ObserveAllIncomingMessagesUseCase(
     private val messengerApi: MessengerStompApi,
     private val sessionStore: SessionStore
 ): FlowUseCase<Unit, Message> {
-    override fun invoke(param: Unit): Flow<Message> = flow {
+    override fun invoke(param: Unit): Flow<Message> =
         messengerApi.subscribeOnIncomingMessages(
             runBlocking { sessionStore.getToken()!! }
-        ).collect { emit(it) }
-    }
+        )
 }

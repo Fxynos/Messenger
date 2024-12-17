@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
@@ -87,6 +88,7 @@ class DialogViewModel @Inject constructor(
                 .launchIn(viewModelScope)
 
             observeAllIncomingMessagesUseCase(Unit)
+                .cancellable()
                 .filter { message -> message.dialogId == dialogId }
                 .collect(this@DialogViewModel::insertMessage)
         }
