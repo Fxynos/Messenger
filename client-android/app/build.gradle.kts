@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.vl.messenger"
-        minSdk = 27
+        minSdk = 29
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -21,7 +21,7 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "ADDRESS", "\"192.168.0.10:5000\"")
+            buildConfigField("String", "ADDRESS", "\"10.0.2.2:8080\"")
         }
         release {
             initWith(buildTypes.getByName("debug"))
@@ -32,6 +32,7 @@ android {
 
     buildFeatures {
         buildConfig = true
+        viewBinding = true
     }
 
     compileOptions {
@@ -67,13 +68,19 @@ dependencies {
     /* Coil */
     implementation(libs.coil)
 
+    /* Adapter Delegates */
+    implementation(libs.adapter.delegates.dsl)
+    implementation(libs.adapter.delegates.pagination)
+    implementation(libs.adapter.delegates.viewbinding)
+
     /* Retrofit */
-    implementation(libs.retrofit)
+    implementation(libs.retrofit.client)
     implementation(libs.retrofit.gson)
+    implementation(libs.okhttp.logging)
 
     /* STOMP */
     implementation(libs.stomp)
-    implementation(libs.okhttp)
+    implementation(libs.okhttp.client)
     implementation(libs.rxjava)
 }
 

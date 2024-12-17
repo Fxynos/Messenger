@@ -2,23 +2,17 @@ package com.vl.messenger.profile
 
 import com.vl.messenger.DataMapper
 import com.vl.messenger.LOGIN_PATTERN
+import com.vl.messenger.dto.DtoMapper.toDto
 import com.vl.messenger.dto.StatusResponse
-import com.vl.messenger.statusOf
 import com.vl.messenger.dto.UsersResponse
+import com.vl.messenger.profile.dto.ProfileResponse
+import com.vl.messenger.statusOf
 import com.vl.messenger.userId
-import com.vl.messenger.toDto
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 
 @RestController
@@ -38,13 +32,12 @@ class ProfileController(
         } ?: statusOf(HttpStatus.GONE, "No such user")
 
     @GetMapping("/me")
-    fun whoAmI(): ResponseEntity<StatusResponse<UsersResponse.UserDto>> {
-        return statusOf(payload = service.getUser(userId)!!.toDto(baseUrl))
-    }
+    fun whoAmI(): ResponseEntity<StatusResponse<ProfileResponse>> =
+        statusOf(payload = service.getUser(userId)!!.toDto(baseUrl))
 
-    @PutMapping("/me/visibility")
-    fun setHidden(@RequestParam hidden: Boolean): ResponseEntity<StatusResponse<Nothing>> {
-        service.setHidden(userId, hidden)
+    @PutMapping("/me/visibility") // TODO use single PATCH endpoint for such settings
+    fun setHidden(@RequestParam("is_hidden") isHidden: Boolean): ResponseEntity<StatusResponse<Nothing>> {
+        service.setHidden(userId, isHidden)
         return statusOf(HttpStatus.OK)
     }
 

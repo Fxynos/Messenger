@@ -20,8 +20,6 @@ class DataMapper {
             transactionIsolation = Connection.TRANSACTION_READ_COMMITTED // some DBMS anomalies are still can be there
         }
 
-        private fun ResultSet.getUnixSeconds(label: String): Long = getTimestamp(label).time / 1000
-
         private fun ResultSet.collectUsers(): List<User> {
             val list = LinkedList<User>()
             while (next())
@@ -39,7 +37,7 @@ class DataMapper {
                 list += Message(
                     getLong("id"),
                     getInt("sender_id"),
-                    getUnixSeconds("time"),
+                    getLong("time"),
                     getString("content")
                 )
             return list
@@ -76,17 +74,23 @@ class DataMapper {
 
     fun getVerboseUser(id: Int) =
         connection.prepareStatement(
-            "select login, password, image from user where id = ?;"
+            "select login, password, image, hidden from user where id = ?;"
         ).use { statement ->
             statement.setInt(1, id)
             statement.executeQuery().takeIf { it.next() }?.run {
-                VerboseUser(id, getString("login"), getString("image"), getBytes("password"))
+                VerboseUser(
+                    id,
+                    getString("login"),
+                    getString("image"),
+                    getBytes("password"),
+                    getBoolean("hidden")
+                )
             }
         }
 
     fun getVerboseUser(login: String) =
         connection.prepareStatement(
-            "select id, login, password, image from user where login = ?;"
+            "select id, login, password, image, hidden from user where login = ?;"
         ).use { statement ->
             statement.setString(1, login)
             statement.executeQuery().takeIf { it.next() }?.run {
@@ -94,7 +98,8 @@ class DataMapper {
                     getInt("id"),
                     getString("login"),
                     getString("image"),
-                    getBytes("password")
+                    getBytes("password"),
+                    getBoolean("hidden")
                 )
             }
         }
@@ -301,7 +306,7 @@ class DataMapper {
                                 getString("friend_sender.image")
                             ),
                             getLong("notification.id"),
-                            getUnixSeconds("time"),
+                            getLong("time"),
                             getString("title"),
                             getString("content"),
                             getBoolean("seen")
@@ -319,14 +324,14 @@ class DataMapper {
                                 getInt("members")
                             ),
                             getLong("notification.id"),
-                            getUnixSeconds("time"),
+                            getLong("time"),
                             getString("title"),
                             getString("content"),
                             getBoolean("seen")
                         )
                         else -> PlainNotification(
                             getLong("notification.id"),
-                            getUnixSeconds("time"),
+                            getLong("time"),
                             getString("title"),
                             getString("content"),
                             getBoolean("seen")
@@ -358,7 +363,7 @@ class DataMapper {
                 while (next())
                     list += PlainNotification(
                         getLong("notification_id"),
-                        getUnixSeconds("time"),
+                        getLong("time"),
                         getString("title"),
                         getString("content"),
                         getBoolean("seen")
@@ -551,7 +556,7 @@ class DataMapper {
                         if (getLong("message_id") == 0L) null else Message(
                             getLong("message_id"),
                             getInt("user.id"),
-                            getUnixSeconds("time"),
+                            getLong("time"),
                             getString("content")
                         ),
                         if (getInt("user.id") == 0) null else User(
@@ -614,7 +619,7 @@ class DataMapper {
             inner join user on user_id = user.id 
             where conversation_id = ?;
         """.trimIndent()).use { statement ->
-            statement.setLong(0, conversationId)
+            statement.setLong(1, conversationId)
 
             statement.executeQuery().run {
                 val list = LinkedList<ConversationMember>()
@@ -671,14 +676,14 @@ class DataMapper {
     /**
      * Fail-Safe operation: changes member if it actually exists
      */
-    fun setRole(userId: Int, conversationId: Long, role: String) {
+    fun setRole(userId: Int, conversationId: Long, roleId: Int) {
         connection.prepareStatement("""
             update participate inner join user on user_id = id 
             inner join conversation on conversation_id = conversation.id 
-            set rights_id = (select id from conversation_rights where role = ?) 
+            set rights_id = ? 
             where user_id = ? and conversation_id = ?;
         """.trimIndent()).use { statement ->
-            statement.setString(1, role)
+            statement.setInt(1, roleId)
             statement.setInt(2, userId)
             statement.setLong(3, conversationId)
             statement.execute()
@@ -792,7 +797,13 @@ class DataMapper {
 
     open class User(val id: Int, val login: String, val image: String?)
 
-    class VerboseUser(id: Int, login: String, image: String?, val password: ByteArray): User(id, login, image)
+    class VerboseUser(
+        id: Int,
+        login: String,
+        image: String?,
+        val password: ByteArray,
+        val isHidden: Boolean
+    ): User(id, login, image)
 
     class Message(val id: Long, val senderId: Int, val unixSec: Long, val content: String)
 
@@ -813,7 +824,7 @@ class DataMapper {
     class ConversationMember(id: Int, login: String, image: String?, val role: Role): User(id, login, image) {
         class Role(
             val id: Int,
-            val name: String,
+            @StringRes val name: String,
             val canGetReports: Boolean,
             val canEditData: Boolean,
             val canEditMembers: Boolean,

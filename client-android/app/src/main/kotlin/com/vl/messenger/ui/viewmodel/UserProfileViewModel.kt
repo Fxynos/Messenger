@@ -1,78 +1,94 @@
 package com.vl.messenger.ui.viewmodel
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.vl.messenger.data.entity.FriendStatus
-import com.vl.messenger.data.entity.User
-import com.vl.messenger.data.entity.UserProfile
-import com.vl.messenger.data.manager.ProfileManager
-import com.vl.messenger.data.manager.SearchManager
+import com.vl.messenger.domain.entity.FriendStatus
+import com.vl.messenger.domain.entity.VerboseUser
+import com.vl.messenger.domain.usecase.AddFriendUseCase
+import com.vl.messenger.domain.usecase.GetUserByIdUseCase
+import com.vl.messenger.domain.usecase.RemoveFriendUseCase
+import com.vl.messenger.ui.utils.launch
+import com.vl.messenger.ui.utils.launchHeavy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class UserProfileViewModel @Inject constructor(
-    private val searchManager: SearchManager,
-    private val profileManager: ProfileManager
+    private val getUserByIdUseCase: GetUserByIdUseCase,
+    private val addFriendUseCase: AddFriendUseCase,
+    private val removeFriendUseCase: RemoveFriendUseCase,
+    savedStateHandle: SavedStateHandle
 ): ViewModel() {
-    private val _profile: MutableStateFlow<UserProfile?> = MutableStateFlow(null)
-    val profile: StateFlow<UserProfile?>
-        get() = _profile
+    companion object {
+        const val ARG_KEY_USER_ID = "user_id"
+    }
 
-    val ownProfile: StateFlow<User?> = flow { emit(profileManager.getProfile()) }
-        .flowOn(Dispatchers.IO)
-        .stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    private val _uiState = MutableStateFlow(UiState())
+    val uiState = _uiState.asStateFlow()
 
-    fun updateUser(user: User) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _profile.update {
-                searchManager.getUser(user.id)
-            }
+    private val _events = MutableSharedFlow<DataDrivenEvent>()
+    val events = _events.asSharedFlow()
+
+    private val userId = savedStateHandle.get<Int>(ARG_KEY_USER_ID)!!
+
+    init {
+        launchHeavy {
+            _uiState.value = getUserByIdUseCase(userId).toUi()
         }
     }
 
     fun addFriend() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val profile = profile.value!!
-            profileManager.addFriend(profile.id)
-            val newFriendStatus = when (profile.friendStatus) {
-                FriendStatus.REQUEST_GOTTEN -> FriendStatus.FRIEND
-                FriendStatus.NONE -> FriendStatus.REQUEST_SENT
-                else -> null
-            }
-            if (newFriendStatus != null) _profile.update { UserProfile(
-                profile.id,
-                profile.login,
-                profile.imageUrl,
-                newFriendStatus
-            ) }
+        launchHeavy {
+            addFriendUseCase(userId)
+            _uiState.value = getUserByIdUseCase(userId).toUi()
         }
     }
 
     fun removeFriend() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val profile = profile.value!!
-            profileManager.removeFriend(profile.id)
-            val newFriendStatus = when (profile.friendStatus) {
-                FriendStatus.REQUEST_SENT -> FriendStatus.NONE
-                FriendStatus.FRIEND -> FriendStatus.NONE
-                else -> null
-            }
-            if (newFriendStatus != null) _profile.update { UserProfile(
-                profile.id,
-                profile.login,
-                profile.imageUrl,
-                newFriendStatus
-            ) }
+        launchHeavy {
+            removeFriendUseCase(userId)
+            _uiState.value = getUserByIdUseCase(userId).toUi()
         }
     }
+
+    fun openDialog() {
+        launch {
+            _events.emit(DataDrivenEvent.NavigateToDialog("u$userId"))
+        }
+    }
+
+    data class UiState(
+        val name: String? = null,
+        val status: FriendStatus? = null,
+        val imageUrl: String? = null,
+        val availableAction: AvailableAction? = null
+    ) {
+        enum class AvailableAction {
+            ADD_FRIEND,
+            REMOVE_FRIEND
+        }
+    }
+
+    sealed interface DataDrivenEvent {
+        data class NavigateToDialog(val dialogId: String): DataDrivenEvent
+    }
 }
+
+private fun VerboseUser.toUi() = UserProfileViewModel.UiState(
+    name = user.login,
+    imageUrl = user.imageUrl,
+    status = friendStatus,
+    availableAction = when (friendStatus) {
+        FriendStatus.REQUEST_GOTTEN, FriendStatus.NONE ->
+            UserProfileViewModel.UiState.AvailableAction.ADD_FRIEND
+        FriendStatus.REQUEST_SENT, FriendStatus.FRIEND ->
+            UserProfileViewModel.UiState.AvailableAction.REMOVE_FRIEND
+    }
+)

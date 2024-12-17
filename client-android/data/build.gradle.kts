@@ -8,7 +8,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        minSdk = 27
+        minSdk = 29
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -17,12 +17,10 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -34,4 +32,17 @@ android {
 
 dependencies {
     implementation(project(":domain"))
+
+    /* Retrofit */
+    implementation(libs.retrofit.client)
+    implementation(libs.retrofit.gson)
+
+    /* Jetpack */
+    implementation(libs.datastore.preferences)
+    implementation(libs.paging.runtime)
+
+    /* STOMP */
+    implementation(libs.stomp)
+    implementation(libs.okhttp.client)
+    implementation(libs.rxjava)
 }

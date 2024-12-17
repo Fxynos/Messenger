@@ -2,7 +2,7 @@ import java.sql.DriverManager
 import java.sql.ResultSet
 
 plugins {
-    kotlin("jvm") version "1.8.10"
+    kotlin("jvm") version "2.0.0"
     application
     id("org.springframework.boot") version "3.0.0"
     id("org.liquibase.gradle") version "2.2.0"

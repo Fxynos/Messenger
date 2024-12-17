@@ -1,28 +1,23 @@
 package com.vl.messenger.chat
 
+import com.vl.messenger.dto.DtoMapper.toDto
 import com.vl.messenger.chat.dto.CreateConversationResponse
-import com.vl.messenger.chat.dto.ConversationResponse
+import com.vl.messenger.chat.dto.MembersResponse
+import com.vl.messenger.chat.dto.RoleResponse
+import com.vl.messenger.chat.dto.RolesResponse
 import com.vl.messenger.dto.StatusResponse
 import com.vl.messenger.statusOf
 import com.vl.messenger.userId
 import jakarta.validation.constraints.NotBlank
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.MessageSource
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.InputStream
+import java.util.Locale
 
 /**
  * Provides interface to create and manage conversations.
@@ -34,7 +29,8 @@ import java.io.InputStream
 @RequestMapping("/conversations")
 class ConversationController(
     @Value("\${base.url}") private val baseUrl: String,
-    @Autowired private val service: ConversationService
+    @Autowired private val service: ConversationService,
+    @Autowired private val messageSource: MessageSource
 ) {
 
     @PostMapping
@@ -48,47 +44,34 @@ class ConversationController(
         return statusOf(payload = CreateConversationResponse(service.createConversation(userId, name)))
     }
 
-    @GetMapping("/{id}")
-    fun describeConversation(
-        @PathVariable id: Long,
-        @RequestParam(defaultValue = "0") offset: Int,
-        @RequestParam(defaultValue = "50") limit: Int
-    ): ResponseEntity<StatusResponse<ConversationResponse>> {
-        if (!service.isMember(userId, id))
-            return statusOf(HttpStatus.GONE, "No conversation or you are not its member")
-        val conversation = service.getConversation(id)!!
-        return statusOf(payload = ConversationResponse(
-            conversation.id,
-            conversation.name,
-            if (conversation.image == null) null else "$baseUrl/${conversation.image}",
-            service.getMembers(id, offset, limit).map {
-                ConversationResponse.Member(it.id, it.login, "$baseUrl/${it.image}", it.role.name)
-            }
-        ))
-    }
-
     @PutMapping("/{id}/set-name")
     fun setConversationName(
-        @PathVariable id: Long,
+        @PathVariable("id") conversationId: Long,
         @RequestParam name: String
-    ): ResponseEntity<StatusResponse<Nothing>> {
-        if (!service.hasPrivilege(userId, id, ConversationService.Privilege.EDIT_DATA))
-            return statusOf(HttpStatus.FORBIDDEN, "No edit conversation data privilege")
-        service.setConversationName(id, name)
-        return statusOf(HttpStatus.OK, "Conversation name is set")
-    }
+    ): ResponseEntity<StatusResponse<Nothing>> =
+        when (service.setConversationName(userId, conversationId, name)) {
+            ConversationService.CommonResult.SUCCESS ->
+                statusOf(HttpStatus.OK, "Conversation name is set")
+
+            ConversationService.CommonResult.NO_PRIVILEGE ->
+                statusOf(HttpStatus.FORBIDDEN, "No edit conversation data privilege")
+        }
 
     @PostMapping("/{id}/set-image", consumes = ["multipart/form-data"])
     fun setConversationImage(
         @RequestParam image: MultipartFile,
-        @PathVariable id: Long
+        @PathVariable("id") conversationId: Long
     ): ResponseEntity<StatusResponse<Nothing>> {
-        if (!service.hasPrivilege(userId, id, ConversationService.Privilege.EDIT_DATA))
-            return statusOf(HttpStatus.FORBIDDEN, "No edit conversation data privilege")
         if (image.contentType != "image/png" && image.contentType != "image/jpeg")
             return statusOf(HttpStatus.UNPROCESSABLE_ENTITY, "Only png and jpeg images are supported")
-        service.setConversationImage(id, image)
-        return statusOf(HttpStatus.OK, "Conversation image is set")
+
+        return when (service.setConversationImage(userId, conversationId, image)) {
+            ConversationService.CommonResult.SUCCESS ->
+                statusOf(HttpStatus.OK, "Conversation image is set")
+
+            ConversationService.CommonResult.NO_PRIVILEGE ->
+                statusOf(HttpStatus.FORBIDDEN, "No edit conversation data privilege")
+        }
     }
 
     @PutMapping("/{id}/leave")
@@ -97,47 +80,101 @@ class ConversationController(
         return statusOf(HttpStatus.OK)
     }
 
-    @PostMapping("/{id}/member")
-    fun addMember(
-        @PathVariable id: Long,
-        @RequestParam("user_id") memberId: Int
-    ): ResponseEntity<StatusResponse<Nothing>> {
-        if (!service.hasPrivilege(userId, id, ConversationService.Privilege.EDIT_MEMBERS))
-            return statusOf(HttpStatus.FORBIDDEN, "No edit members privilege")
-        service.addMember(userId, id, memberId)
-        return statusOf(HttpStatus.OK, "Conversation member is added")
-    }
+    @GetMapping("/{id}/members")
+    fun getMembers(
+        locale: Locale,
+        @PathVariable("id") conversationId: Long,
+        @RequestParam(defaultValue = "0") offset: Int,
+        @RequestParam(defaultValue = "50") limit: Int
+    ): ResponseEntity<StatusResponse<MembersResponse>> {
+        return when (val result = service.getMembers(userId, conversationId, offset, limit)) {
+            ConversationService.GetMembersResult.NoPrivilege ->
+                statusOf(HttpStatus.FORBIDDEN, "No retrieve members privilege")
 
-    @DeleteMapping("/{id}/member")
-    fun removeMember(
-        @PathVariable id: Long,
-        @RequestParam("user_id") memberId: Int
-    ): ResponseEntity<StatusResponse<Nothing>> {
-        if (!service.hasPrivilege(userId, id, ConversationService.Privilege.EDIT_MEMBERS))
-            return statusOf(HttpStatus.FORBIDDEN, "No edit conversation members privilege")
-        service.removeMember(userId, id, memberId)
-        return statusOf(HttpStatus.OK, "Conversation member is removed")
-    }
+            ConversationService.GetMembersResult.NotFound ->
+                statusOf(HttpStatus.NOT_FOUND, "No conversation")
 
-    @PutMapping("/{id}/member/role")
-    fun setMemberRole(
-        @PathVariable id: Long,
-        @RequestParam("user_id") memberId: Int,
-        @RequestParam role: String
-    ): ResponseEntity<StatusResponse<Nothing>> {
-        if (!service.hasPrivilege(userId, id, ConversationService.Privilege.EDIT_RIGHTS))
-            return statusOf(HttpStatus.FORBIDDEN, "No edit conversation members rights privilege")
-        service.setMemberRole(id, memberId, role)
-        return statusOf(HttpStatus.OK, "Conversation member role is set")
-    }
-
-    @GetMapping("/{id}/report", produces = [MediaType.APPLICATION_PDF_VALUE])
-    fun generateReport(@PathVariable id: Long): ResponseEntity<ByteArray> {
-        if (!service.hasPrivilege(userId, id, ConversationService.Privilege.GET_REPORTS))
-            return ResponseEntity(HttpStatus.FORBIDDEN)
-        ByteArrayOutputStream().use { outputStream ->
-            service.generateReport(id, outputStream)
-            return ResponseEntity(outputStream.toByteArray(), HttpStatus.OK) // TODO large report can lead to out of memory error
+            is ConversationService.GetMembersResult.Success ->
+                statusOf(payload = result.members.toDto(messageSource, locale, baseUrl))
         }
     }
+
+    @PostMapping("/{id}/members/{user_id}")
+    fun addMember(
+        @PathVariable("id") conversationId: Long,
+        @PathVariable("user_id") memberId: Int
+    ): ResponseEntity<StatusResponse<Nothing>> =
+        when (service.addMember(userId, conversationId, memberId)) {
+            ConversationService.CommonResult.SUCCESS ->
+                statusOf(HttpStatus.OK, "Conversation member is added")
+
+            ConversationService.CommonResult.NO_PRIVILEGE ->
+                statusOf(HttpStatus.FORBIDDEN, "No edit members privilege")
+        }
+
+    @DeleteMapping("/{id}/members/{user_id}")
+    fun removeMember(
+        @PathVariable("id") conversationId: Long,
+        @PathVariable("user_id") memberId: Int
+    ): ResponseEntity<StatusResponse<Nothing>> =
+        when (service.removeMember(userId, conversationId, memberId)) {
+            ConversationService.CommonResult.SUCCESS ->
+                statusOf(HttpStatus.OK, "Conversation member is removed")
+
+            ConversationService.CommonResult.NO_PRIVILEGE ->
+                statusOf(HttpStatus.FORBIDDEN, "No edit conversation members privilege")
+        }
+
+    @PutMapping("/{id}/members/{user_id}/role")
+    fun setMemberRole(
+        @PathVariable("id") conversationId: Long,
+        @PathVariable("user_id") memberId: Int,
+        @RequestParam role: Int
+    ): ResponseEntity<StatusResponse<Nothing>> =
+        when (service.setMemberRole(userId, conversationId, memberId, role)) {
+            ConversationService.SetRoleResult.SUCCESS ->
+                statusOf(HttpStatus.OK, "Conversation member role is set")
+
+            ConversationService.SetRoleResult.NO_PRIVILEGE ->
+                statusOf(HttpStatus.FORBIDDEN, "No edit conversation members rights privilege")
+
+            ConversationService.SetRoleResult.ROLE_NOT_FOUND ->
+                statusOf(HttpStatus.NOT_FOUND, "No such role")
+        }
+
+    @GetMapping("/{id}/roles") // in the future, roles can become specific for conversations
+    fun getRoles(
+        locale: Locale,
+        @PathVariable("id") conversationId: Long
+    ): ResponseEntity<StatusResponse<RolesResponse>> =
+        when (val result = service.getRoles(userId, conversationId)) {
+            ConversationService.CommonResultValue.NoPrivilege ->
+                statusOf(HttpStatus.FORBIDDEN, "You're not participant")
+
+            is ConversationService.CommonResultValue.Success ->
+                statusOf(payload = result.value.toDto(messageSource, locale))
+        }
+
+    @GetMapping("/{id}/roles/mine")
+    fun getOwnRole(
+        locale: Locale,
+        @PathVariable("id") conversationId: Long
+    ): ResponseEntity<StatusResponse<RoleResponse>> =
+        when (val result = service.getRole(userId, conversationId)) {
+            ConversationService.CommonResultValue.NoPrivilege ->
+                statusOf(HttpStatus.FORBIDDEN, "You're not participant")
+
+            is ConversationService.CommonResultValue.Success ->
+                statusOf(payload = RoleResponse(result.value.toDto(messageSource, locale)))
+        }
+
+    @GetMapping("/{id}/report", produces = [MediaType.APPLICATION_PDF_VALUE])
+    fun generateReport(@PathVariable("id") conversationId: Long): ResponseEntity<ByteArray> =
+        when (val result = service.generateReport(userId, conversationId)) {
+            ConversationService.GenerateReportResult.NoPrivilege ->
+                ResponseEntity(HttpStatus.FORBIDDEN)
+
+            is ConversationService.GenerateReportResult.Success ->
+                ResponseEntity(result.reportFile, HttpStatus.OK)
+        }
 }

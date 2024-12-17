@@ -31,6 +31,8 @@
 
         <activity android:name=".ui.screen.DialogActivity" android:exported="false"/>
 
+        <activity android:name=".ui.screen.EditConversationActivity" android:exported="false"/>
+
     </application>
 
 </manifest>

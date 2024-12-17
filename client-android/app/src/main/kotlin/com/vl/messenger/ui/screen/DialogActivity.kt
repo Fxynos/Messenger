@@ -1,118 +1,127 @@
 package com.vl.messenger.ui.screen
 
+import android.content.Intent
 import android.os.Bundle
-import android.view.View
-import android.widget.EditText
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.TextView
+import android.util.Log
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
+import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
+import coil.request.CachePolicy
 import com.vl.messenger.R
-import com.vl.messenger.data.component.PrivateMessagePagingAdapter
-import com.vl.messenger.data.entity.Dialog
+import com.vl.messenger.databinding.ActivityDialogBinding
+import com.vl.messenger.ui.adapter.MessagePagingAdapter
+import com.vl.messenger.ui.modal.dropConfirmationDialog
+import com.vl.messenger.ui.modal.dropPopupOptions
 import com.vl.messenger.ui.viewmodel.DialogViewModel
+import com.vl.messenger.ui.viewmodel.EditConversationViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/**
- * Accepts extras:
- * - [EXTRA_DIALOG]
- * - [EXTRA_OWN_ID]
- */
+private const val TAG = "DialogActivity"
+
 @AndroidEntryPoint
 class DialogActivity: AppCompatActivity() {
-    companion object {
-        const val EXTRA_DIALOG = "dialog"
-        const val EXTRA_OWN_ID = "id" // own user id
-    }
 
-    private val viewModel: DialogViewModel by viewModels()
+private val viewModel: DialogViewModel by viewModels()
 
-    private lateinit var back: ImageButton
-    private lateinit var options: ImageButton
-    private lateinit var send: ImageButton
-    private lateinit var image: ImageView
-    private lateinit var input: EditText
-    private lateinit var name: TextView
-    private lateinit var noMessages: TextView
-
-    private lateinit var adapter: PrivateMessagePagingAdapter
+    private lateinit var binding: ActivityDialogBinding
+    private lateinit var adapter: MessagePagingAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_dialog)
+        binding = ActivityDialogBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        /* Args */
-        val userId: Int = intent.getIntExtra(EXTRA_OWN_ID, -1).takeUnless { it == -1 }!!
-        val dialog: Dialog = intent.getParcelableExtra(EXTRA_DIALOG)!!
+        adapter = MessagePagingAdapter(this)
 
-        viewModel.initialize(dialog)
+        with(binding) {
+            messages.adapter = adapter
+            back.setOnClickListener { onBackPressedDispatcher.onBackPressed() }
+            options.setOnClickListener { showPopupOptions() }
+            send.setOnClickListener {
+                viewModel.sendMessage(input.text.toString())
+                input.text.clear()
+            }
+            name.setOnClickListener { viewModel.editConversation() }
+            image.setOnClickListener { viewModel.editConversation() }
+        }
 
-        /* Views */
-        back = findViewById(R.id.back)
-        options = findViewById(R.id.options)
-        send = findViewById(R.id.send)
-        input = findViewById(R.id.input)
-        image = findViewById(R.id.icon)
-        name = findViewById(R.id.name)
-        noMessages = findViewById(R.id.no_messages_hint)
-        val messagesList = findViewById<RecyclerView>(R.id.messages)
-
-        adapter = PrivateMessagePagingAdapter(this, userId)
-        messagesList.adapter = adapter
-
-        back.setOnClickListener(this::onClick)
-        options.setOnClickListener(this::onClick)
-        send.setOnClickListener(this::onClick)
-
-        noMessages.visibility = View.GONE // TODO
-
-        /* State */
+        // subscriptions
         lifecycleScope.launch(Dispatchers.Main) {
-            launch { viewModel.messages.collect(adapter::submitData) }
             launch { viewModel.uiState.collect(this@DialogActivity::updateState) }
-            launch { viewModel.scrollEvents.collect {
-                val layoutManager = messagesList.layoutManager as LinearLayoutManager
-                val firstVisiblePosition = layoutManager.findFirstVisibleItemPosition()
-
-                if ( // scroll down to new message
-                    messagesList.scrollState == RecyclerView.SCROLL_STATE_IDLE &&
-                    firstVisiblePosition == 1
-                ) withContext(Dispatchers.Main) {
-                    messagesList.smoothScrollToPosition(0)
-                }
+            launch { viewModel.events.collect(this@DialogActivity::handleEvent) }
+            launch { adapter.loadStateFlow.collectLatest { loadStates ->
+                if (loadStates.refresh != LoadState.Loading)
+                    binding.noMessagesHint.isVisible = adapter.itemCount == 0
             } }
         }
     }
 
-    private fun updateState(state: DialogViewModel.UiState) {
+    private suspend fun updateState(state: DialogViewModel.UiState) {
+        Log.d(TAG, "UI State: $state")
         when (state) {
-            is DialogViewModel.UiState.Loading -> {
+            is DialogViewModel.UiState.Loading -> with(binding) {
                 name.text = getString(R.string.loading)
                 image.setImageBitmap(null)
             }
-            is DialogViewModel.UiState.DialogShown -> {
+            is DialogViewModel.UiState.Loaded -> with(binding) {
                 name.text = state.dialogName
-                image.load(state.dialogImage)
+                image.load(state.dialogImageUrl) { memoryCachePolicy(CachePolicy.DISABLED) }
+                adapter.submitData(state.messages)
             }
         }
     }
 
-    private fun onClick(view: View) {
-        when (view.id) {
-            R.id.back -> onBackPressedDispatcher.onBackPressed()
-            R.id.options -> TODO()
-            R.id.send -> {
-                viewModel.send(input.text.toString())
-                input.text.clear()
+    private suspend fun handleEvent(event: DialogViewModel.DataDrivenEvent) {
+        Log.d(TAG, "Event: $event")
+        when (event) {
+            DialogViewModel.DataDrivenEvent.ScrollToLast -> {
+                val layoutManager = binding.messages.layoutManager as LinearLayoutManager
+                val firstVisiblePosition = layoutManager.findFirstVisibleItemPosition()
+
+                if ( // scroll down to new message
+                    binding.messages.scrollState == RecyclerView.SCROLL_STATE_IDLE &&
+                    firstVisiblePosition == 1
+                ) withContext(Dispatchers.Main) {
+                    binding.messages.smoothScrollToPosition(0)
+                }
+            }
+
+            DialogViewModel.DataDrivenEvent.NavigateBack -> finish()
+
+            is DialogViewModel.DataDrivenEvent.NavigateToEditConversation -> {
+                startActivity(Intent(this, EditConversationActivity::class.java).apply {
+                    putExtra(EditConversationViewModel.ARG_DIALOG_ID, event.dialogId)
+                })
+                finish()
             }
         }
+    }
+
+    private fun showPopupOptions() {
+        val dialog = (viewModel.uiState.value as? DialogViewModel.UiState.Loaded)
+
+        binding.options.dropPopupOptions(*buildList {
+            if (dialog != null && !dialog.isPrivate) { // conversation-only
+                add(R.string.dialog_option_details to Runnable { viewModel.editConversation() })
+                add(R.string.dialog_option_leave to Runnable {
+                    dropConfirmationDialog(
+                        title = R.string.dialog_option_leave_title,
+                        message = R.string.dialog_option_leave_message,
+                        cancel = R.string.dialog_option_leave_cancel,
+                        confirm = R.string.dialog_option_leave_ok,
+                        onConfirm = viewModel::leaveConversation
+                    )
+                })
+            }
+        }.toTypedArray())
     }
 }

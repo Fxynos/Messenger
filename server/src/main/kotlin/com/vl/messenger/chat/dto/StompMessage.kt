@@ -7,8 +7,8 @@ class StompMessage {
     @field:JsonInclude(JsonInclude.Include.NON_NULL)
     var id: Long? = null
     @field:JsonInclude(JsonInclude.Include.NON_NULL)
-    @field:JsonProperty("conversation_id")
-    var conversationId: Long? = null
+    @field:JsonProperty("dialog_id")
+    var dialogId: String? = null
     @field:JsonInclude(JsonInclude.Include.NON_NULL)
     @field:JsonProperty("sender_id")
     var senderId: Int? = null

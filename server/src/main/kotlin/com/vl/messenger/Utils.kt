@@ -2,6 +2,7 @@ package com.vl.messenger
 
 import com.vl.messenger.dto.StatusResponse
 import com.vl.messenger.dto.UsersResponse
+import com.vl.messenger.profile.dto.ProfileResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
@@ -18,8 +19,12 @@ fun <T> statusOf(
 val userId: Int
     get() = SecurityContextHolder.getContext().authentication.principal as Int
 
-fun DataMapper.User.toDto(baseUrl: String) = UsersResponse.UserDto(
-    id,
-    login,
-    if (image == null) null else "$baseUrl/${image}"
-)
+fun Long.asConversationDialogId() = "c$this"
+fun Int.asPrivateDialogId() = "u$this"
+
+/**
+ * Used to mark localization codes of message source
+ */
+@Target(AnnotationTarget.VALUE_PARAMETER)
+@Retention(AnnotationRetention.SOURCE)
+annotation class StringRes

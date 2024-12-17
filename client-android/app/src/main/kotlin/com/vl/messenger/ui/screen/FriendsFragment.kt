@@ -12,26 +12,20 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.vl.messenger.R
-import com.vl.messenger.data.entity.User
-import com.vl.messenger.data.manager.DownloadManager
-import com.vl.messenger.domain.OnItemClickListener
-import com.vl.messenger.data.component.ProfileAdapter
+import com.vl.messenger.ui.adapter.UserAdapter
 import com.vl.messenger.ui.viewmodel.FriendsViewModel
+import com.vl.messenger.ui.viewmodel.UserProfileViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.Objects
-import javax.inject.Inject
 
 @AndroidEntryPoint
-class FriendsFragment: Fragment(), View.OnClickListener, OnItemClickListener<User> {
+class FriendsFragment: Fragment() {
 
-    @Inject
-    lateinit var downloadManager: DownloadManager
     private val viewModel: FriendsViewModel by viewModels()
     private lateinit var menu: ImageButton
     private lateinit var friends: RecyclerView
-    private lateinit var adapter: ProfileAdapter
+    private lateinit var adapter: UserAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -40,11 +34,17 @@ class FriendsFragment: Fragment(), View.OnClickListener, OnItemClickListener<Use
     ): View {
         val view = inflater.inflate(R.layout.fragment_friends, container, false)
         menu = view.findViewById(R.id.menu)
-        menu.setOnClickListener(this)
-        adapter = ProfileAdapter(requireContext(), downloadManager)
-        adapter.onItemClickListener = this
         friends = view.findViewById(R.id.friends)
+
+        adapter = UserAdapter(requireContext()) { clickedUser ->
+            startActivity(Intent(requireContext(), UserProfileActivity::class.java).apply {
+                putExtra(UserProfileViewModel.ARG_KEY_USER_ID, clickedUser.id)
+            })
+        }
         friends.adapter = adapter
+        menu.setOnClickListener {
+            (requireActivity() as MenuActivity).openDrawer()
+        }
         return view
     }
 
@@ -52,29 +52,12 @@ class FriendsFragment: Fragment(), View.OnClickListener, OnItemClickListener<Use
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         lifecycleScope.launch(Dispatchers.Main) {
-            viewModel.friends.collect { items ->
-                if (items == null) return@collect
-                adapter.items.removeAll(Objects::nonNull) // removes absolutely all
-                adapter.items.addAll(items)
-                adapter.notifyDataSetChanged()
+            viewModel.uiState.collect { uiState ->
+                when (uiState) {
+                    is FriendsViewModel.UiState.Loaded -> adapter.submitList(uiState.friends)
+                    FriendsViewModel.UiState.Loading -> adapter.submitList(emptyList())
+                }
             }
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        viewModel.fetchFriends()
-    }
-
-    override fun onClick(view: View) {
-        when (view.id) {
-            R.id.menu -> (requireActivity() as MenuActivity).openDrawer()
-        }
-    }
-
-    override fun onClick(item: User, position: Int) {
-        startActivity(Intent(requireContext(), UserProfileActivity::class.java).apply {
-            putExtra("user", item)
-        })
     }
 }

@@ -1,162 +1,125 @@
 package com.vl.messenger.ui.viewmodel
 
 import android.app.Application
-import android.content.Context
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.vl.messenger.App
-import com.vl.messenger.R
-import com.vl.messenger.data.manager.AuthManager
-import com.vl.messenger.data.manager.SessionStore
+import com.vl.messenger.domain.usecase.GetIsLoggedInUseCase
+import com.vl.messenger.domain.usecase.SignInUseCase
+import com.vl.messenger.domain.usecase.SignUpUseCase
+import com.vl.messenger.domain.usecase.param.CredentialsParam
+import com.vl.messenger.ui.utils.launch
+import com.vl.messenger.ui.utils.launchHeavy
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.util.stream.Stream
 import javax.inject.Inject
 
 private const val TAG = "AuthViewModel"
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val authManager: AuthManager,
-    private val sessionStore: SessionStore,
-    app: Application
+    app: Application,
+    getIsLoggedInUseCase: GetIsLoggedInUseCase,
+    private val signInUseCase: SignInUseCase,
+    private val signUpUseCase: SignUpUseCase
 ): AndroidViewModel(app) {
-    val route = MutableLiveData(Route.SIGN_IN) // TODO use StateFlow
-    val popup = MutableLiveData<InfoPopup?>()
-    val isButtonEnabled = MutableLiveData(true)
-    val loginError = MutableLiveData<String?>()
-    val passwordError = MutableLiveData<String?>()
-    val repeatPasswordError = MutableLiveData<String?>()
 
-    private val context: Context
-        get() = getApplication<App>().applicationContext
-    private var currentTask: Job? = null // sign in or sign up job
+    private val _uiState = MutableStateFlow(UiState.REGULAR)
+    val uiState = _uiState.asStateFlow()
+
+    private val _events = MutableSharedFlow<DataDrivenEvent>()
+    val events = _events.asSharedFlow()
 
     init {
-        if (sessionStore.accessTokenFlow.value != null)
-            route.value = Route.CLOSE
+        launch {
+            if (getIsLoggedInUseCase(Unit))
+                _events.emit(DataDrivenEvent.NavigateLoggedIn)
+        }
     }
 
     fun navigateToSignIn() {
-        currentTask?.takeUnless(Job::isCompleted)?.cancel()
-        resetState()
-        route.value = Route.SIGN_IN
+        if (uiState.value != UiState.LOADING)
+            emitEvent(DataDrivenEvent.NavigateSignIn)
     }
 
     fun navigateToSignUp() {
-        currentTask?.takeUnless(Job::isCompleted)?.cancel()
-        resetState()
-        route.value = Route.SIGN_UP
+        if (uiState.value != UiState.LOADING)
+            emitEvent(DataDrivenEvent.NavigateSignUp)
     }
 
-    fun attemptSignIn(login: String, password: String) {
+    fun signIn(login: String, password: String) {
+        updateState(UiState.LOADING)
         if (validate(login, password))
-            currentTask = viewModelScope.launch { signIn(login, password) }
+            launchHeavy {
+                when (val result = signInUseCase(CredentialsParam(login, password))) {
+                    SignInUseCase.Result.Success -> emitEvent(DataDrivenEvent.NavigateLoggedIn)
+                    SignInUseCase.Result.WrongCredentials -> emitEvent(DataDrivenEvent.NotifyWrongCredentials)
+                    is SignInUseCase.Result.Error -> {
+                        Log.w(TAG, result.cause)
+                        emitEvent(DataDrivenEvent.NotifyError(null))
+                    }
+                }
+                updateState(UiState.REGULAR)
+            }
     }
 
-    fun attemptSignUp(login: String, password: String, repeatPassword: String) {
+    fun signUp(login: String, password: String, repeatPassword: String) {
+        updateState(UiState.LOADING)
         if (validate(login, password, repeatPassword))
-            currentTask = viewModelScope.launch { signUp(login, password) }
+            launchHeavy {
+                when (val result = signUpUseCase(CredentialsParam(login, password))) {
+                    SignUpUseCase.Result.Success -> emitEvent(DataDrivenEvent.NavigateLoggedIn)
+                    SignUpUseCase.Result.LoginTaken -> emitEvent(DataDrivenEvent.NotifyLoginTaken)
+                    is SignUpUseCase.Result.Error -> {
+                        Log.w(TAG, result.cause)
+                        emitEvent(DataDrivenEvent.NotifyError(null))
+                    }
+                }
+                updateState(UiState.REGULAR)
+            }
     }
 
     private fun validate(login: String, password: String, repeatPassword: String? = null): Boolean {
         when {
-            login.length < 3 || login.length > 20 ->
-                loginError.value = context.getString(R.string.error_login_length)
-            login.contains(Regex("\\W")) ->
-                loginError.value = context.getString(R.string.error_login_char)
-            else ->
-                loginError.value = null
+            login.length < 3 || login.length > 20 -> updateState(UiState.LOGIN_ILLEGAL_LENGTH)
+            login.contains(Regex("\\W")) -> updateState(UiState.LOGIN_ILLEGAL_CHAR)
+            password.length < 8 || password.length > 20 -> updateState(UiState.PASSWORD_ILLEGAL_LENGTH)
+            repeatPassword != null && password != repeatPassword -> updateState(UiState.PASSWORDS_DIFFER)
+            else -> return true
         }
-        passwordError.value =
-            if (password.length < 8 || password.length > 20)
-                context.getString(R.string.error_password_length)
-            else null
-        repeatPasswordError.value =
-            if (repeatPassword != null && password != repeatPassword)
-                context.getString(R.string.error_password_repeat)
-            else null
-        return Stream.of(loginError, passwordError, repeatPasswordError)
-            .map { it.value }
-            .anyMatch { it != null }
-            .not() // there are no errors if true
+        return false
     }
 
-    private suspend fun signIn(login: String, password: String) {
-        withContext(Dispatchers.Main) {
-            isButtonEnabled.value = false
-        }
-        val result = withContext(Dispatchers.IO) { authManager.signIn(login, password) }
-        withContext(Dispatchers.Main) {
-            when (result) {
-                is AuthManager.SignInResult.Token -> {
-                    saveToken(result)
-                    route.value = Route.CLOSE
-                }
-                is AuthManager.SignInResult.WrongCredentials -> popup.value = InfoPopup(
-                    context.getString(R.string.title_could_not_sign_in),
-                    context.getString(R.string.info_wrong_credentials)
-                )
-                is AuthManager.SignInResult.Error -> {
-                    Log.w(TAG, result.throwable.stackTraceToString())
-                    popup.value = InfoPopup(
-                        context.getString(R.string.title_could_not_sign_in),
-                        context.getString(R.string.info_unexpected_error)
-                    )
-                }
-            }
-            isButtonEnabled.value = true
+    private fun updateState(state: UiState) {
+        _uiState.value = state
+    }
+
+    private fun emitEvent(event: DataDrivenEvent) {
+        launch {
+            _events.emit(event)
         }
     }
 
-    private suspend fun signUp(login: String, password: String) {
-        withContext(Dispatchers.Main) {
-            isButtonEnabled.value = false
-        }
-        val result = withContext(Dispatchers.IO) { authManager.signUp(login, password) }
-        withContext(Dispatchers.Main) {
-            when (result) {
-                is AuthManager.SignUpResult.Success ->
-                    signIn(login, password)
-                is AuthManager.SignUpResult.LoginIsTaken -> popup.value = InfoPopup(
-                    context.getString(R.string.title_could_not_sign_in),
-                    context.getString(R.string.info_login_taken)
-                )
-                is AuthManager.SignUpResult.Error -> {
-                    Log.w(TAG, result.throwable.stackTraceToString())
-                    popup.value = InfoPopup(
-                        context.getString(R.string.title_could_not_sign_in),
-                        context.getString(R.string.info_unexpected_error)
-                    )
-                }
-            }
-            isButtonEnabled.value = true
-        }
+    enum class UiState {
+        REGULAR,
+        LOADING,
+        LOGIN_ILLEGAL_CHAR,
+        LOGIN_ILLEGAL_LENGTH,
+        PASSWORDS_DIFFER,
+        PASSWORD_ILLEGAL_LENGTH
     }
 
-    private suspend fun saveToken(token: AuthManager.SignInResult.Token) {
-        sessionStore.setAccessToken(SessionStore.AccessToken(token.token, token.expirationSec))
-    }
-
-    private fun resetState() {
-        isButtonEnabled.value = true
-        Stream.of(loginError, passwordError, repeatPasswordError, popup).forEach { it.value = null }
-    }
-
-    enum class Route {
-        SIGN_IN,
-        SIGN_UP,
-        CLOSE
-    }
-
-    inner class InfoPopup(val title: String, val text: String) {
-        fun hide() {
-            popup.value = null
-        }
+    sealed interface DataDrivenEvent {
+        data object NavigateLoggedIn: DataDrivenEvent
+        data object NavigateSignIn: DataDrivenEvent
+        data object NavigateSignUp: DataDrivenEvent
+        data object NotifyLoginTaken: DataDrivenEvent
+        data object NotifyWrongCredentials: DataDrivenEvent
+        data class NotifyError(val message: String?): DataDrivenEvent
     }
 }

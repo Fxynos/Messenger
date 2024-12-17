@@ -1,110 +1,164 @@
 package com.vl.messenger.ui.viewmodel
 
+import android.util.Log
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.ExperimentalPagingApi
 import androidx.paging.PagingData
-import androidx.paging.cachedIn
-import com.vl.messenger.data.component.CacheDao
-import com.vl.messenger.data.component.PrivateMessagePagingSource
-import com.vl.messenger.data.component.PrivateMessageRemoteMediator
-import com.vl.messenger.data.component.PrivateMessageRepository
-import com.vl.messenger.data.entity.Dialog
-import com.vl.messenger.data.entity.Message
-import com.vl.messenger.data.manager.DialogManager
-import com.vl.messenger.data.manager.DownloadManager
-import com.vl.messenger.data.manager.PrivateChatManager
+import androidx.paging.map
+import com.vl.messenger.domain.boundary.PagingCache
+import com.vl.messenger.domain.entity.Dialog
+import com.vl.messenger.domain.entity.Message
+import com.vl.messenger.domain.entity.User
+import com.vl.messenger.domain.usecase.GetDialogByIdUseCase
+import com.vl.messenger.domain.usecase.GetLoggedUserProfileUseCase
+import com.vl.messenger.domain.usecase.GetPagedMessagesUseCase
+import com.vl.messenger.domain.usecase.GetUserByIdUseCase
+import com.vl.messenger.domain.usecase.LeaveConversationUseCase
+import com.vl.messenger.domain.usecase.ObserveAllIncomingMessagesUseCase
+import com.vl.messenger.domain.usecase.SendMessageUseCase
+import com.vl.messenger.ui.UiMapper.toUi
+import com.vl.messenger.ui.adapter.MessagePagingAdapter
+import com.vl.messenger.ui.utils.launch
+import com.vl.messenger.ui.utils.launchHeavy
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.cancellable
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
+
+private const val TAG = "DialogViewModel"
 
 @HiltViewModel
 class DialogViewModel @Inject constructor(
-    private val dialogManager: DialogManager,
-    private val chatManager: PrivateChatManager
+    savedStateHandle: SavedStateHandle,
+    getLoggedUserProfileUseCase: GetLoggedUserProfileUseCase,
+    private val getUserByIdUseCase: GetUserByIdUseCase,
+    getDialogByIdUseCase: GetDialogByIdUseCase,
+    getPagedMessagesUseCase: GetPagedMessagesUseCase,
+    observeAllIncomingMessagesUseCase: ObserveAllIncomingMessagesUseCase,
+    private val sendMessageUseCase: SendMessageUseCase,
+    private val leaveConversationUseCase: LeaveConversationUseCase
 ): ViewModel() {
-    private val cachedMessages = CacheDao<Long, Message>()
-    private val _dialog = MutableStateFlow<Dialog?>(null)
+    companion object {
+        const val ARG_DIALOG_ID = "dialog"
+    }
 
-    val uiState = _dialog.map {
-        if (it == null)
+    private val dialogId: String = savedStateHandle.get<String>(ARG_DIALOG_ID)!!
+    private lateinit var loggedUser: User
+    private lateinit var cachedMessages: PagingCache<Long, Message>
+
+    private val dialog = MutableStateFlow<Dialog?>(null)
+    private val messages = MutableStateFlow<PagingData<MessagePagingAdapter.MessageItem>>(PagingData.from(emptyList()))
+    val uiState = combine(dialog, messages) { dialog, messages ->
+        if (dialog == null)
             UiState.Loading
         else
-            UiState.DialogShown(it.title, it.image)
-    }.flowOn(Dispatchers.IO)
+            UiState.Loaded(
+                dialogName = dialog.title,
+                dialogImageUrl = dialog.image,
+                messages = messages,
+                isPrivate = dialog.isPrivate
+            )
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, UiState.Loading)
 
-    private lateinit var _messages: Flow<PagingData<Message>>
-    val messages by this::_messages
+    private val _events = MutableSharedFlow<DataDrivenEvent>()
+    val events = _events.asSharedFlow()
 
-    private val _scrollEvents = MutableSharedFlow<Any>(
-        extraBufferCapacity = 1,
-        onBufferOverflow = BufferOverflow.DROP_LATEST
-    )
-    val scrollEvents = _scrollEvents.asSharedFlow()
+    init {
+        launchHeavy {
+            loggedUser = getLoggedUserProfileUseCase(Unit).asUser()
+            dialog.value = getDialogByIdUseCase(dialogId)
 
-    @OptIn(ExperimentalPagingApi::class)
-    fun initialize(dialog: Dialog) {
-        if (_dialog.value != null) // skip if initialized
-            return
+            val pagedMessages = getPagedMessagesUseCase(dialogId)
 
-        this._dialog.value = dialog
+            cachedMessages = pagedMessages.cache
+            pagedMessages.data.toUi()
+                .onEach { messages.emit(it) }
+                .launchIn(viewModelScope)
 
-        // fetch old messages
-        _messages =
-            if (dialog.isPrivate)
-                PrivateMessageRepository(
-                    remoteMediator = PrivateMessageRemoteMediator(
-                        dialogManager,
-                        cachedMessages,
-                        dialog.id.toInt() // actually user id
-                    ),
-                    pagingSourceFactory = {
-                        PrivateMessagePagingSource(cachedMessages).apply {
-                            viewModelScope.launch {
-                                cachedMessages.updateEvents.collect { invalidate() }
-                            }
-                        }
-                    }
-                ).getMessages().cachedIn(viewModelScope)
-            else
-                TODO()
-
-        // subscribe for new messages
-        viewModelScope.launch {
-            chatManager.messageEvents.collect(this@DialogViewModel::insertNewMessage)
+            observeAllIncomingMessagesUseCase(Unit)
+                .cancellable()
+                .filter { message -> message.dialogId == dialogId }
+                .collect(this@DialogViewModel::insertMessage)
         }
     }
 
-    fun send(messageText: String) { // TODO sending messages to conversation
+    fun sendMessage(messageText: String) {
         if (messageText.isBlank())
             return
 
-        viewModelScope.launch(Dispatchers.IO) {
-            insertNewMessage(dialogManager.sendMessage(
-                _dialog.value!!.id.toInt(), // private dialog id is the companion user id
-                messageText.trim())
+        launchHeavy {
+            val sentMessage = sendMessageUseCase(
+                SendMessageUseCase.Param(
+                    message = messageText.trim(),
+                    dialogId = dialogId
+                )
             )
+            insertMessage(sentMessage)
         }
     }
 
-    private suspend fun insertNewMessage(message: Message) {
-        // DAO triggers paging source invalidation, it will update UI state
-        cachedMessages.addFirst(listOf(message.id to message))
-        delay(100L)
-        _scrollEvents.tryEmit(Any())
+    fun leaveConversation() {
+        launchHeavy {
+            leaveConversationUseCase(dialogId)
+            _events.emit(DataDrivenEvent.NavigateBack)
+        }
+    }
+
+    fun editConversation() {
+        if (dialog.value.let { it == null || it.isPrivate }) // unavailable for private dialog
+            return
+
+        launch {
+            _events.emit(DataDrivenEvent.NavigateToEditConversation(dialogId))
+        }
+    }
+
+    private suspend fun insertMessage(message: Message) {
+        cachedMessages.addFirst(listOf(message))
+        delay(100L) // FIXME dirty hack to scroll after refreshing recycler view
+        _events.emit(DataDrivenEvent.ScrollToLast)
+    }
+
+    private fun Flow<PagingData<Message>>.toUi(): Flow<PagingData<MessagePagingAdapter.MessageItem>> {
+        val cachedUsers = HashMap<Int, User>().apply { put(loggedUser.id, loggedUser) }
+        return map { pagingData ->
+            pagingData.map { message ->
+                var user = cachedUsers[message.senderId]
+                if (user == null) {
+                    user = getUserByIdUseCase(message.senderId).user
+                    cachedUsers[message.senderId] = user
+                    Log.d(TAG, "User ${user.id} is cached")
+                }
+                message.toUi(loggedUser.id, user)
+            }
+        }
     }
 
     sealed interface UiState {
-        object Loading: UiState
-        data class DialogShown(val dialogName: String, val dialogImage: String?): UiState
+        data object Loading: UiState
+        data class Loaded(
+            val dialogName: String,
+            val dialogImageUrl: String?,
+            val messages: PagingData<MessagePagingAdapter.MessageItem>,
+            val isPrivate: Boolean
+        ): UiState
+    }
+
+    sealed interface DataDrivenEvent {
+        data object ScrollToLast: DataDrivenEvent
+        data object NavigateBack: DataDrivenEvent
+        data class NavigateToEditConversation(val dialogId: String): DataDrivenEvent
     }
 }

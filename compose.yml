@@ -18,27 +18,14 @@ services:
     build: ./server
     restart: always
     environment:
-      - MSG_DB_URL=jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DB}?user=${MYSQL_USER}&password=${MYSQL_PASS}&autoReconnect=true&failOverReadOnly=false&maxReconnects=10
+      - MSG_DB_URL=jdbc:mysql://${MYSQL_HOST}:${MYSQL_PORT}/${MYSQL_DB}?user=${MYSQL_USER}&password=${MYSQL_PASS}&autoReconnect=true&failOverReadOnly=false&maxReconnects=10&serverTimezone=GMT%2B7
       - SERVER_HOST=${SERVER_HOST}
       - SERVER_PORT=${SERVER_PORT}
+      - SERVER_BASE_URL=${SERVER_BASE_URL}
       - JWT_AES=${JWT_AES}
-      - CLIENT_HOST=${PUBLIC_CLIENT_HOST}
-      - CLIENT_PORT=${PUBLIC_CLIENT_PORT}
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
     depends_on:
       - db
-
-  client:
-    build: ./client-web
-    restart: always
-    environment:
-      - HOST=${CLIENT_HOST}
-      - PORT=${CLIENT_PORT}
-      - REACT_APP_ADDRESS=${PUBLIC_SERVER_HOST}:${PUBLIC_SERVER_PORT}
-    ports:
-      - "${CLIENT_PORT}:${CLIENT_PORT}"
-    depends_on:
-      - server
     volumes:
-      - ../:/usr/src/app/
+      - ./server/static:/app/static

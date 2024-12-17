@@ -8,7 +8,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        minSdk = 27
+        minSdk = 29
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
@@ -32,4 +32,7 @@ android {
     }
 }
 
-dependencies {}
+dependencies {
+    /* Paging */
+    implementation(libs.paging.common)
+}

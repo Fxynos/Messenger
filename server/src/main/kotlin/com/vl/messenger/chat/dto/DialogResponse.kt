@@ -13,7 +13,7 @@ class DialogResponse(
     val lastMessage: MessageDto?
 ) {
     class DialogDto(
-        val id: Long,
+        val id: String,
         val title: String,
         val image: String?
     )

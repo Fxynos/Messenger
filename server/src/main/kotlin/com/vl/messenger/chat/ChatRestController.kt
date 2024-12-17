@@ -1,32 +1,24 @@
 package com.vl.messenger.chat
 
 import com.vl.messenger.DataMapper
-import com.vl.messenger.chat.dto.ConversationMessageForm
+import com.vl.messenger.dto.DtoMapper.toDto
 import com.vl.messenger.chat.dto.DialogResponse
-import com.vl.messenger.chat.dto.PrivateMessageForm
+import com.vl.messenger.chat.dto.MessageForm
 import com.vl.messenger.chat.dto.MessagesResponse
 import com.vl.messenger.dto.StatusResponse
-import com.vl.messenger.dto.UsersResponse
 import com.vl.messenger.statusOf
-import com.vl.messenger.toDto
 import com.vl.messenger.userId
 import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestParam
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 class ChatRestController(
     @Value("\${base.url}") private val baseUrl: String,
-    @Autowired private val chatService: ChatService,
-    @Autowired private val conversationService: ConversationService
+    @Autowired private val chatService: ChatService
 ) {
     companion object {
         private fun messageToDto(message: DataMapper.Message) =
@@ -43,77 +35,103 @@ class ChatRestController(
         @RequestParam(defaultValue = "0") offset: Int,
         @RequestParam(defaultValue = "50") limit: Int
     ): ResponseEntity<StatusResponse<List<DialogResponse>>> {
-        return statusOf(payload = chatService.getDialogs(userId, offset, limit).map {
-            DialogResponse(
-                it.isPrivate,
-                DialogResponse.DialogDto(it.id, it.title, it.image.toImageUrl()),
-                it.lastMessage?.run {
-                    DialogResponse.MessageDto(id, unixSec, content, it.lastMessageSender!!.run {
-                        UsersResponse.UserDto(id, login, image.toImageUrl())
-                    })
-                }
-            )
-        })
-    }
-
-    @GetMapping("/messages/private")
-    fun getPrivateMessages(
-        @RequestParam("user_id") companionId: Int,
-        @RequestParam("from_id", required = false) fromId: Long?,
-        @RequestParam(defaultValue = "50") limit: Int
-    ): ResponseEntity<StatusResponse<MessagesResponse>> {
-        if (fromId != null && fromId < 0)
-            return statusOf(HttpStatus.BAD_REQUEST, "\"from_id\" must be positive")
-        if (limit <= 0)
-            return statusOf(HttpStatus.BAD_REQUEST, "\"limit\" must be positive")
-        if (!chatService.userExists(companionId))
-            return statusOf(HttpStatus.GONE, "No such user")
-        return statusOf(payload = MessagesResponse(
-            chatService.getPrivateMessages(userId, companionId, fromId, limit).map(::messageToDto)
-        ))
-    }
-
-    @PostMapping("/messages/private/send")
-    fun sendPrivateMessage(
-        @Valid @RequestBody message: PrivateMessageForm
-    ): ResponseEntity<StatusResponse<MessagesResponse.Message>> {
-        if (!chatService.userExists(message.receiverId))
-            return statusOf(HttpStatus.GONE, "No such user")
-        if (message.content.length > 1000)
-            return statusOf(HttpStatus.PAYLOAD_TOO_LARGE, "Message is too long")
         return statusOf(
-            reason = "Message is sent",
-            payload = chatService.sendPrivateMessage(userId, message.receiverId, message.content.trim())
+            payload = chatService.getDialogs(userId, offset, limit)
+                .map { it.toDto(baseUrl) }
         )
     }
 
-    @GetMapping("/messages/conversations/{id}")
-    fun getConversationMessages(
-        @PathVariable("id") conversationId: Long,
+    /**
+     * @param id starts with `u` or `c` prefix for private dialogs and conversations respectively,
+     * ends with its actual id. For example, to retrieve private dialog for user with id `1234`, `u1234` should be used
+     */
+    @GetMapping("/dialogs/{id}")
+    fun getDialog(
+        @PathVariable id: String
+    ): ResponseEntity<StatusResponse<DialogResponse>> = handleDialog(
+        id = id,
+        privateDialogBlock = { dialog, _ -> dialog.toDto(baseUrl) },
+        conversationBlock = { dialog, _ -> dialog.toDto(baseUrl) }
+    )
+
+    @GetMapping("/dialogs/{id}/messages")
+    fun getMessages(
+        @PathVariable id: String,
         @RequestParam("from_id", required = false) fromId: Long?,
         @RequestParam(defaultValue = "50") limit: Int
-    ): ResponseEntity<StatusResponse<MessagesResponse>> {
-        if (fromId != null && fromId < 0)
-            return statusOf(HttpStatus.BAD_REQUEST, "\"from_id\" must be positive")
-        if (limit <= 0)
-            return statusOf(HttpStatus.BAD_REQUEST, "\"limit\" must be positive")
-        if (!conversationService.isMember(userId, conversationId))
-            return statusOf(HttpStatus.GONE, "Not member")
-        return statusOf(payload = MessagesResponse(
-            chatService.getConversationMessages(conversationId, fromId, limit).map(::messageToDto)
-        ))
-    }
+    ): ResponseEntity<StatusResponse<MessagesResponse>> = handleDialog(
+        id = id,
+        privateDialogBlock = { _, companionId ->
+            chatService.getPrivateMessages(
+                userId = userId,
+                companionId = companionId,
+                fromId = fromId,
+                limit = limit
+            ).toDto()
+        },
+        conversationBlock = { _, conversationId ->
+            chatService.getConversationMessages(
+                conversationId = conversationId,
+                fromId = fromId,
+                limit = limit
+            ).toDto()
+        }
+    )
 
-    @PostMapping("/messages/conversations/{id}/send")
-    fun sendConversationMessage(
-        @PathVariable("id") conversationId: Long,
-        @Valid @RequestBody message: ConversationMessageForm
-    ): ResponseEntity<StatusResponse<Nothing?>> {
-        if (!conversationService.isMember(userId, conversationId))
-            return statusOf(HttpStatus.GONE, "Not member")
+    @PostMapping("/dialogs/{id}/messages")
+    fun sendMessage(
+        @PathVariable id: String,
+        @Valid @RequestBody message: MessageForm
+    ): ResponseEntity<StatusResponse<MessagesResponse.Message>> {
         if (message.content.length > 1000)
             return statusOf(HttpStatus.PAYLOAD_TOO_LARGE, "Message is too long")
-        chatService.sendConversationMessage(userId, conversationId, message.content.trim())
-        return statusOf(HttpStatus.OK, "Message is sent")
+
+        return handleDialog(
+            id = id,
+            privateDialogBlock = { _, companionId ->
+                chatService.sendPrivateMessage(
+                    userId,
+                    companionId,
+                    message.content.trim()
+                )
+            },
+            conversationBlock = { _, conversationId ->
+                chatService.sendConversationMessage(
+                    userId,
+                    conversationId,
+                    message.content.trim()
+                )
+            }
+        )
+    }
+
+    private inline fun <T> handleDialog(
+        id: String,
+        privateDialogBlock: (dialog: DataMapper.Dialog, userId: Int) -> T,
+        conversationBlock: (dialog: DataMapper.Dialog, conversationId: Long) -> T
+    ): ResponseEntity<StatusResponse<T>> {
+        return when {
+            id.startsWith('u') -> { // private dialog
+                val userId = id.substring(1).toIntOrNull()
+                    ?: return statusOf(HttpStatus.BAD_REQUEST, "Invalid user id")
+
+                val dialog = chatService.getPrivateDialog(userId)
+                    ?: return statusOf(HttpStatus.NOT_FOUND, "No such user")
+
+                statusOf(payload = privateDialogBlock(dialog, userId))
+            }
+
+            id.startsWith('c') -> { // conversation dialog
+                val conversationId = id.substring(1).toLongOrNull()
+                    ?: return statusOf(HttpStatus.BAD_REQUEST, "Invalid conversation id")
+
+                val dialog = chatService.getConversationDialog(conversationId)
+                    ?: return statusOf(HttpStatus.NOT_FOUND, "No such conversation")
+
+                statusOf(payload = conversationBlock(dialog, conversationId))
+            }
+
+            else -> statusOf(HttpStatus.BAD_REQUEST, "Invalid id prefix")
+        }
     }
 }

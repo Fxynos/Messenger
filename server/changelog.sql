@@ -68,7 +68,7 @@ create table participate(
 create table message(
     id bigint primary key auto_increment,
     sender_id int not null,
-    time timestamp not null,
+    time bigint not null, -- seconds
     content varchar(1000) not null,
     foreign key (sender_id) references user(id)
 );
@@ -91,7 +91,7 @@ create table conversation_message(
 create table notification(
     id bigint primary key auto_increment,
     user_id int not null,
-    time timestamp not null,
+    time bigint not null, -- seconds
     title varchar(40),
     content varchar(1000),
     seen bool not null default false,
