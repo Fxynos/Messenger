@@ -5,7 +5,7 @@
     <string name="username">Логин</string>
     <string name="username_hint">Введите логин</string>
     <string name="password">Пароль</string>
-    <string name="password_hint">Ведите пароль</string>
+    <string name="password_hint">Введите пароль</string>
     <string name="don_t_have_an_account">Ещё нет аккаунта?</string>
     <string name="sign_up">Зарегистрироваться</string>
     <string name="have_an_account">Уже есть аккаунт?</string>

@@ -21,7 +21,7 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             app:cardElevation="0dp"
-            app:cardBackgroundColor="@android:color/darker_gray"
+            app:cardBackgroundColor="@color/gray_red"
             app:cardCornerRadius="32dp">
             <ImageView
                 android:id="@+id/image"
@@ -37,7 +37,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="36dp"
             android:background="@drawable/shape_message_received"
-            android:backgroundTint="@color/gray_purple">
+            android:backgroundTint="@color/gray_darker">
 
             <LinearLayout
                 android:id="@+id/message_body"
@@ -53,7 +53,7 @@
                     android:id="@+id/name"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="?attr/colorPrimary"
+                    android:textColor="@color/red_light"
                     android:textStyle="bold"
                     android:textSize="16sp"
                     android:singleLine="true"

@@ -17,7 +17,7 @@
             android:layout_width="64dp"
             android:layout_height="64dp"
             app:cardElevation="0dp"
-            app:cardBackgroundColor="@android:color/darker_gray"
+            app:cardBackgroundColor="@color/gray_red"
             app:cardCornerRadius="32dp">
             <ImageView
                 android:id="@+id/image"
@@ -28,13 +28,12 @@
         </androidx.cardview.widget.CardView>
 
         <ImageView
+            style="@style/IconStyle"
             android:id="@+id/conversation_marker"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_gravity="bottom|end"
             android:src="@drawable/ic_group"
-            android:scaleType="fitCenter"
-            app:tint="?attr/colorPrimary"
             android:visibility="gone"
             tools:visibility="visible"/>
 
@@ -60,6 +59,7 @@
         app:layout_constraintTop_toBottomOf="@id/title"
         android:textSize="16sp"
         android:textStyle="bold"
+        android:textColor="@color/red_blind"
         tools:text="You:"/>
 
     <TextView

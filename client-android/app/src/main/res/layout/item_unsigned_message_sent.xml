@@ -23,7 +23,8 @@
             android:id="@+id/message_body"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/shape_rounded_medium">
+            android:background="@drawable/shape_rounded_medium"
+            android:backgroundTint="@color/red">
 
             <com.vl.messenger.ui.view.ThinTextView
                 android:id="@+id/content"
