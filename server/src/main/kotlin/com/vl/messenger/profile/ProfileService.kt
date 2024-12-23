@@ -40,7 +40,7 @@ class ProfileService(
         dataMapper.getFriendRequestId(friendId, userId)?.let { requestId -> // accept existing friend request if received
             dataMapper.addFriend(userId, friendId)
             removeFriendRequest(requestId)
-            notificationService.addNotification(
+            notificationService.sendInfoNotification(
                 friendId,
                 "Новый друг",
                 "Пользователь ${dataMapper.getVerboseUser(userId)!!.login} принял ваш запрос в друзья"
@@ -64,7 +64,7 @@ class ProfileService(
     fun removeFriend(userId: Int, friendId: Int): Boolean {
         if (dataMapper.areFriends(userId, friendId)) {
             dataMapper.deleteFriend(userId, friendId)
-            notificationService.addNotification(
+            notificationService.sendInfoNotification(
                 friendId,
                 "Друзья",
                 "Пользователь ${dataMapper.getVerboseUser(userId)!!.login} удалил вас из друзей"
@@ -73,7 +73,7 @@ class ProfileService(
         }
         dataMapper.getFriendRequestId(friendId, userId)?.also { // reject inbound request
             removeFriendRequest(it)
-            notificationService.addNotification(
+            notificationService.sendInfoNotification(
                 friendId,
                 "Друзья",
                 "Пользователь ${dataMapper.getVerboseUser(userId)!!.login} отклонил ваш запрос в друзья"

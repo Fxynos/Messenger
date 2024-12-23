@@ -15,9 +15,16 @@ class DataMapper {
 
         private fun createConnection() = DriverManager.getConnection(System.getenv("MSG_DB_URL")
             ?: throw IllegalArgumentException("Define environment variable MSG_DB_URL"))
-        private fun createTransactionalConnection() = createConnection().apply {
-            autoCommit = false
-            transactionIsolation = Connection.TRANSACTION_READ_COMMITTED // some DBMS anomalies are still can be there
+
+        private inline fun <T> runTransaction(block: Connection.() -> T): T = createConnection().use { connection ->
+            connection.run {
+                autoCommit = false
+                transactionIsolation = Connection.TRANSACTION_READ_COMMITTED // some DBMS anomalies are still can be there
+                val result = block()
+                commit()
+
+                result
+            }
         }
 
         private fun ResultSet.collectUsers(): List<User> {
@@ -149,9 +156,8 @@ class DataMapper {
             statement.executeQuery().takeIf(ResultSet::next)?.getLong("id")
         }
 
-    fun addFriendRequest(userId: Int, friendId: Int) {
-        createTransactionalConnection().use { connection -> // concurrent transactions require different JDBC connections
-            connection.prepareStatement(
+    fun addFriendRequest(userId: Int, friendId: Int): Unit = runTransaction {
+            prepareStatement(
                 """
                     select id from notification inner join friend_request on id = notification_id 
                     where sender_id = ? and user_id = ?;
@@ -162,21 +168,21 @@ class DataMapper {
                 if (executeQuery().next())
                     throw IllegalStateException("Friend request is already sent")
             }
-            connection.prepareStatement(
-                "insert into notification (user_id, time) values (?, now());"
+
+            prepareStatement(
+                "insert into notification (user_id, time) values (?, unix_timestamp());"
             ).run {
                 setInt(1, friendId)
                 execute()
             }
-            connection.prepareStatement(
-                "insert into friend_request (notification_id, sender_id) values (LAST_INSERT_ID(), ?);"
+
+            prepareStatement(
+                "insert into friend_request (notification_id, sender_id) values (last_insert_id(), ?);"
             ).run {
                 setInt(1, userId)
                 execute()
             }
-            connection.commit()
         }
-    }
 
     /**
      * Symmetric
@@ -236,15 +242,79 @@ class DataMapper {
         }
     }
 
-    fun addNotification(userId: Int, title: String, content: String) {
-        connection.prepareStatement(
-            "insert into notification (user_id, title, content, time) values (?, ?, ?, now());"
+    /**
+     * @return notification id
+     */
+    fun addNotification(userId: Int, title: String, content: String): Long = runTransaction {
+        prepareStatement(
+            "insert into notification (user_id, title, content, time) values (?, ?, ?, unix_timestamp());"
         ).use { statement ->
             statement.setInt(1, userId)
             statement.setString(2, title)
             statement.setString(3, content)
             statement.execute()
         }
+
+        return createStatement()
+            .executeQuery("select last_insert_id() as id;")
+            .getLong("id")
+    }
+
+    /**
+     * @param userId sender
+     * @param memberId receiver
+     * @return notification id
+     */
+    fun addConversationInviteNotification(userId: Int, memberId: Int, conversationId: Long): Long = runTransaction {
+        prepareStatement(
+            "insert into notification (user_id, time) values (?, unix_timestamp());"
+        ).use { statement ->
+            statement.setInt(1, memberId)
+            statement.execute()
+        }
+
+        prepareStatement(
+            """
+                insert into conversation_request (notification_id, conversation_id, sender_id) 
+                values (last_insert_id(), ?, ?);
+            """.trimIndent()
+        ).use { statement ->
+            statement.setLong(1, conversationId)
+            statement.setInt(2, userId)
+            statement.execute()
+        }
+
+        return createStatement()
+            .executeQuery("select last_insert_id() as id;")
+            .getLong("id")
+    }
+
+    /**
+     * @param userId sender
+     * @param friendId receiver
+     * @return notification id
+     */
+    fun addFriendInviteNotification(userId: Int, friendId: Int): Long = runTransaction {
+        prepareStatement(
+            "insert into notification (user_id, time) values (?, unix_timestamp());"
+        ).use { statement ->
+            statement.setInt(1, friendId)
+            statement.execute()
+        }
+
+        prepareStatement(
+            """
+                insert into friend_request (notification_id, sender_id) 
+                values (last_insert_id(), ?);
+            """.trimIndent()
+        ).use { statement ->
+            statement.setInt(1, userId)
+            statement.execute()
+        }
+
+        return createStatement()
+            .executeQuery("select last_insert_id() as id;")
+            .getLong("id")
     }
 
     /**
@@ -287,7 +357,7 @@ class DataMapper {
             left join user as conversation_sender on cr.sender_id = conversation_sender.id 
             left join conversation on conversation_id = conversation.id 
             left join participate on conversation.id = participate.conversation_id
-            and user_id = ? ${ if (fromId == null) "" else "and notification.id < ? " }
+            where notification.user_id = ? ${ if (fromId == null) "" else "and notification.id < ? " }
             order by notification.id desc limit ?;
         """.trimIndent()).use { statement ->
             var argCounter = 0
@@ -295,7 +365,7 @@ class DataMapper {
             if (fromId != null)
                 statement.setLong(++argCounter, fromId)
             statement.setInt(++argCounter, limit)
-            statement.executeQuery().run { // fr and cr are empty for plain notifications
+            statement.executeQuery().run { // `fr` and `cr` are null for plain notifications
                 val list = LinkedList<Notification>()
                 while (next())
                     list += when {
@@ -391,25 +461,27 @@ class DataMapper {
             }
 
     fun addMessage(senderId: Int, receiverId: Int, content: String): Long =
-        createTransactionalConnection().use { connection ->
-            connection.prepareStatement(
-                "insert into message (sender_id, content, time) values (?, ?, now());"
+        runTransaction {
+            prepareStatement(
+                "insert into message (sender_id, content, time) values (?, ?, unix_timestamp());"
             ).run {
                 setInt(1, senderId)
                 setString(2, content)
                 execute()
             }
-            val messageId = connection.prepareStatement("select last_insert_id() as id;")
+
+            val messageId = prepareStatement("select last_insert_id() as id;")
                 .executeQuery()
                 .also(ResultSet::next)
                 .getLong("id")
-            connection.prepareStatement(
+
+            prepareStatement(
                 "insert into private_message (message_id, receiver_id) values (last_insert_id(), ?);"
             ).run {
                 setInt(1, receiverId)
                 execute()
             }
-            connection.commit()
+
             messageId
         }
 
@@ -450,23 +522,25 @@ class DataMapper {
         }
 
     fun createConversation(userId: Int, name: String): Long =
-        createTransactionalConnection().use { connection ->
-            connection.prepareStatement("insert into conversation (name) values (?);").run {
+        runTransaction {
+            prepareStatement("insert into conversation (name) values (?);").run {
                 setString(1, name)
                 execute()
             }
-            connection.prepareStatement("""
+
+            prepareStatement("""
                 insert into participate (user_id, conversation_id, rights_id) 
                 select ?, last_insert_id(), id from conversation_rights where role = "owner";
             """.trimIndent()).run {
                 setInt(1, userId)
                 execute()
             }
-            val conversationId = connection.prepareStatement("select last_insert_id() as id;")
+
+            val conversationId = prepareStatement("select last_insert_id() as id;")
                 .executeQuery()
                 .also(ResultSet::next)
                 .getLong("id")
-            connection.commit()
+
             conversationId
         }
 
@@ -481,6 +555,25 @@ class DataMapper {
             statement.executeQuery().takeIf(ResultSet::next)?.run {
                 Conversation(
                     id,
+                    getString("name"),
+                    getString("image"),
+                    getInt("members")
+                )
+            }
+        }
+
+    fun getConversationByInviteId(inviteId: Long): Conversation? =
+        connection.prepareStatement("""
+            select id, name, image, count(user_id) as members
+            from conversation_request
+            inner join conversation on id = conversation_request.conversation_id 
+            left join participate on id = participate.conversation_id
+            where notification_id = ?;
+        """.trimIndent()).use { statement ->
+            statement.setLong(1, inviteId)
+            statement.executeQuery().takeIf(ResultSet::next)?.run {
+                Conversation(
+                    getLong("id"),
                     getString("name"),
                     getString("image"),
                     getInt("members")
@@ -586,6 +679,25 @@ class DataMapper {
             statement.setLong(2, id)
             statement.execute()
         }
+    }
+
+    fun addConversationInvite(userId: Int, memberId: Int, conversationId: Long): Long = runTransaction {
+        prepareStatement(
+            "insert into notification (user_id, time) values (?, unix_timestamp());"
+        ).use { statement ->
+            statement.setInt(1, memberId)
+            statement.execute()
+        }
+
+        val notificationId = createStatement()
+            .executeQuery("select last_insert_id() as id;")
+            .use { it.getLong("id") }
+
+        prepareStatement(
+            "insert into conversation_request (notification_id, sender_id, conversation_id) values ();"
+        )
+
+        notificationId
     }
 
     fun getMembers(conversationId: Long, offset: Int, limit: Int): List<ConversationMember> =
@@ -705,25 +817,27 @@ class DataMapper {
         }
 
     fun addConversationMessage(userId: Int, conversationId: Long, content: String): Long =
-        createTransactionalConnection().use { connection ->
-            connection.prepareStatement(
-                "insert into message (sender_id, content, time) values (?, ?, now());"
+        runTransaction {
+            prepareStatement(
+                "insert into message (sender_id, content, time) values (?, ?, unix_timestamp());"
             ).run {
                 setInt(1, userId)
                 setString(2, content)
                 execute()
             }
-            val messageId = connection.prepareStatement("select last_insert_id() as id;")
+
+            val messageId = prepareStatement("select last_insert_id() as id;")
                 .executeQuery()
                 .also(ResultSet::next)
                 .getLong("id")
-            connection.prepareStatement(
+
+            prepareStatement(
                 "insert into conversation_message (message_id, conversation_id) values (last_insert_id(), ?);"
             ).run {
                 setLong(1, conversationId)
                 execute()
             }
-            connection.commit()
+
             messageId
         }
 
@@ -845,13 +959,21 @@ class DataMapper {
 
     class FriendRequest(
         val sender: User,
-        notificationId: Long, unixSec: Long, title: String, content: String, isSeen: Boolean
+        notificationId: Long,
+        unixSec: Long,
+        title: String,
+        content: String,
+        isSeen: Boolean
     ): Notification(notificationId, unixSec, title, content, isSeen)
 
     class ConversationRequest(
         val sender: User,
         val conversation: Conversation,
-        notificationId: Long, unixSec: Long, title: String, content: String, isSeen: Boolean
+        notificationId: Long,
+        unixSec: Long,
+        title: String,
+        content: String,
+        isSeen: Boolean
     ): Notification(notificationId, unixSec, title, content, isSeen)
 
     class UserActivity(val user: User, val messages: Long, val characters: Long)

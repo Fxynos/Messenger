@@ -68,21 +68,23 @@ class ConversationService(
         )
     }
 
-    fun addMember(userId: Int, conversationId: Long, memberId: Int): CommonResult {
+    fun inviteMember(userId: Int, conversationId: Long, memberId: Int): CommonResult {
         if (!hasPrivilege(userId, conversationId, Privilege.EDIT_MEMBERS))
             return CommonResult.NO_PRIVILEGE
 
-        dataMapper.addMember(memberId, conversationId)
-        notificationService.addNotification(
-            memberId,
-            "Новая беседа",
-            "Пользователь ${
-                dataMapper.getVerboseUser(userId)!!.login
-            } добавил вас в беседу ${
-                dataMapper.getConversation(conversationId)!!.name
-            }"
-        )
+        notificationService.sendConversationInviteNotification(userId, memberId, conversationId)
         return CommonResult.SUCCESS
+    }
+
+    /**
+     * @param inviteId notification id
+     */
+    fun acceptInvite(userId: Int, inviteId: Long) {
+        dataMapper.addMember(
+            userId,
+            dataMapper.getConversationByInviteId(inviteId)!!.id
+        )
+        dataMapper.removeNotification(inviteId)
     }
 
     fun removeMember(userId: Int, conversationId: Long, memberId: Int): CommonResult {
@@ -90,7 +92,7 @@ class ConversationService(
             return CommonResult.NO_PRIVILEGE
 
         dataMapper.removeMember(memberId, conversationId)
-        notificationService.addNotification(
+        notificationService.sendInfoNotification(
             memberId,
             "Беседы",
             "Пользователь ${
