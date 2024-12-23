@@ -3,15 +3,18 @@ package com.vl.messenger.profile
 import com.vl.messenger.DataMapper
 import com.vl.messenger.StorageService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.MessageSource
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
+import java.util.Locale
 import java.util.logging.Logger
 
 @Service
 class ProfileService(
     @Autowired private val dataMapper: DataMapper,
     @Autowired private val storageService: StorageService,
-    @Autowired private val notificationService: NotificationService
+    @Autowired private val notificationService: NotificationService,
+    @Autowired private val messageSource: MessageSource
 ) {
 
     private val logger = Logger.getLogger("ProfileService")
@@ -53,6 +56,20 @@ class ProfileService(
             logger.warning("User#$userId attempts to send friend request, but it is already sent")
         }
         return false
+    }
+
+    fun acceptInviteToFriends(userId: Int, inviteId: Long, locale: Locale) {
+        val sender = dataMapper.getFriendRequest(inviteId)!!.sender
+        val receiver = dataMapper.getVerboseUser(userId)!!
+
+        dataMapper.addFriend(userId, sender.id)
+        dataMapper.removeNotification(inviteId)
+
+        notificationService.sendInfoNotification(
+            sender.id,
+            messageSource.getMessage("notification.new_friend.title", null, locale),
+            messageSource.getMessage("notification.new_friend.content", arrayOf(receiver.login), locale)
+        )
     }
 
     fun getFriends(userId: Int) = dataMapper.getFriends(userId)

@@ -146,11 +146,35 @@ class DataMapper {
             statement.executeQuery().collectUsers()
         }
 
+    fun getFriendRequest(inviteId: Long): FriendRequest? =
+        connection.prepareStatement("""
+            select user.id, user.login, user.image, time, title, content, seen from notification 
+            inner join friend_request on id = notification_id
+            inner join user on user.id = friend_request.sender_id
+            where notification.id = ?;
+        """.trimIndent()).use { statement ->
+            statement.setLong(1, inviteId)
+            statement.executeQuery().takeIf(ResultSet::next)?.run {
+                FriendRequest(
+                    User(
+                        getInt("user.id"),
+                        getString("user.login"),
+                        getString("user.image")
+                    ),
+                    inviteId,
+                    getLong("time"),
+                    getString("title"),
+                    getString("content"),
+                    getBoolean("seen")
+                )
+            }
+        }
+
     fun getFriendRequestId(senderId: Int, receiverId: Int) =
         connection.prepareStatement("""
-        select id from notification inner join friend_request on id = notification_id 
-        where sender_id = ? and user_id = ?;
-    """.trimIndent()).use { statement ->
+            select id from notification inner join friend_request on id = notification_id 
+            where sender_id = ? and user_id = ?;
+        """.trimIndent()).use { statement ->
             statement.setInt(1, senderId)
             statement.setInt(2, receiverId)
             statement.executeQuery().takeIf(ResultSet::next)?.getLong("id")

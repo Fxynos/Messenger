@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
+import java.util.Locale
 
 @RestController
 @RequestMapping("/users")
@@ -70,17 +71,26 @@ class ProfileController(
     }
 
     @PutMapping("/add-friend")
-    fun addFriend(@RequestParam("user_id") friendId: Int): ResponseEntity<StatusResponse<Nothing>> {
+    fun inviteToFriends(@RequestParam("user_id") friendId: Int): ResponseEntity<StatusResponse<Nothing>> {
         if (userId == friendId)
             return statusOf(HttpStatus.BAD_REQUEST, "It's forbidden for users to add themselves to friends")
         if (service.getUser(friendId) == null)
-            return statusOf(HttpStatus.GONE, "No such user")
+            return statusOf(HttpStatus.NOT_FOUND, "No such user")
         return statusOf(HttpStatus.OK,
             if (service.addFriend(userId, friendId))
                 "User is added to friends"
             else
                 "Friend request is sent"
         )
+    }
+
+    @PostMapping("/invites/{id}/accept")
+    fun acceptInviteToFriends(
+        @PathVariable("id") inviteId: Long,
+        locale: Locale
+    ): ResponseEntity<StatusResponse<Nothing>> {
+        service.acceptInviteToFriends(userId, inviteId, locale)
+        return statusOf(HttpStatus.OK, "Accepted invite to friends")
     }
 
     @GetMapping("/friends")
