@@ -11,6 +11,7 @@ import com.vl.messenger.domain.entity.ConversationMember
 import com.vl.messenger.domain.entity.Dialog
 import com.vl.messenger.domain.entity.ExtendedDialog
 import com.vl.messenger.domain.entity.Message
+import com.vl.messenger.domain.entity.Notification
 import com.vl.messenger.domain.entity.Profile
 import com.vl.messenger.domain.entity.Role
 import com.vl.messenger.domain.entity.User
@@ -88,6 +89,11 @@ class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
             token.toBearerAuthHeader(),
             isHidden
         )
+
+    override suspend fun getNotifications(token: String, limit: Int, key: Long?): List<Notification> =
+        api.getNotifications(token.toBearerAuthHeader(), limit, key)
+            .requireResponse()
+            .toDomain()
 
     /* Friends */
 

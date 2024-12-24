@@ -24,6 +24,7 @@
     <string name="dialogs">Диалоги</string>
     <string name="profile">Профиль</string>
     <string name="search">Поиск</string>
+    <string name="notifications">Уведомления</string>
     <string name="create_conversation">Создать беседу</string>
     <string name="no_results">Нет результатов</string>
     <string name="dialog_last_message_sender">%1$s:</string>
@@ -40,6 +41,13 @@
     <string name="no_messages">Нет сообщений</string>
     <string name="loading">Загрузка...</string>
     <string name="edit_conversation">Редактирование беседы</string>
+
+    <!-- Notifications -->
+
+    <string name="notification_friend_request_title">Запрос в друзья</string>
+    <string name="notification_friend_request_content">Пользователь %1$s отправил вам запрос в друзья</string>
+    <string name="notification_conversation_invite_title">Приглашение в беседу</string>
+    <string name="notification_conversation_invite_content">Пользователь %1$s отправил вам приглашение в беседу %2$s</string>
 
     <!-- Profile menu -->
 

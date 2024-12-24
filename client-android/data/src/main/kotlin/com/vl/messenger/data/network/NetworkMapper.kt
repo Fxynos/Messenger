@@ -7,6 +7,8 @@ import com.vl.messenger.data.network.dto.DialogResponse
 import com.vl.messenger.data.network.dto.FriendStatusDto
 import com.vl.messenger.data.network.dto.MessageDto
 import com.vl.messenger.data.network.dto.MessagesDto
+import com.vl.messenger.data.network.dto.NotificationDto
+import com.vl.messenger.data.network.dto.NotificationsResponse
 import com.vl.messenger.data.network.dto.ProfileDto
 import com.vl.messenger.data.network.dto.RoleDto
 import com.vl.messenger.data.network.dto.RolesResponse
@@ -20,6 +22,7 @@ import com.vl.messenger.domain.entity.Dialog
 import com.vl.messenger.domain.entity.ExtendedDialog
 import com.vl.messenger.domain.entity.FriendStatus
 import com.vl.messenger.domain.entity.Message
+import com.vl.messenger.domain.entity.Notification
 import com.vl.messenger.domain.entity.Profile
 import com.vl.messenger.domain.entity.Role
 import com.vl.messenger.domain.entity.User
@@ -67,4 +70,27 @@ internal object NetworkMapper {
     fun RolesResponse.toDomain() = roles.map { it.toDomain() }
     fun ConversationMemberDto.toDomain() = ConversationMember(User(userId, login, image), role.toDomain())
     fun ConversationMembersResponse.toDomain() = members.map { it.toDomain() }
+    fun NotificationDto.toDomain() = when (type) {
+        NotificationDto.Type.INFO -> Notification.Info(
+            id = id,
+            unixSec = time,
+            isSeen = seen,
+            title = title!!,
+            content = content!!
+        )
+        NotificationDto.Type.FRIEND_REQUEST -> Notification.FriendRequest(
+            id = id,
+            unixSec = time,
+            isSeen = seen,
+            sender = sender!!.toDomain()
+        )
+        NotificationDto.Type.CONVERSATION_INVITE -> Notification.InviteToConversation(
+            id = id,
+            unixSec = time,
+            isSeen = seen,
+            sender = sender!!.toDomain(),
+            dialog = conversation!!.toDomain()
+        )
+    }
+    fun NotificationsResponse.toDomain() = notifications.map { it.toDomain() }
 }

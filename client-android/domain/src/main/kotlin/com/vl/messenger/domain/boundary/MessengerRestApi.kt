@@ -5,6 +5,7 @@ import com.vl.messenger.domain.entity.ConversationMember
 import com.vl.messenger.domain.entity.Dialog
 import com.vl.messenger.domain.entity.ExtendedDialog
 import com.vl.messenger.domain.entity.Message
+import com.vl.messenger.domain.entity.Notification
 import com.vl.messenger.domain.entity.Profile
 import com.vl.messenger.domain.entity.Role
 import com.vl.messenger.domain.entity.User
@@ -35,6 +36,7 @@ interface MessengerRestApi {
     suspend fun getProfile(token: String): Profile
     suspend fun uploadPhoto(token: String, image: ByteArray)
     suspend fun setProfileHidden(token: String, isHidden: Boolean)
+    suspend fun getNotifications(token: String, limit: Int, key: Long?): List<Notification>
 
     /* Friends */
 

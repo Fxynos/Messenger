@@ -7,6 +7,7 @@ import com.vl.messenger.data.network.dto.DialogResponse
 import com.vl.messenger.data.network.dto.MessageDto
 import com.vl.messenger.data.network.dto.MessageForm
 import com.vl.messenger.data.network.dto.MessagesDto
+import com.vl.messenger.data.network.dto.NotificationsResponse
 import com.vl.messenger.data.network.dto.ProfileDto
 import com.vl.messenger.data.network.dto.RoleResponse
 import com.vl.messenger.data.network.dto.RolesResponse
@@ -57,6 +58,13 @@ internal interface ApiScheme {
         @Header("Authorization") auth: String,
         @Query("is_hidden") isHidden: Boolean
     )
+
+    @GET("/notifications/")
+    suspend fun getNotifications(
+        @Header("Authorization") auth: String,
+        @Query("limit") limit: Int,
+        @Query("from_id") key: Long?
+    ): StatusResponse<NotificationsResponse>
 
     /* Friends */
 
