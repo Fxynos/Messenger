@@ -26,6 +26,14 @@ class NotificationsViewModel @Inject constructor(
 
     init { invalidate() }
 
+    fun acceptInvite(invite: Notification.InviteToConversation) {
+        TODO()
+    }
+
+    fun acceptRequest(request: Notification.FriendRequest) {
+        TODO()
+    }
+
     private fun invalidate() {
         pagingJob?.cancel()
         pagingJob = getPagedNotificationsUseCase(Unit)

@@ -1,17 +1,15 @@
 package com.vl.messenger.ui.screen
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageButton
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.RecyclerView
-import com.vl.messenger.R
+import com.vl.messenger.databinding.FragmentFriendsBinding
 import com.vl.messenger.ui.adapter.UserAdapter
 import com.vl.messenger.ui.viewmodel.FriendsViewModel
 import com.vl.messenger.ui.viewmodel.UserProfileViewModel
@@ -23,8 +21,7 @@ import kotlinx.coroutines.launch
 class FriendsFragment: Fragment() {
 
     private val viewModel: FriendsViewModel by viewModels()
-    private lateinit var menu: ImageButton
-    private lateinit var friends: RecyclerView
+    private lateinit var binding: FragmentFriendsBinding
     private lateinit var adapter: UserAdapter
 
     override fun onCreateView(
@@ -32,29 +29,31 @@ class FriendsFragment: Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val view = inflater.inflate(R.layout.fragment_friends, container, false)
-        menu = view.findViewById(R.id.menu)
-        friends = view.findViewById(R.id.friends)
-
+        binding = FragmentFriendsBinding.inflate(inflater, container, false)
         adapter = UserAdapter(requireContext()) { clickedUser ->
             startActivity(Intent(requireContext(), UserProfileActivity::class.java).apply {
                 putExtra(UserProfileViewModel.ARG_KEY_USER_ID, clickedUser.id)
             })
         }
-        friends.adapter = adapter
-        menu.setOnClickListener {
-            (requireActivity() as MenuActivity).openDrawer()
+        with(binding) {
+            friends.adapter = adapter
+            menu.setOnClickListener {
+                (requireActivity() as MenuActivity).openDrawer()
+            }
         }
-        return view
+        return binding.root
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         lifecycleScope.launch(Dispatchers.Main) {
             viewModel.uiState.collect { uiState ->
                 when (uiState) {
-                    is FriendsViewModel.UiState.Loaded -> adapter.submitList(uiState.friends)
+                    is FriendsViewModel.UiState.Loaded -> {
+                        adapter.submitList(uiState.friends)
+                        binding.hint.isVisible = adapter.itemCount == 0
+                        binding.friends.isVisible = adapter.itemCount != 0
+                    }
                     FriendsViewModel.UiState.Loading -> adapter.submitList(emptyList())
                 }
             }

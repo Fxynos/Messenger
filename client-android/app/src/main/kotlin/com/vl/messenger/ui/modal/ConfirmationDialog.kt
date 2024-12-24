@@ -19,3 +19,16 @@ fun Context.dropConfirmationDialog(
     .setNegativeButton(cancel, null)
     .setPositiveButton(confirm) { _, _ -> onConfirm() }
     .show()
+
+fun Context.dropConfirmationDialog(
+    title: String,
+    message: String,
+    cancel: String,
+    confirm: String,
+    onConfirm: () -> Unit
+): AlertDialog = MaterialAlertDialogBuilder(ContextThemeWrapper(this, R.style.AlertDialogStyle))
+    .setTitle(title)
+    .setMessage(message)
+    .setNegativeButton(cancel, null)
+    .setPositiveButton(confirm) { _, _ -> onConfirm() }
+    .show()

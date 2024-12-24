@@ -27,6 +27,8 @@
     <string name="notifications">Уведомления</string>
     <string name="create_conversation">Создать беседу</string>
     <string name="no_results">Нет результатов</string>
+    <string name="no_dialogs">Нет диалогов</string>
+    <string name="no_friends">Нет друзей</string>
     <string name="dialog_last_message_sender">%1$s:</string>
     <string name="logout">Выйти</string>
     <string name="open_dialog">Открыть диалог</string>
@@ -48,6 +50,9 @@
     <string name="notification_friend_request_content">Пользователь %1$s отправил вам запрос в друзья</string>
     <string name="notification_conversation_invite_title">Приглашение в беседу</string>
     <string name="notification_conversation_invite_content">Пользователь %1$s отправил вам приглашение в беседу %2$s</string>
+    <string name="accept">Принять</string>
+    <string name="cancel">Отмена</string>
+    <string name="no_notifications">Нет уведомлений</string>
 
     <!-- Profile menu -->
 

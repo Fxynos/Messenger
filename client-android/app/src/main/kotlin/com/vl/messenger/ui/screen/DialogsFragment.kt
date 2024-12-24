@@ -5,11 +5,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.paging.LoadState
 import com.vl.messenger.databinding.FragmentDialogsBinding
 import com.vl.messenger.ui.adapter.DialogPagingAdapter
 import com.vl.messenger.ui.viewmodel.DialogViewModel
@@ -45,7 +47,20 @@ class DialogsFragment: Fragment() {
         super.onViewCreated(view, savedInstanceState)
         lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collectLatest(adapter::submitData)
+                launch {
+                    viewModel.uiState.collectLatest(adapter::submitData)
+                }
+                launch { // load state
+                    adapter.loadStateFlow.collectLatest {
+                        if (it.refresh is LoadState.Loading)
+                            return@collectLatest
+
+                        with(binding) {
+                            hint.isVisible = adapter.itemCount == 0
+                            dialogs.isVisible = adapter.itemCount != 0
+                        }
+                    }
+                }
             }
         }
     }
