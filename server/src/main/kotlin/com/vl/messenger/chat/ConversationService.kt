@@ -6,16 +6,20 @@ import com.vl.messenger.StorageService
 import com.vl.messenger.asConversationDialogId
 import com.vl.messenger.profile.NotificationService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.context.MessageSource
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.io.ByteArrayOutputStream
+import java.util.Locale
 
 @Service
 class ConversationService(
     @Autowired private val dataMapper: DataMapper,
     @Autowired private val storageService: StorageService,
     @Autowired private val pdfService: PdfService,
-    @Autowired private val notificationService: NotificationService
+    @Autowired private val notificationService: NotificationService,
+    @Qualifier("messageSource") private val messageSource: MessageSource
 ) {
     fun createConversation(userId: Int, name: String) =
         dataMapper
@@ -79,12 +83,20 @@ class ConversationService(
     /**
      * @param inviteId notification id
      */
-    fun acceptInvite(userId: Int, inviteId: Long) {
-        dataMapper.addMember(
-            userId,
-            dataMapper.getConversationByInviteId(inviteId)!!.id
-        )
+    fun acceptInvite(userId: Int, inviteId: Long, locale: Locale) {
+        val invite = dataMapper.getNotification(userId, inviteId)
+                as DataMapper.ConversationRequest
+
+        dataMapper.addMember(userId, invite.conversation.id)
         dataMapper.removeNotification(inviteId)
+        notificationService.sendInfoNotification(
+            invite.sender.id,
+            messageSource.getMessage("notification.new_member.title", null, locale),
+            messageSource.getMessage("notification.new_member.content", arrayOf(
+                dataMapper.getVerboseUser(userId)!!.login,
+                invite.conversation.name
+            ), locale)
+        )
     }
 
     fun removeMember(userId: Int, conversationId: Long, memberId: Int): CommonResult {

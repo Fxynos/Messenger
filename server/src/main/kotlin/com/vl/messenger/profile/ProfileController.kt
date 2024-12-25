@@ -84,8 +84,8 @@ class ProfileController(
         )
     }
 
-    @PostMapping("/invites/{id}/accept")
-    fun acceptInviteToFriends(
+    @PostMapping("/friends/invites/{id}/accept")
+    fun acceptInviteToFriends( // TODO move out to notification controller
         @PathVariable("id") inviteId: Long,
         locale: Locale
     ): ResponseEntity<StatusResponse<Nothing>> {

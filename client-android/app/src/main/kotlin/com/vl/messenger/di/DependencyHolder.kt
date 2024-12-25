@@ -18,7 +18,9 @@ import com.vl.messenger.domain.boundary.MessengerStompApi
 import com.vl.messenger.domain.boundary.NotificationDataSource
 import com.vl.messenger.domain.boundary.SessionStore
 import com.vl.messenger.domain.boundary.UserDataSource
-import com.vl.messenger.domain.usecase.AddConversationMemberUseCase
+import com.vl.messenger.domain.usecase.AcceptConversationInviteUseCase
+import com.vl.messenger.domain.usecase.AcceptFriendRequestUseCase
+import com.vl.messenger.domain.usecase.InviteConversationMemberUseCase
 import com.vl.messenger.domain.usecase.AddFriendUseCase
 import com.vl.messenger.domain.usecase.CreateConversationUseCase
 import com.vl.messenger.domain.usecase.DownloadConversationReportUseCase
@@ -174,7 +176,7 @@ object DependencyHolder {
     @Provides
     @Singleton
     fun provideAddConversationMemberUseCase(sessionStore: SessionStore, api: MessengerRestApi) =
-        AddConversationMemberUseCase(sessionStore, api)
+        InviteConversationMemberUseCase(sessionStore, api)
 
     @Provides
     @Singleton
@@ -236,6 +238,16 @@ object DependencyHolder {
         sessionStore: SessionStore,
         dataSource: NotificationDataSource
     ) = GetPagedNotificationsUseCase(sessionStore, dataSource)
+
+    @Provides
+    @Singleton
+    fun provideAcceptConversationInviteUseCase(sessionStore: SessionStore, api: MessengerRestApi) =
+        AcceptConversationInviteUseCase(sessionStore, api)
+
+    @Provides
+    @Singleton
+    fun provideAcceptFriendRequestUseCase(sessionStore: SessionStore, api: MessengerRestApi) =
+        AcceptFriendRequestUseCase(sessionStore, api)
 
     /* Boundary */
 

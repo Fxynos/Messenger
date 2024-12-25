@@ -51,7 +51,7 @@ class ProfileService(
             return true
         }
         try {
-            dataMapper.addFriendRequest(userId, friendId)
+            notificationService.sendFriendInviteNotification(userId, friendId)
         } catch (e: IllegalStateException) {
             logger.warning("User#$userId attempts to send friend request, but it is already sent")
         }

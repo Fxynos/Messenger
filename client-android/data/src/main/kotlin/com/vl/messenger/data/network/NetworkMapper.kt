@@ -89,7 +89,7 @@ internal object NetworkMapper {
             unixSec = time,
             isSeen = seen,
             sender = sender!!.toDomain(),
-            dialog = conversation!!.toDomain()
+            dialog = dialog!!.toDomain()
         )
     }
     fun NotificationsResponse.toDomain() = notifications.map { it.toDomain() }

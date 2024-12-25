@@ -66,6 +66,18 @@ internal interface ApiScheme {
         @Query("from_id") key: Long?
     ): StatusResponse<NotificationsResponse>
 
+    @POST("/users/friends/invites/{id}/accept")
+    suspend fun acceptFriendRequest(
+        @Header("Authorization") auth: String,
+        @Path("id") inviteId: Long
+    )
+
+    @POST("/conversations/invites/{id}/accept")
+    suspend fun acceptConversationInvite(
+        @Header("Authorization") auth: String,
+        @Path("id") inviteId: Long
+    )
+
     /* Friends */
 
     @GET("/users/friends")
@@ -145,8 +157,8 @@ internal interface ApiScheme {
         @Path("id") conversationId: Long
     )
 
-    @POST("/conversations/{id}/members/{user_id}")
-    suspend fun addConversationMember(
+    @POST("/conversations/{id}/members/{user_id}/invite")
+    suspend fun inviteConversationMember(
         @Header("Authorization") auth: String,
         @Path("id") conversationId: Long,
         @Path("user_id") userId: Int

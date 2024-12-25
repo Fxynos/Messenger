@@ -51,8 +51,8 @@ class FriendsFragment: Fragment() {
                 when (uiState) {
                     is FriendsViewModel.UiState.Loaded -> {
                         adapter.submitList(uiState.friends)
-                        binding.hint.isVisible = adapter.itemCount == 0
-                        binding.friends.isVisible = adapter.itemCount != 0
+                        binding.hint.isVisible = uiState.friends.isEmpty()
+                        binding.friends.isVisible = uiState.friends.isNotEmpty()
                     }
                     FriendsViewModel.UiState.Loading -> adapter.submitList(emptyList())
                 }

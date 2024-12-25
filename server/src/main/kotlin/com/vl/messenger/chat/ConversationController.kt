@@ -106,7 +106,7 @@ class ConversationController(
     ): ResponseEntity<StatusResponse<Nothing>> =
         when (service.inviteMember(userId, conversationId, memberId)) {
             ConversationService.CommonResult.SUCCESS ->
-                statusOf(HttpStatus.OK, "Conversation member is added")
+                statusOf(HttpStatus.OK, "Conversation member is invited")
 
             ConversationService.CommonResult.NO_PRIVILEGE ->
                 statusOf(HttpStatus.FORBIDDEN, "No edit members privilege")
@@ -115,8 +115,9 @@ class ConversationController(
     @PostMapping("/invites/{id}/accept")
     fun acceptInvite(
         @PathVariable("id") inviteId: Long,
+        locale: Locale
     ): ResponseEntity<StatusResponse<Nothing>> {
-        service.acceptInvite(userId, inviteId)
+        service.acceptInvite(userId, inviteId, locale)
         return statusOf(HttpStatus.OK, "Invite to conversation accepted")
     }
 

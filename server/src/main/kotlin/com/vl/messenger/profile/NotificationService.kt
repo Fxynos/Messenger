@@ -19,7 +19,7 @@ class NotificationService(@Autowired private val dataMapper: DataMapper) {
 
     fun sendConversationInviteNotification(userId: Int, memberId: Int, conversationId: Long): Unit =
         deliverNotification(
-            dataMapper.addConversationInviteNotification(userId, memberId, conversationId)
+            dataMapper.addConversationInvite(userId, memberId, conversationId)
         )
 
     fun getNotifications(userId: Int, fromId: Long?, limit: Int) =

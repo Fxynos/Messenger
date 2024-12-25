@@ -93,7 +93,7 @@
     <string name="member_option_remove">Удалить из беседы</string>
     <string name="member_option_assign_role">Назначить роль</string>
 
-    <string name="dialog_member_invited">Новый участник \"%1$s\" добавлен в беседу</string>
+    <string name="dialog_member_invited">Новый участник \"%1$s\" приглашен в беседу</string>
     <string name="dialog_member_removed">Участник \"%1$s\" исключен из беседы</string>
     <string name="dialog_member_role_set">Участнику \"%1$s\" назначена роль \"%2$s\"</string>
 

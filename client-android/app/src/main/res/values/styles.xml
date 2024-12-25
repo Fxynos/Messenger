@@ -74,4 +74,9 @@
         <item name="android:background">@color/gray_dark</item>
     </style>
 
+    <style name="MaterialAlertDialogStyle" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="android:background">@color/gray_dark</item>
+        <item name="colorOnSurface">?attr/colorOnPrimary</item>
+    </style>
+
 </resources>

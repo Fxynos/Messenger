@@ -14,13 +14,14 @@ import com.vl.messenger.databinding.FragmentNotificationsBinding
 import com.vl.messenger.domain.entity.Notification
 import com.vl.messenger.ui.adapter.NotificationPagingAdapter
 import com.vl.messenger.ui.modal.dropConfirmationDialog
+import com.vl.messenger.ui.utils.setOnClick
 import com.vl.messenger.ui.viewmodel.NotificationsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class NotificationsScreen: Fragment() {
+class NotificationsFragment: Fragment() {
 
     private val viewModel: NotificationsViewModel by viewModels()
     private lateinit var binding: FragmentNotificationsBinding
@@ -44,7 +45,7 @@ class NotificationsScreen: Fragment() {
                         ),
                         cancel = getString(R.string.cancel),
                         confirm = getString(R.string.accept),
-                        onConfirm = { viewModel.acceptRequest(notification) }
+                        onConfirm = { viewModel.acceptFriendRequest(notification) }
                     )
                 }
                 is Notification.InviteToConversation -> with(requireContext()) {
@@ -57,11 +58,13 @@ class NotificationsScreen: Fragment() {
                         ),
                         cancel = getString(R.string.cancel),
                         confirm = getString(R.string.accept),
-                        onConfirm = { viewModel.acceptInvite(notification) }
+                        onConfirm = { viewModel.acceptConversationInvite(notification) }
                     )
                 }
             }
         }
+        binding.notifications.adapter = adapter
+        binding.menu.setOnClick { (requireActivity() as MenuActivity).openDrawer() }
         return binding.root
     }
 

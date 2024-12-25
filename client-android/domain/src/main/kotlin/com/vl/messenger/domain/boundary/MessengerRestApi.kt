@@ -43,6 +43,8 @@ interface MessengerRestApi {
     suspend fun getFriends(token: String): List<User>
     suspend fun addFriend(token: String, userId: Int)
     suspend fun removeFriend(token: String, userId: Int)
+    suspend fun acceptFriendRequest(token: String, notificationId: Long)
+    suspend fun acceptConversationInvite(token: String, notificationId: Long)
 
     /* Users */
 
@@ -68,7 +70,7 @@ interface MessengerRestApi {
      */
     suspend fun createConversation(token: String, conversationName: String): String
     suspend fun leaveConversation(token: String, dialogId: String)
-    suspend fun addMemberToConversation(token: String, dialogId: String, userId: Int)
+    suspend fun inviteMemberToConversation(token: String, dialogId: String, userId: Int)
     suspend fun removeMemberFromConversation(token: String, dialogId: String, userId: Int)
     suspend fun getConversationMembers(
         token: String,

@@ -95,6 +95,12 @@ class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
             .requireResponse()
             .toDomain()
 
+    override suspend fun acceptFriendRequest(token: String, notificationId: Long): Unit =
+        api.acceptFriendRequest(token.toBearerAuthHeader(), notificationId)
+
+    override suspend fun acceptConversationInvite(token: String, notificationId: Long): Unit =
+        api.acceptConversationInvite(token.toBearerAuthHeader(), notificationId)
+
     /* Friends */
 
     override suspend fun getFriends(token: String): List<User> =
@@ -167,11 +173,11 @@ class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
             dialogId.toConversationId()
         )
 
-    override suspend fun addMemberToConversation(
+    override suspend fun inviteMemberToConversation(
         token: String,
         dialogId: String,
         userId: Int
-    ): Unit = api.addConversationMember(
+    ): Unit = api.inviteConversationMember(
         token.toBearerAuthHeader(),
         dialogId.toConversationId(),
         userId

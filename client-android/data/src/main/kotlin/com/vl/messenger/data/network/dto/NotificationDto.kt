@@ -7,7 +7,7 @@ internal class NotificationDto {
     val time: Long = 0
     val seen: Boolean = false
     val sender: UserDto? = null
-    val conversation: DialogDto? = null
+    val dialog: DialogDto? = null
     val title: String? = null
     val content: String? = null
 
