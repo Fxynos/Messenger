@@ -10,7 +10,7 @@ import com.vl.messenger.domain.entity.ConversationMember
 import com.vl.messenger.domain.entity.Dialog
 import com.vl.messenger.domain.entity.Role
 import com.vl.messenger.domain.entity.User
-import com.vl.messenger.domain.usecase.AddConversationMemberUseCase
+import com.vl.messenger.domain.usecase.InviteConversationMemberUseCase
 import com.vl.messenger.domain.usecase.DownloadConversationReportUseCase
 import com.vl.messenger.domain.usecase.GetAvailableRolesUseCase
 import com.vl.messenger.domain.usecase.GetDialogByIdUseCase
@@ -43,7 +43,7 @@ class EditConversationViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val getDialogByIdUseCase: GetDialogByIdUseCase,
     private val getPagedConversationMembersUseCase: GetPagedConversationMembersUseCase,
-    private val addConversationMemberUseCase: AddConversationMemberUseCase,
+    private val inviteConversationMemberUseCase: InviteConversationMemberUseCase,
     private val removeConversationMemberUseCase: RemoveConversationMemberUseCase,
     private val setConversationMemberRole: SetConversationMemberRole,
     private val getFriendsUseCase: GetFriendsUseCase,
@@ -155,13 +155,13 @@ class EditConversationViewModel @Inject constructor(
 
     fun inviteMember(user: User) {
         launchHeavy {
-            addConversationMemberUseCase(
-                AddConversationMemberUseCase.Param(
+            inviteConversationMemberUseCase(
+                InviteConversationMemberUseCase.Param(
                     dialogId = dialog.value!!.id,
                     userId = user.id
                 ))
             invalidateMembers()
-            DataDrivenEvent.NotifyMemberAdded(user) sendTo _events
+            DataDrivenEvent.NotifyMemberInvited(user) sendTo _events
         }
     }
 
@@ -248,7 +248,7 @@ class EditConversationViewModel @Inject constructor(
             val canEditImage: Boolean
         ): DataDrivenEvent
         data class ShowFriendsToInviteDialog(val users: List<User>): DataDrivenEvent
-        data class NotifyMemberAdded(val member: User): DataDrivenEvent
+        data class NotifyMemberInvited(val member: User): DataDrivenEvent
         data class NotifyMemberRemoved(val member: ConversationMember): DataDrivenEvent
         data class NotifyMemberRoleSet(val member: ConversationMember): DataDrivenEvent
         data class ShowMemberOptions(

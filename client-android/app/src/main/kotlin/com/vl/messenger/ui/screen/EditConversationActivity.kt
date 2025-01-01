@@ -90,7 +90,7 @@ class EditConversationActivity: AppCompatActivity() {
                 onSelect = viewModel::inviteMember
             )
 
-            is EditConversationViewModel.DataDrivenEvent.NotifyMemberAdded -> Toast.makeText(
+            is EditConversationViewModel.DataDrivenEvent.NotifyMemberInvited -> Toast.makeText(
                 this,
                 getString(R.string.dialog_member_invited, event.member.login),
                 Toast.LENGTH_LONG

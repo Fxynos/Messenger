@@ -3,15 +3,18 @@ package com.vl.messenger.profile
 import com.vl.messenger.DataMapper
 import com.vl.messenger.StorageService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.MessageSource
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
+import java.util.Locale
 import java.util.logging.Logger
 
 @Service
 class ProfileService(
     @Autowired private val dataMapper: DataMapper,
     @Autowired private val storageService: StorageService,
-    @Autowired private val notificationService: NotificationService
+    @Autowired private val notificationService: NotificationService,
+    @Autowired private val messageSource: MessageSource
 ) {
 
     private val logger = Logger.getLogger("ProfileService")
@@ -40,7 +43,7 @@ class ProfileService(
         dataMapper.getFriendRequestId(friendId, userId)?.let { requestId -> // accept existing friend request if received
             dataMapper.addFriend(userId, friendId)
             removeFriendRequest(requestId)
-            notificationService.addNotification(
+            notificationService.sendInfoNotification(
                 friendId,
                 "Новый друг",
                 "Пользователь ${dataMapper.getVerboseUser(userId)!!.login} принял ваш запрос в друзья"
@@ -48,11 +51,25 @@ class ProfileService(
             return true
         }
         try {
-            dataMapper.addFriendRequest(userId, friendId)
+            notificationService.sendFriendInviteNotification(userId, friendId)
         } catch (e: IllegalStateException) {
             logger.warning("User#$userId attempts to send friend request, but it is already sent")
         }
         return false
+    }
+
+    fun acceptInviteToFriends(userId: Int, inviteId: Long, locale: Locale) {
+        val sender = dataMapper.getFriendRequest(inviteId)!!.sender
+        val receiver = dataMapper.getVerboseUser(userId)!!
+
+        dataMapper.addFriend(userId, sender.id)
+        dataMapper.removeNotification(inviteId)
+
+        notificationService.sendInfoNotification(
+            sender.id,
+            messageSource.getMessage("notification.new_friend.title", null, locale),
+            messageSource.getMessage("notification.new_friend.content", arrayOf(receiver.login), locale)
+        )
     }
 
     fun getFriends(userId: Int) = dataMapper.getFriends(userId)
@@ -64,7 +81,7 @@ class ProfileService(
     fun removeFriend(userId: Int, friendId: Int): Boolean {
         if (dataMapper.areFriends(userId, friendId)) {
             dataMapper.deleteFriend(userId, friendId)
-            notificationService.addNotification(
+            notificationService.sendInfoNotification(
                 friendId,
                 "Друзья",
                 "Пользователь ${dataMapper.getVerboseUser(userId)!!.login} удалил вас из друзей"
@@ -73,7 +90,7 @@ class ProfileService(
         }
         dataMapper.getFriendRequestId(friendId, userId)?.also { // reject inbound request
             removeFriendRequest(it)
-            notificationService.addNotification(
+            notificationService.sendInfoNotification(
                 friendId,
                 "Друзья",
                 "Пользователь ${dataMapper.getVerboseUser(userId)!!.login} отклонил ваш запрос в друзья"

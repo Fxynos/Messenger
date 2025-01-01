@@ -11,6 +11,7 @@ import com.vl.messenger.domain.entity.ConversationMember
 import com.vl.messenger.domain.entity.Dialog
 import com.vl.messenger.domain.entity.ExtendedDialog
 import com.vl.messenger.domain.entity.Message
+import com.vl.messenger.domain.entity.Notification
 import com.vl.messenger.domain.entity.Profile
 import com.vl.messenger.domain.entity.Role
 import com.vl.messenger.domain.entity.User
@@ -89,6 +90,17 @@ class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
             isHidden
         )
 
+    override suspend fun getNotifications(token: String, limit: Int, key: Long?): List<Notification> =
+        api.getNotifications(token.toBearerAuthHeader(), limit, key)
+            .requireResponse()
+            .toDomain()
+
+    override suspend fun acceptFriendRequest(token: String, notificationId: Long): Unit =
+        api.acceptFriendRequest(token.toBearerAuthHeader(), notificationId)
+
+    override suspend fun acceptConversationInvite(token: String, notificationId: Long): Unit =
+        api.acceptConversationInvite(token.toBearerAuthHeader(), notificationId)
+
     /* Friends */
 
     override suspend fun getFriends(token: String): List<User> =
@@ -161,11 +173,11 @@ class RetrofitMessengerRestApi(retrofit: Retrofit): MessengerRestApi {
             dialogId.toConversationId()
         )
 
-    override suspend fun addMemberToConversation(
+    override suspend fun inviteMemberToConversation(
         token: String,
         dialogId: String,
         userId: Int
-    ): Unit = api.addConversationMember(
+    ): Unit = api.inviteConversationMember(
         token.toBearerAuthHeader(),
         dialogId.toConversationId(),
         userId

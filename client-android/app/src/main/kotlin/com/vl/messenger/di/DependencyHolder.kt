@@ -8,15 +8,19 @@ import com.vl.messenger.data.network.MessengerStompApiImpl
 import com.vl.messenger.data.network.RetrofitMessengerRestApi
 import com.vl.messenger.data.paging.dialog.DialogDataSourceImpl
 import com.vl.messenger.data.paging.message.MessageDataSourceImpl
+import com.vl.messenger.data.paging.notification.NotificationDataSourceImpl
 import com.vl.messenger.data.paging.user.UserDataSourceImpl
 import com.vl.messenger.domain.boundary.DialogDataSource
 import com.vl.messenger.domain.boundary.FileStorageAccessor
 import com.vl.messenger.domain.boundary.MessageDataSource
 import com.vl.messenger.domain.boundary.MessengerRestApi
 import com.vl.messenger.domain.boundary.MessengerStompApi
+import com.vl.messenger.domain.boundary.NotificationDataSource
 import com.vl.messenger.domain.boundary.SessionStore
 import com.vl.messenger.domain.boundary.UserDataSource
-import com.vl.messenger.domain.usecase.AddConversationMemberUseCase
+import com.vl.messenger.domain.usecase.AcceptConversationInviteUseCase
+import com.vl.messenger.domain.usecase.AcceptFriendRequestUseCase
+import com.vl.messenger.domain.usecase.InviteConversationMemberUseCase
 import com.vl.messenger.domain.usecase.AddFriendUseCase
 import com.vl.messenger.domain.usecase.CreateConversationUseCase
 import com.vl.messenger.domain.usecase.DownloadConversationReportUseCase
@@ -29,6 +33,7 @@ import com.vl.messenger.domain.usecase.GetOwnConversationRoleUseCase
 import com.vl.messenger.domain.usecase.GetPagedConversationMembersUseCase
 import com.vl.messenger.domain.usecase.GetPagedDialogsUseCase
 import com.vl.messenger.domain.usecase.GetPagedMessagesUseCase
+import com.vl.messenger.domain.usecase.GetPagedNotificationsUseCase
 import com.vl.messenger.domain.usecase.GetPagedUsersByNameUseCase
 import com.vl.messenger.domain.usecase.GetUserByIdUseCase
 import com.vl.messenger.domain.usecase.LeaveConversationUseCase
@@ -171,7 +176,7 @@ object DependencyHolder {
     @Provides
     @Singleton
     fun provideAddConversationMemberUseCase(sessionStore: SessionStore, api: MessengerRestApi) =
-        AddConversationMemberUseCase(sessionStore, api)
+        InviteConversationMemberUseCase(sessionStore, api)
 
     @Provides
     @Singleton
@@ -227,6 +232,23 @@ object DependencyHolder {
         fileStorageAccessor: FileStorageAccessor
     ) = UpdateConversationImageUseCase(sessionStore, api, fileStorageAccessor)
 
+    @Provides
+    @Singleton
+    fun provideGetPagedNotificationsUseCase(
+        sessionStore: SessionStore,
+        dataSource: NotificationDataSource
+    ) = GetPagedNotificationsUseCase(sessionStore, dataSource)
+
+    @Provides
+    @Singleton
+    fun provideAcceptConversationInviteUseCase(sessionStore: SessionStore, api: MessengerRestApi) =
+        AcceptConversationInviteUseCase(sessionStore, api)
+
+    @Provides
+    @Singleton
+    fun provideAcceptFriendRequestUseCase(sessionStore: SessionStore, api: MessengerRestApi) =
+        AcceptFriendRequestUseCase(sessionStore, api)
+
     /* Boundary */
 
     @Provides
@@ -259,6 +281,11 @@ object DependencyHolder {
     @Provides
     fun provideFileStorageAccessor(@ApplicationContext context: Context): FileStorageAccessor =
         FileStorageAccessorImpl(context)
+
+    @Provides
+    @Singleton
+    fun provideNotificationDataSourceImpl(api: MessengerRestApi): NotificationDataSource =
+        NotificationDataSourceImpl(api)
 
     /* Data layer */
 

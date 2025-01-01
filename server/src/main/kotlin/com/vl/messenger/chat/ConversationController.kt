@@ -99,18 +99,27 @@ class ConversationController(
         }
     }
 
-    @PostMapping("/{id}/members/{user_id}")
-    fun addMember(
+    @PostMapping("/{id}/members/{user_id}/invite")
+    fun inviteMember(
         @PathVariable("id") conversationId: Long,
         @PathVariable("user_id") memberId: Int
     ): ResponseEntity<StatusResponse<Nothing>> =
-        when (service.addMember(userId, conversationId, memberId)) {
+        when (service.inviteMember(userId, conversationId, memberId)) {
             ConversationService.CommonResult.SUCCESS ->
-                statusOf(HttpStatus.OK, "Conversation member is added")
+                statusOf(HttpStatus.OK, "Conversation member is invited")
 
             ConversationService.CommonResult.NO_PRIVILEGE ->
                 statusOf(HttpStatus.FORBIDDEN, "No edit members privilege")
         }
+
+    @PostMapping("/invites/{id}/accept")
+    fun acceptInvite(
+        @PathVariable("id") inviteId: Long,
+        locale: Locale
+    ): ResponseEntity<StatusResponse<Nothing>> {
+        service.acceptInvite(userId, inviteId, locale)
+        return statusOf(HttpStatus.OK, "Invite to conversation accepted")
+    }
 
     @DeleteMapping("/{id}/members/{user_id}")
     fun removeMember(

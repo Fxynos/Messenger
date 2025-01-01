@@ -5,6 +5,7 @@ import com.vl.messenger.domain.entity.ConversationMember
 import com.vl.messenger.domain.entity.Dialog
 import com.vl.messenger.domain.entity.ExtendedDialog
 import com.vl.messenger.domain.entity.Message
+import com.vl.messenger.domain.entity.Notification
 import com.vl.messenger.domain.entity.Profile
 import com.vl.messenger.domain.entity.Role
 import com.vl.messenger.domain.entity.User
@@ -35,12 +36,15 @@ interface MessengerRestApi {
     suspend fun getProfile(token: String): Profile
     suspend fun uploadPhoto(token: String, image: ByteArray)
     suspend fun setProfileHidden(token: String, isHidden: Boolean)
+    suspend fun getNotifications(token: String, limit: Int, key: Long?): List<Notification>
 
     /* Friends */
 
     suspend fun getFriends(token: String): List<User>
     suspend fun addFriend(token: String, userId: Int)
     suspend fun removeFriend(token: String, userId: Int)
+    suspend fun acceptFriendRequest(token: String, notificationId: Long)
+    suspend fun acceptConversationInvite(token: String, notificationId: Long)
 
     /* Users */
 
@@ -66,7 +70,7 @@ interface MessengerRestApi {
      */
     suspend fun createConversation(token: String, conversationName: String): String
     suspend fun leaveConversation(token: String, dialogId: String)
-    suspend fun addMemberToConversation(token: String, dialogId: String, userId: Int)
+    suspend fun inviteMemberToConversation(token: String, dialogId: String, userId: Int)
     suspend fun removeMemberFromConversation(token: String, dialogId: String, userId: Int)
     suspend fun getConversationMembers(
         token: String,

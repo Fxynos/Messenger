@@ -35,7 +35,8 @@ class MenuActivity: AppCompatActivity() {
     private val routes: Map<Int, Class<out Fragment>> = mapOf(
         R.id.search to SearchFragment::class.java,
         R.id.friends to FriendsFragment::class.java,
-        R.id.dialogs to DialogsFragment::class.java
+        R.id.dialogs to DialogsFragment::class.java,
+        R.id.notifications to NotificationsFragment::class.java
     )
     private lateinit var pickMediaRequestLauncher: ActivityResultLauncher<PickVisualMediaRequest>
 

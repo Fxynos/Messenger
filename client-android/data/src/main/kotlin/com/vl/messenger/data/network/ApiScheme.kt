@@ -7,6 +7,7 @@ import com.vl.messenger.data.network.dto.DialogResponse
 import com.vl.messenger.data.network.dto.MessageDto
 import com.vl.messenger.data.network.dto.MessageForm
 import com.vl.messenger.data.network.dto.MessagesDto
+import com.vl.messenger.data.network.dto.NotificationsResponse
 import com.vl.messenger.data.network.dto.ProfileDto
 import com.vl.messenger.data.network.dto.RoleResponse
 import com.vl.messenger.data.network.dto.RolesResponse
@@ -56,6 +57,25 @@ internal interface ApiScheme {
     suspend fun updateVisibility(
         @Header("Authorization") auth: String,
         @Query("is_hidden") isHidden: Boolean
+    )
+
+    @GET("/notifications/")
+    suspend fun getNotifications(
+        @Header("Authorization") auth: String,
+        @Query("limit") limit: Int,
+        @Query("from_id") key: Long?
+    ): StatusResponse<NotificationsResponse>
+
+    @POST("/users/friends/invites/{id}/accept")
+    suspend fun acceptFriendRequest(
+        @Header("Authorization") auth: String,
+        @Path("id") inviteId: Long
+    )
+
+    @POST("/conversations/invites/{id}/accept")
+    suspend fun acceptConversationInvite(
+        @Header("Authorization") auth: String,
+        @Path("id") inviteId: Long
     )
 
     /* Friends */
@@ -137,8 +157,8 @@ internal interface ApiScheme {
         @Path("id") conversationId: Long
     )
 
-    @POST("/conversations/{id}/members/{user_id}")
-    suspend fun addConversationMember(
+    @POST("/conversations/{id}/members/{user_id}/invite")
+    suspend fun inviteConversationMember(
         @Header("Authorization") auth: String,
         @Path("id") conversationId: Long,
         @Path("user_id") userId: Int
